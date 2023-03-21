@@ -5,6 +5,9 @@ use anyhow::Result;
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
+mod commands;
+mod keymap;
+
 enum Control {
     EntriesList,
     TabsControl,
@@ -12,7 +15,7 @@ enum Control {
     EntryContentTxt,
 }
 
-struct AppState {
+pub struct AppState {
     active_control: Control,
 }
 
