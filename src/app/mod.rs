@@ -5,29 +5,25 @@ use anyhow::Result;
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
+use self::ui::ControlType;
+
 mod commands;
 mod keymap;
+mod ui;
 
-enum Control {
-    EntriesList,
-    TabsControl,
-    EntrNameTxt,
-    EntryContentTxt,
+pub struct App {
+    active_control: ControlType,
 }
 
-pub struct AppState {
-    active_control: Control,
-}
-
-impl AppState {
-    fn new(active_control: Control) -> Self {
+impl App {
+    fn new(active_control: ControlType) -> Self {
         Self { active_control }
     }
 }
 
 pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
     let mut last_tick = Instant::now();
-    let mut app = AppState::new(Control::TabsControl);
+    let mut app = App::new(ControlType::EntriesList);
     loop {
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
@@ -45,9 +41,8 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
             last_tick = Instant::now();
         }
     }
-    Ok(())
 }
 
-fn handle_input(key: crossterm::event::KeyEvent, app: &mut AppState) -> Result<bool> {
-    Ok(true)
+fn handle_input(key: crossterm::event::KeyEvent, app: &mut App) -> Result<bool> {
+    todo!()
 }

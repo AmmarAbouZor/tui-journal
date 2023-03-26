@@ -1,12 +1,13 @@
 use anyhow::Result;
+use std::fmt::Debug;
 
-use super::AppState;
+use super::App;
 
-pub trait Command {
+pub trait Command: Debug {
     fn get_name(&self) -> &str;
     fn get_description(&self) -> &str;
-    fn execute(&self, app: &mut AppState) -> Result<()>;
-    fn can_exec(&self, app: &mut AppState) -> bool;
+    fn execute(&self, app: &mut App) -> Result<()>;
+    fn can_exec(&self, app: &mut App) -> bool;
 }
 
 #[derive(Debug, Default)]
@@ -21,11 +22,11 @@ impl Command for CreateEntryCommand {
         "Opens dialog to add a new journal entry"
     }
 
-    fn execute(&self, app: &mut AppState) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         todo!()
     }
 
-    fn can_exec(&self, app: &mut AppState) -> bool {
+    fn can_exec(&self, app: &mut App) -> bool {
         todo!()
     }
 }
@@ -34,19 +35,19 @@ impl Command for CreateEntryCommand {
 pub(crate) struct DeleteCurrentEntry {}
 
 impl Command for DeleteCurrentEntry {
-    fn get_name(&self) -> &'static str {
+    fn get_name(&self) -> &str {
         "Delete current entry"
     }
 
-    fn get_description(&self) -> &'static str {
+    fn get_description(&self) -> &str {
         "Delete current journal entry if any"
     }
 
-    fn execute(&self, app: &mut AppState) -> Result<()> {
+    fn execute(&self, app: &mut App) -> Result<()> {
         todo!()
     }
 
-    fn can_exec(&self, app: &mut AppState) -> bool {
+    fn can_exec(&self, app: &mut App) -> bool {
         todo!()
     }
 }
