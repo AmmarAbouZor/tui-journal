@@ -1,3 +1,4 @@
+use crate::app::commands::UICommand;
 use crate::app::keymap::Keymap;
 
 use super::UIComponent;
@@ -21,8 +22,9 @@ impl UIComponent for EntriesList {
         app: &mut crate::app::App,
     ) -> anyhow::Result<bool> {
         if let Some(key) = self.keymaps.iter().find(|&c| &c.key == input) {
-            if key.command.can_exec(app) {
-                key.command.execute(app)?;
+            match key.command {
+                UICommand::CreateEntry => {}
+                UICommand::DeleteCurrentEntry => {}
             }
             Ok(true)
         } else {

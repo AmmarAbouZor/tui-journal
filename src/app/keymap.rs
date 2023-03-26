@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::commands::Command;
+use super::commands::UICommand;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq)]
 pub struct Input {
@@ -20,11 +20,11 @@ impl From<&KeyEvent> for Input {
 #[derive(Debug)]
 pub struct Keymap {
     pub key: Input,
-    pub command: Box<dyn Command>,
+    pub command: UICommand,
 }
 
 impl Keymap {
-    pub fn new(key: Input, command: Box<dyn Command>) -> Self {
+    pub fn new(key: Input, command: UICommand) -> Self {
         Self { key, command }
     }
 }
