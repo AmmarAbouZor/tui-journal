@@ -9,6 +9,7 @@ use crossterm::{
 use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
+mod data;
 
 fn main() -> Result<()> {
     enable_raw_mode()?;

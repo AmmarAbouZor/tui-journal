@@ -5,25 +5,40 @@ use anyhow::Result;
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
+use crate::data::{DataProvider, JsonDataProvide};
+
 use self::ui::ControlType;
 
 mod commands;
 mod keymap;
 mod ui;
 
-pub struct App {
+pub struct App<D>
+where
+    D: DataProvider,
+{
+    data_provide: D,
     active_control: ControlType,
 }
 
-impl App {
-    fn new(active_control: ControlType) -> Self {
-        Self { active_control }
+impl<D> App<D>
+where
+    D: DataProvider,
+{
+    fn new(data_provide: D, active_control: ControlType) -> Self {
+        Self {
+            data_provide,
+            active_control,
+        }
     }
 }
 
 pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
     let mut last_tick = Instant::now();
-    let mut app = App::new(ControlType::EntriesList);
+    let temp_path = String::from("./entries.json");
+    let json_provider = JsonDataProvide::new(temp_path);
+
+    let mut app = App::new(json_provider, ControlType::EntriesList);
     loop {
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
@@ -43,6 +58,9 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     }
 }
 
-fn handle_input(key: crossterm::event::KeyEvent, app: &mut App) -> Result<bool> {
+fn handle_input<D: DataProvider>(
+    key: crossterm::event::KeyEvent,
+    app: &mut App<D>,
+) -> Result<bool> {
     todo!()
 }

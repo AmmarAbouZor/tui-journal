@@ -1,3 +1,5 @@
+use crate::data::DataProvider;
+
 use super::{
     keymap::{Input, Keymap},
     App,
@@ -14,7 +16,7 @@ pub enum ControlType {
 }
 
 pub trait UIComponent {
-    fn handle_input(&self, input: &Input, app: &mut App) -> Result<bool>;
+    fn handle_input<D: DataProvider>(&self, input: &Input, app: &mut App<D>) -> Result<bool>;
     fn get_keymaps(&self) -> &[Keymap];
     fn get_type(&self) -> ControlType;
 }
