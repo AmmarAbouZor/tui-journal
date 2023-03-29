@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use thiserror;
 
@@ -16,13 +17,13 @@ pub enum ModifyEntryError {
 }
 
 pub trait DataProvider {
-    fn load_all_entries(&self) -> Result<Vec<Entry>, anyhow::Error>;
+    fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
     fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
-    fn remove_entry(&self, entry: Entry) -> Result<(), anyhow::Error>;
+    fn remove_entry(&self, entry: Entry) -> anyhow::Result<()>;
     fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     id: u32,
     date: DateTime<Utc>,

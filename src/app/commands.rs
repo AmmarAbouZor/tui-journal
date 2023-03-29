@@ -7,6 +7,7 @@ pub enum UICommand {
     StartEditCurrentEntry,
     SaveEntry,
     DiscardEntry,
+    ReloadAll,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +43,10 @@ impl UICommand {
             UICommand::DiscardEntry => {
                 CommandInfo::new("Discard changes", "Discard changes on journal")
             }
+            UICommand::ReloadAll => CommandInfo::new(
+                "Reload all",
+                "Reload all entries, discarding unsaved changes",
+            ),
         }
     }
 }

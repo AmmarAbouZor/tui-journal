@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
-chrono = "0.4.24"
+chrono = { version = "0.4.24", features = ["serde"] }
 crossterm = "0.26.1"
-serde = "1.0.158"
+serde = { version = "1.0.158", features = ["derive"] }
 thiserror = "1.0.40"
 tui = "0.19.0"
