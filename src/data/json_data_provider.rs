@@ -1,6 +1,8 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
-use super::{DataProvider, Entry};
+use anyhow::anyhow;
+
+use super::*;
 
 pub struct JsonDataProvide {
     file_path: PathBuf,
@@ -14,19 +16,85 @@ impl JsonDataProvide {
 
 impl DataProvider for JsonDataProvide {
     fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
-        todo!()
+        if !self.file_path.try_exists()? {
+            return Ok(Vec::new());
+        }
+
+        let json_content = fs::read_to_string(&self.file_path)?;
+        let entries = serde_json::from_str(&json_content)?;
+
+        Ok(entries)
     }
 
-    fn add_entry(&self, entry: super::EntryDraft) -> Result<Entry, super::ModifyEntryError> {
-        todo!()
+    fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
+        if entry.title.is_empty() {
+            return Err(ModifyEntryError::ValidationError(
+                "Entry title can't be empty".into(),
+            ));
+        }
+
+        let mut entries = self.load_all_entries()?;
+
+        entries.sort_by_key(|e| e.id);
+
+        let id: u32 = entries
+            .last()
+            .and_then(|entry| Some(entry.id + 1))
+            .unwrap_or(0);
+
+        let new_entry = Entry::from_draft(id, entry);
+
+        entries.push(new_entry);
+
+        self.write_entries_to_file(&entries)
+            .map_err(|err| anyhow!(err))?;
+
+        Ok(entries.into_iter().last().unwrap())
     }
 
     fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
-        todo!()
+        let mut entries = self.load_all_entries()?;
+
+        if let Some(pos) = entries.iter().position(|e| e.id == entry_id) {
+            entries.remove(pos);
+
+            self.write_entries_to_file(&entries)
+                .map_err(|err| anyhow!(err))?;
+        }
+
+        Ok(())
     }
 
-    fn update_entry(&self, entry: Entry) -> Result<Entry, super::ModifyEntryError> {
-        todo!()
+    fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+        if entry.title.is_empty() {
+            return Err(ModifyEntryError::ValidationError(
+                "Entry title can't be empty".into(),
+            ));
+        }
+
+        let mut entries = self.load_all_entries()?;
+
+        if let Some(entry_to_modify) = entries.iter_mut().find(|e| e.id == entry.id) {
+            *entry_to_modify = entry.clone();
+
+            self.write_entries_to_file(&entries)
+                .map_err(|err| anyhow!(err))?;
+
+            Ok(entry)
+        } else {
+            Err(ModifyEntryError::ValidationError(
+                "Entry title can't be empty".into(),
+            ))
+        }
+    }
+}
+
+impl JsonDataProvide {
+    fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
+        let entries_text = serde_json::to_vec(&entries)?;
+        fs::write(&self.file_path, &entries_text)?;
+
+        Ok(())
     }
 }
 
@@ -75,6 +143,7 @@ mod test {
     }
 
     #[test]
+    #[serial]
     fn create_provider_add_entrie() {
         clean_up();
         let provider = create_provide_with_two_entries();
@@ -91,6 +160,7 @@ mod test {
     }
 
     #[test]
+    #[serial]
     fn remove_entry() {
         clean_up();
         let provider = create_provide_with_two_entries();
@@ -105,6 +175,7 @@ mod test {
     }
 
     #[test]
+    #[serial]
     fn update_entry() {
         clean_up();
         let provider = create_provide_with_two_entries();

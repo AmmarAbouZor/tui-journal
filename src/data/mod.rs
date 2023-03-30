@@ -1,19 +1,20 @@
 use serde::{Deserialize, Serialize};
+use serial_test::serial;
 use std::error::Error;
 use thiserror;
 
 use chrono::{DateTime, Utc};
 
-mod json_data_provide;
+mod json_data_provider;
 
-pub use json_data_provide::JsonDataProvide;
+pub use json_data_provider::JsonDataProvide;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModifyEntryError {
     #[error("{0}")]
     ValidationError(String),
     #[error("{0}")]
-    DataError(#[source] anyhow::Error),
+    DataError(#[from] anyhow::Error),
 }
 
 pub trait DataProvider {
