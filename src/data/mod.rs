@@ -19,7 +19,7 @@ pub enum ModifyEntryError {
 pub trait DataProvider {
     fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
     fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
-    fn remove_entry(&self, entry: Entry) -> anyhow::Result<()>;
+    fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
     fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
 }
 

@@ -3,14 +3,12 @@ use std::path::PathBuf;
 use super::{DataProvider, Entry};
 
 pub struct JsonDataProvide {
-    entries: Vec<Entry>,
     file_path: PathBuf,
 }
 
 impl JsonDataProvide {
     pub fn new(file_path: PathBuf) -> Self {
-        let entries = Vec::new();
-        Self { entries, file_path }
+        Self { file_path }
     }
 }
 
@@ -23,7 +21,7 @@ impl DataProvider for JsonDataProvide {
         todo!()
     }
 
-    fn remove_entry(&self, entry: Entry) -> anyhow::Result<()> {
+    fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
         todo!()
     }
 
@@ -36,7 +34,10 @@ impl DataProvider for JsonDataProvide {
 mod test {
     use std::env;
     use std::fs;
-    use std::path::Path;
+
+    use chrono::{TimeZone, Utc};
+
+    use crate::data::EntryDraft;
 
     use super::*;
 
@@ -56,8 +57,72 @@ mod test {
         }
     }
 
+    fn create_provide_with_two_entries() -> JsonDataProvide {
+        let path_file = get_file_path();
+        let json_provide = JsonDataProvide::new(path_file);
+        let mut entry_draft_1 = EntryDraft::new(Utc::now(), String::from("Title 1"));
+        entry_draft_1.content.push_str("Content entry 1");
+        let mut entry_draft_2 = EntryDraft::new(
+            Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
+            String::from("Title 2"),
+        );
+        entry_draft_2.content.push_str("Content entry 2");
+
+        json_provide.add_entry(entry_draft_1).unwrap();
+        json_provide.add_entry(entry_draft_2).unwrap();
+
+        json_provide
+    }
+
     #[test]
-    fn environmet_vaiable_is_set() {
+    fn create_provider_add_entrie() {
+        clean_up();
+        let provider = create_provide_with_two_entries();
+
+        let entries = provider.load_all_entries().unwrap();
+
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].id, 0);
+        assert_eq!(entries[1].id, 1);
+        assert_eq!(entries[0].title, String::from("Title 1"));
+        assert_eq!(entries[1].title, String::from("Title 2"));
+
+        clean_up();
+    }
+
+    #[test]
+    fn remove_entry() {
+        clean_up();
+        let provider = create_provide_with_two_entries();
+
+        provider.remove_entry(1).unwrap();
+
+        let entries = provider.load_all_entries().unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].id, 0);
+
+        clean_up();
+    }
+
+    #[test]
+    fn update_entry() {
+        clean_up();
+        let provider = create_provide_with_two_entries();
+
+        let mut entries = provider.load_all_entries().unwrap();
+
+        entries[0].content = String::from("Updated Content");
+        entries[1].title = String::from("Updated Title");
+
+        provider.update_entry(entries.pop().unwrap()).unwrap();
+        provider.update_entry(entries.pop().unwrap()).unwrap();
+
+        let entries = provider.load_all_entries().unwrap();
+
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].content, String::from("Updated Content"));
+        assert_eq!(entries[1].title, String::from("Updated Title"));
+
         clean_up();
     }
 }
