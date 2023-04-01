@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serial_test::serial;
-use std::error::Error;
 use thiserror;
 
 use chrono::{DateTime, Utc};

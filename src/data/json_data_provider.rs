@@ -109,24 +109,43 @@ mod test {
 
     use super::*;
 
-    const PATH_VAR: &'static str = "JOURNAL_JSON_TEST_PATH";
-
-    fn get_file_path() -> PathBuf {
-        PathBuf::from(env::var(PATH_VAR).unwrap())
+    fn get_file_path(file_name: &str) -> PathBuf {
+        env::temp_dir().join(file_name)
     }
 
-    fn clean_up() {
-        let path = get_file_path();
-        if path
-            .try_exists()
-            .expect("Access to check the test file should be given")
-        {
-            fs::remove_file(&path).expect("Access to delete the test file should be given");
+    struct TempFile {
+        file_path: PathBuf,
+    }
+
+    impl TempFile {
+        fn new(file_name: &str) -> Self {
+            let file_path = env::temp_dir().join(file_name);
+
+            let temp_file = Self { file_path };
+            temp_file.clean_up();
+
+            temp_file
+        }
+
+        fn clean_up(&self) {
+            if self
+                .file_path
+                .try_exists()
+                .expect("Access to check the test file should be given")
+            {
+                fs::remove_file(&self.file_path)
+                    .expect("Access to delete the test file should be given");
+            }
         }
     }
 
-    fn create_provide_with_two_entries() -> JsonDataProvide {
-        let path_file = get_file_path();
+    impl Drop for TempFile {
+        fn drop(&mut self) {
+            self.clean_up();
+        }
+    }
+
+    fn create_provide_with_two_entries(path_file: PathBuf) -> JsonDataProvide {
         let json_provide = JsonDataProvide::new(path_file);
         let mut entry_draft_1 = EntryDraft::new(Utc::now(), String::from("Title 1"));
         entry_draft_1.content.push_str("Content entry 1");
@@ -143,10 +162,9 @@ mod test {
     }
 
     #[test]
-    #[serial]
     fn create_provider_with_default_entrie() {
-        clean_up();
-        let provider = create_provide_with_two_entries();
+        let temp_file = TempFile::new("json_create_default");
+        let provider = create_provide_with_two_entries(temp_file.file_path.clone());
 
         let entries = provider.load_all_entries().unwrap();
 
@@ -155,15 +173,12 @@ mod test {
         assert_eq!(entries[1].id, 1);
         assert_eq!(entries[0].title, String::from("Title 1"));
         assert_eq!(entries[1].title, String::from("Title 2"));
-
-        clean_up();
     }
 
     #[test]
-    #[serial]
     fn add_entry() {
-        clean_up();
-        let provider = create_provide_with_two_entries();
+        let temp_file = TempFile::new("json_add_entry");
+        let provider = create_provide_with_two_entries(temp_file.file_path.clone());
 
         let mut entry_draft = EntryDraft::new(
             Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
@@ -179,30 +194,24 @@ mod test {
         assert_eq!(entries[2].id, 2);
         assert_eq!(entries[2].title, String::from("Title added"));
         assert_eq!(entries[2].content, String::from("Content entry added"));
-
-        clean_up();
     }
 
     #[test]
-    #[serial]
     fn remove_entry() {
-        clean_up();
-        let provider = create_provide_with_two_entries();
+        let temp_file = TempFile::new("json_remove_entry");
+        let provider = create_provide_with_two_entries(temp_file.file_path.clone());
 
         provider.remove_entry(1).unwrap();
 
         let entries = provider.load_all_entries().unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].id, 0);
-
-        clean_up();
     }
 
     #[test]
-    #[serial]
     fn update_entry() {
-        clean_up();
-        let provider = create_provide_with_two_entries();
+        let temp_file = TempFile::new("json_update_entry");
+        let provider = create_provide_with_two_entries(temp_file.file_path.clone());
 
         let mut entries = provider.load_all_entries().unwrap();
 
@@ -217,7 +226,5 @@ mod test {
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].content, String::from("Updated Content"));
         assert_eq!(entries[1].title, String::from("Updated Title"));
-
-        clean_up();
     }
 }
