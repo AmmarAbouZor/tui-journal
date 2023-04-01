@@ -109,10 +109,6 @@ mod test {
 
     use super::*;
 
-    fn get_file_path(file_name: &str) -> PathBuf {
-        env::temp_dir().join(file_name)
-    }
-
     struct TempFile {
         file_path: PathBuf,
     }
