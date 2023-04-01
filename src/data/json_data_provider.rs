@@ -144,7 +144,7 @@ mod test {
 
     #[test]
     #[serial]
-    fn create_provider_add_entrie() {
+    fn create_provider_with_default_entrie() {
         clean_up();
         let provider = create_provide_with_two_entries();
 
@@ -155,6 +155,30 @@ mod test {
         assert_eq!(entries[1].id, 1);
         assert_eq!(entries[0].title, String::from("Title 1"));
         assert_eq!(entries[1].title, String::from("Title 2"));
+
+        clean_up();
+    }
+
+    #[test]
+    #[serial]
+    fn add_entry() {
+        clean_up();
+        let provider = create_provide_with_two_entries();
+
+        let mut entry_draft = EntryDraft::new(
+            Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
+            String::from("Title added"),
+        );
+        entry_draft.content.push_str("Content entry added");
+
+        provider.add_entry(entry_draft).unwrap();
+
+        let entries = provider.load_all_entries().unwrap();
+
+        assert_eq!(entries.len(), 3);
+        assert_eq!(entries[2].id, 2);
+        assert_eq!(entries[2].title, String::from("Title added"));
+        assert_eq!(entries[2].content, String::from("Content entry added"));
 
         clean_up();
     }
