@@ -5,12 +5,14 @@ use std::{
 
 use anyhow::Result;
 
+use chrono::Utc;
 use crossterm::event::Event;
-use tui::{backend::Backend, Terminal};
+use tui::{backend::Backend, Frame, Terminal};
 
-use crate::data::{DataProvider, Entry, JsonDataProvide};
+use crate::data::{DataProvider, Entry, EntryDraft, JsonDataProvide};
 
-use self::ui::ControlType;
+use self::ui::{ControlType, UIComponents};
+use ui::EntriesList;
 
 mod commands;
 mod keymap;
@@ -23,6 +25,8 @@ where
     data_provide: D,
     active_control: ControlType,
     entries: Vec<Entry>,
+    current_entry_id: Option<u32>,
+    ui_components: UIComponents,
 }
 
 impl<D> App<D>
@@ -31,17 +35,28 @@ where
 {
     fn new(data_provide: D, active_control: ControlType) -> Self {
         let entries = Vec::new();
+        let ui_components = UIComponents::new();
         Self {
             data_provide,
             active_control,
             entries,
+            current_entry_id: None,
+            ui_components,
         }
     }
 
     fn load_entries(&mut self) -> anyhow::Result<()> {
         self.entries = self.data_provide.load_all_entries()?;
 
+        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        self.current_entry_id = self.entries.last().and_then(|entry| Some(entry.id));
+
         Ok(())
+    }
+
+    fn draw_ui<B: Backend>(&self, f: &mut Frame<B>) {
+        self.ui_components.draw_ui(f, self);
     }
 }
 
@@ -55,7 +70,11 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
         //TODO: handle error message with notify service
     }
 
+    app.load_entries();
+
     loop {
+        terminal.draw(|f| app.draw_ui(f))?;
+
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
             .unwrap_or_else(|| Duration::from_secs(0));

@@ -24,10 +24,10 @@ pub trait DataProvider {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
-    id: u32,
-    date: DateTime<Utc>,
-    title: String,
-    content: String,
+    pub id: u32,
+    pub date: DateTime<Utc>,
+    pub title: String,
+    pub content: String,
 }
 
 impl Entry {
