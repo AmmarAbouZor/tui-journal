@@ -25,8 +25,8 @@ impl EntriesList {
         }
     }
 
-    pub fn get_state(&self) -> ListState {
-        self.state.clone()
+    pub fn get_state_mut(&mut self) -> &mut ListState {
+        &mut self.state
     }
 }
 

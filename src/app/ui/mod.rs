@@ -48,15 +48,23 @@ impl<'a> UIComponents {
         }
     }
 
-    pub fn set_current_entry(&mut self, entry_id: Option<u32>) {
-        todo!()
+    pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
+        if let Some(id) = entry_id {
+            let entry_index = app.entries.iter().position(|entry| entry.id == id);
+
+            self.entries_list.state.select(entry_index);
+        }
     }
 
-    pub fn get_current_entry_id(&self) -> Option<u32> {
-        todo!();
+    pub fn get_current_entry_id<D: DataProvider>(&self, app: &App<D>) -> Option<u32> {
+        if let Some(index) = self.entries_list.state.selected() {
+            app.entries.get(index).and_then(|entry| Some(entry.id))
+        } else {
+            None
+        }
     }
 
-    pub fn draw_ui<D, B>(&self, f: &mut Frame<B>, app: &'a App<D>)
+    pub fn draw_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'a App<D>)
     where
         D: DataProvider,
         B: Backend,
@@ -67,8 +75,8 @@ impl<'a> UIComponents {
             .split(f.size());
 
         let entries_widget = self.entries_list.get_widget(app);
-        let mut list_state = self.entries_list.get_state();
+        let list_state = self.entries_list.get_state_mut();
 
-        f.render_stateful_widget(entries_widget, chunks[0], &mut list_state);
+        f.render_stateful_widget(entries_widget, chunks[0], list_state);
     }
 }

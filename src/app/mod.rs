@@ -24,7 +24,6 @@ where
 {
     data_provide: D,
     entries: Vec<Entry>,
-    ui_components: UIComponents,
 }
 
 impl<D> App<D>
@@ -37,7 +36,6 @@ where
         Self {
             data_provide,
             entries,
-            ui_components,
         }
     }
 
@@ -46,14 +44,7 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
-        self.ui_components
-            .set_current_entry(self.entries.last().and_then(|entry| Some(entry.id)));
-
         Ok(())
-    }
-
-    fn draw_ui<B: Backend>(&self, f: &mut Frame<B>) {
-        self.ui_components.draw_ui(f, self);
     }
 }
 
@@ -67,10 +58,11 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
         //TODO: handle error message with notify service
     }
 
-    app.load_entries();
+    let mut ui_components = UIComponents::new();
+    ui_components.set_current_entry(app.entries.last().and_then(|entry| Some(entry.id)), &app);
 
     loop {
-        terminal.draw(|f| app.draw_ui(f))?;
+        terminal.draw(|f| ui_components.draw_ui(f, &mut app))?;
 
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
