@@ -35,12 +35,25 @@ where
 
 pub struct UIComponents {
     pub entries_list: EntriesList,
+    pub active_control: ControlType,
 }
 
 impl<'a> UIComponents {
     pub fn new() -> Self {
         let entries_list = EntriesList::new();
-        Self { entries_list }
+        let active_control = ControlType::EntriesList;
+        Self {
+            entries_list,
+            active_control,
+        }
+    }
+
+    pub fn set_current_entry(&mut self, entry_id: Option<u32>) {
+        todo!()
+    }
+
+    pub fn get_current_entry_id(&self) -> Option<u32> {
+        todo!();
     }
 
     pub fn draw_ui<D, B>(&self, f: &mut Frame<B>, app: &'a App<D>)

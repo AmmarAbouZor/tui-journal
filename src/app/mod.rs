@@ -23,9 +23,7 @@ where
     D: DataProvider,
 {
     data_provide: D,
-    active_control: ControlType,
     entries: Vec<Entry>,
-    current_entry_id: Option<u32>,
     ui_components: UIComponents,
 }
 
@@ -33,14 +31,12 @@ impl<D> App<D>
 where
     D: DataProvider,
 {
-    fn new(data_provide: D, active_control: ControlType) -> Self {
+    fn new(data_provide: D) -> Self {
         let entries = Vec::new();
         let ui_components = UIComponents::new();
         Self {
             data_provide,
-            active_control,
             entries,
-            current_entry_id: None,
             ui_components,
         }
     }
@@ -50,7 +46,8 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
-        self.current_entry_id = self.entries.last().and_then(|entry| Some(entry.id));
+        self.ui_components
+            .set_current_entry(self.entries.last().and_then(|entry| Some(entry.id)));
 
         Ok(())
     }
@@ -65,7 +62,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     let temp_path = PathBuf::from("./entries.json");
     let json_provider = JsonDataProvide::new(temp_path);
 
-    let mut app = App::new(json_provider, ControlType::EntriesList);
+    let mut app = App::new(json_provider);
     if let Err(info) = app.load_entries() {
         //TODO: handle error message with notify service
     }

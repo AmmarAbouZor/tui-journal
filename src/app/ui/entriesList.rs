@@ -12,7 +12,7 @@ use super::UIComponent;
 
 pub struct EntriesList {
     keymaps: Vec<Keymap>,
-    state: ListState,
+    pub state: ListState,
 }
 
 impl EntriesList {
