@@ -4,8 +4,17 @@ use super::commands::UICommand;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq)]
 pub struct Input {
-    key_code: KeyCode,
-    modmodifiers: KeyModifiers,
+    pub key_code: KeyCode,
+    pub modmodifiers: KeyModifiers,
+}
+
+impl Input {
+    pub fn new(key_code: KeyCode, modmodifiers: KeyModifiers) -> Self {
+        Self {
+            key_code,
+            modmodifiers,
+        }
+    }
 }
 
 impl From<&KeyEvent> for Input {

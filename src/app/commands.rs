@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UICommand {
+    Quit,
+    ShowHelp,
     CreateEntry,
     DeleteCurrentEntry,
     StartEditCurrentEntry,
@@ -28,6 +30,8 @@ impl CommandInfo {
 impl UICommand {
     fn get_info(&self) -> CommandInfo {
         match self {
+            UICommand::Quit => CommandInfo::new("Exit", "Exit the program"),
+            UICommand::ShowHelp => CommandInfo::new("Show help", "Show keybindings overview"),
             UICommand::CreateEntry => CommandInfo::new(
                 "Create new entry",
                 "Opens dialog to add a new journal entry",

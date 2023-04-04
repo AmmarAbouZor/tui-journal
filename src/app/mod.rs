@@ -1,90 +1,79 @@
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
+use crossterm::event::{KeyCode, KeyModifiers};
+
+use crate::data::{DataProvider, Entry};
+
+use self::{
+    commands::UICommand,
+    keymap::{Input, Keymap},
+    runner::HandleInputReturnType,
 };
 
-use anyhow::Result;
-
-use chrono::Utc;
-use crossterm::event::Event;
-use tui::{backend::Backend, Frame, Terminal};
-
-use crate::data::{DataProvider, Entry, EntryDraft, JsonDataProvide};
-
-use self::ui::{ControlType, UIComponents};
-use ui::EntriesList;
+pub use runner::run;
+pub use ui::UIComponents;
 
 mod commands;
 mod keymap;
+mod runner;
 mod ui;
 
 pub struct App<D>
 where
     D: DataProvider,
 {
-    data_provide: D,
-    entries: Vec<Entry>,
+    pub data_provide: D,
+    pub entries: Vec<Entry>,
+    pub global_keymaps: Vec<Keymap>,
 }
 
 impl<D> App<D>
 where
     D: DataProvider,
 {
-    fn new(data_provide: D) -> Self {
+    pub fn new(data_provide: D) -> Self {
         let entries = Vec::new();
-        let ui_components = UIComponents::new();
+        let global_keymaps = vec![
+            Keymap::new(
+                Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
+                UICommand::Quit,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('?'), KeyModifiers::SHIFT),
+                UICommand::ShowHelp,
+            ),
+        ];
         Self {
             data_provide,
             entries,
+            global_keymaps,
         }
     }
 
-    fn load_entries(&mut self) -> anyhow::Result<()> {
+    pub fn load_entries(&mut self) -> anyhow::Result<()> {
         self.entries = self.data_provide.load_all_entries()?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
         Ok(())
     }
-}
 
-pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
-    let mut last_tick = Instant::now();
-    let temp_path = PathBuf::from("./entries.json");
-    let json_provider = JsonDataProvide::new(temp_path);
+    pub fn handle_input(&self, input: &Input) -> HandleInputReturnType {
+        if let Some(cmd) = self
+            .global_keymaps
+            .iter()
+            .find(|keymap| keymap.key == *input)
+            .and_then(|keymap| Some(keymap.command))
+        {
+            match cmd {
+                UICommand::Quit => HandleInputReturnType::ExitApp,
+                UICommand::ShowHelp => {
+                    // TODO: show help
 
-    let mut app = App::new(json_provider);
-    if let Err(info) = app.load_entries() {
-        //TODO: handle error message with notify service
-    }
-
-    let mut ui_components = UIComponents::new();
-    ui_components.set_current_entry(app.entries.last().and_then(|entry| Some(entry.id)), &app);
-
-    loop {
-        terminal.draw(|f| ui_components.draw_ui(f, &mut app))?;
-
-        let timeout = tick_rate
-            .checked_sub(last_tick.elapsed())
-            .unwrap_or_else(|| Duration::from_secs(0));
-
-        if crossterm::event::poll(timeout)? {
-            if let Event::Key(key) = crossterm::event::read()? {
-                if !handle_input(key, &mut app)? {
-                    return Ok(());
+                    HandleInputReturnType::Handled
                 }
+                _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
             }
-        }
-
-        if last_tick.elapsed() >= tick_rate {
-            last_tick = Instant::now();
+        } else {
+            HandleInputReturnType::NotFound
         }
     }
-}
-
-fn handle_input<D: DataProvider>(
-    key: crossterm::event::KeyEvent,
-    app: &mut App<D>,
-) -> Result<bool> {
-    todo!()
 }
