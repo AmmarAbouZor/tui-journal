@@ -5,6 +5,7 @@ use tui::widgets::{Block, Borders, List, ListItem, ListState};
 
 use crate::app::commands::UICommand;
 use crate::app::keymap::Keymap;
+use crate::app::runner::HandleInputReturnType;
 use crate::app::App;
 use crate::data::DataProvider;
 
@@ -43,7 +44,7 @@ impl<'a> UIComponent<'a, List<'a>> for EntriesList {
         &self,
         input: &crate::app::keymap::Input,
         app: &'a mut crate::app::App<D>,
-    ) -> anyhow::Result<bool> {
+    ) -> anyhow::Result<HandleInputReturnType> {
         if let Some(key) = self.keymaps.iter().find(|&c| &c.key == input) {
             match key.command {
                 UICommand::CreateEntry => {}
@@ -51,9 +52,9 @@ impl<'a> UIComponent<'a, List<'a>> for EntriesList {
                 UICommand::StartEditCurrentEntry => {}
                 _ => unreachable!("{:?} is not implemented for entries list", key.command),
             }
-            Ok(true)
+            Ok(HandleInputReturnType::Handled)
         } else {
-            Ok(false)
+            Ok(HandleInputReturnType::NotFound)
         }
     }
 

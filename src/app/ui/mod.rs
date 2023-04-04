@@ -2,6 +2,7 @@ use crate::data::DataProvider;
 
 use super::{
     keymap::{Input, Keymap},
+    runner::HandleInputReturnType,
     App,
 };
 use anyhow::Result;
@@ -27,7 +28,11 @@ pub trait UIComponent<'a, W>
 where
     W: Widget,
 {
-    fn handle_input<D: DataProvider>(&self, input: &Input, app: &'a mut App<D>) -> Result<bool>;
+    fn handle_input<D: DataProvider>(
+        &self,
+        input: &Input,
+        app: &'a mut App<D>,
+    ) -> Result<HandleInputReturnType>;
     fn get_keymaps(&self) -> &[Keymap];
     fn get_type(&self) -> ControlType;
     fn get_widget<D: DataProvider>(&self, app: &'a App<D>) -> W;
@@ -78,5 +83,13 @@ impl<'a> UIComponents {
         let list_state = self.entries_list.get_state_mut();
 
         f.render_stateful_widget(entries_widget, chunks[0], list_state);
+    }
+
+    pub fn handle_input<D: DataProvider>(
+        &mut self,
+        input: &Input,
+        app: &mut App<D>,
+    ) -> Result<HandleInputReturnType> {
+        todo!()
     }
 }
