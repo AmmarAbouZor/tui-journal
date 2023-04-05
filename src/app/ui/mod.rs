@@ -8,14 +8,13 @@ use super::{
 use anyhow::Result;
 use tui::{
     backend::Backend,
-    layout::{Constraint, Direction, Layout},
-    widgets::Widget,
+    layout::{Constraint, Direction, Layout, Rect},
     Frame,
 };
 
-mod entriesList;
+mod entries_list;
 
-pub use entriesList::EntriesList;
+pub use entries_list::EntriesList;
 
 pub enum ControlType {
     EntriesList,
@@ -24,10 +23,7 @@ pub enum ControlType {
     HelpPopup,
 }
 
-pub trait UIComponent<'a, W>
-where
-    W: Widget,
-{
+pub trait UIComponent<'a> {
     fn handle_input<D: DataProvider>(
         &self,
         input: &Input,
@@ -35,7 +31,12 @@ where
     ) -> Result<HandleInputReturnType>;
     fn get_keymaps(&self) -> &[Keymap];
     fn get_type(&self) -> ControlType;
-    fn get_widget<D: DataProvider>(&self, app: &'a App<D>) -> W;
+    fn render_widget<B: Backend, D: DataProvider>(
+        &mut self,
+        frame: &mut Frame<B>,
+        area: Rect,
+        app: &'a App<D>,
+    );
 }
 
 pub struct UIComponents {
@@ -79,10 +80,11 @@ impl<'a> UIComponents {
             .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
             .split(f.size());
 
-        let entries_widget = self.entries_list.get_widget(app);
-        let list_state = self.entries_list.get_state_mut();
+        self.entries_list.render_widget(f, chunks[0], app);
+    }
 
-        f.render_stateful_widget(entries_widget, chunks[0], list_state);
+    fn get_active_control(&mut self) -> &mut impl UIComponent {
+        &mut self.entries_list
     }
 
     pub fn handle_input<D: DataProvider>(
@@ -90,6 +92,8 @@ impl<'a> UIComponents {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
-        todo!()
+        let active_control = self.get_active_control();
+
+        active_control.handle_input(input, app)
     }
 }

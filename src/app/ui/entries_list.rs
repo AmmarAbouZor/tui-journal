@@ -1,7 +1,10 @@
 use chrono::Datelike;
+use tui::backend::Backend;
+use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, ListState};
+use tui::Frame;
 
 use crate::app::commands::UICommand;
 use crate::app::keymap::Keymap;
@@ -16,9 +19,9 @@ pub struct EntriesList {
     pub state: ListState,
 }
 
-impl EntriesList {
+impl<'a> EntriesList {
     pub fn new() -> Self {
-        //TODO keymaps
+        //TODO: keymaps
         let keymaps: Vec<Keymap> = Vec::new();
         Self {
             keymaps,
@@ -28,34 +31,6 @@ impl EntriesList {
 
     pub fn get_state_mut(&mut self) -> &mut ListState {
         &mut self.state
-    }
-}
-
-impl<'a> UIComponent<'a, List<'a>> for EntriesList {
-    fn get_keymaps(&self) -> &[crate::app::keymap::Keymap] {
-        &self.keymaps
-    }
-
-    fn get_type(&self) -> super::ControlType {
-        super::ControlType::EntriesList
-    }
-
-    fn handle_input<D: DataProvider>(
-        &self,
-        input: &crate::app::keymap::Input,
-        app: &'a mut crate::app::App<D>,
-    ) -> anyhow::Result<HandleInputReturnType> {
-        if let Some(key) = self.keymaps.iter().find(|&c| &c.key == input) {
-            match key.command {
-                UICommand::CreateEntry => {}
-                UICommand::DeleteCurrentEntry => {}
-                UICommand::StartEditCurrentEntry => {}
-                _ => unreachable!("{:?} is not implemented for entries list", key.command),
-            }
-            Ok(HandleInputReturnType::Handled)
-        } else {
-            Ok(HandleInputReturnType::NotFound)
-        }
     }
 
     fn get_widget<D: DataProvider>(&self, app: &'a App<D>) -> List<'a> {
@@ -89,5 +64,44 @@ impl<'a> UIComponent<'a, List<'a>> for EntriesList {
                     .add_modifier(Modifier::BOLD),
             )
             .highlight_symbol(">> ")
+    }
+}
+
+impl<'a> UIComponent<'a> for EntriesList {
+    fn get_keymaps(&self) -> &[crate::app::keymap::Keymap] {
+        &self.keymaps
+    }
+    fn get_type(&self) -> super::ControlType {
+        super::ControlType::EntriesList
+    }
+
+    fn handle_input<D: DataProvider>(
+        &self,
+        input: &crate::app::keymap::Input,
+        app: &'a mut crate::app::App<D>,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        if let Some(key) = self.keymaps.iter().find(|&c| &c.key == input) {
+            match key.command {
+                UICommand::CreateEntry => {}
+                UICommand::DeleteCurrentEntry => {}
+                UICommand::StartEditCurrentEntry => {}
+                _ => unreachable!("{:?} is not implemented for entries list", key.command),
+            }
+            Ok(HandleInputReturnType::Handled)
+        } else {
+            Ok(HandleInputReturnType::NotFound)
+        }
+    }
+
+    fn render_widget<B: Backend, D: DataProvider>(
+        &mut self,
+        frame: &mut Frame<B>,
+        area: Rect,
+        app: &'a App<D>,
+    ) {
+        let entries_widget = self.get_widget(app);
+        let list_state = self.get_state_mut();
+
+        frame.render_stateful_widget(entries_widget, area, list_state);
     }
 }
