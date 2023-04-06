@@ -1,4 +1,5 @@
 use chrono::Datelike;
+use crossterm::event::{KeyCode, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
@@ -7,7 +8,7 @@ use tui::widgets::{Block, Borders, List, ListItem, ListState};
 use tui::Frame;
 
 use crate::app::commands::UICommand;
-use crate::app::keymap::Keymap;
+use crate::app::keymap::{Input, Keymap};
 use crate::app::runner::HandleInputReturnType;
 use crate::app::App;
 use crate::data::DataProvider;
@@ -21,16 +22,56 @@ pub struct EntriesList {
 
 impl<'a> EntriesList {
     pub fn new() -> Self {
-        //TODO: keymaps
-        let keymaps: Vec<Keymap> = Vec::new();
+        let keymaps = vec![
+            Keymap::new(
+                Input::new(KeyCode::Up, KeyModifiers::NONE),
+                UICommand::SelectedPrevEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('k'), KeyModifiers::NONE),
+                UICommand::SelectedPrevEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Down, KeyModifiers::NONE),
+                UICommand::SelectedNextEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('j'), KeyModifiers::NONE),
+                UICommand::SelectedNextEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+                UICommand::CreateEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+                UICommand::CreateEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Delete, KeyModifiers::NONE),
+                UICommand::DeleteCurrentEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
+                UICommand::DeleteCurrentEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Enter, KeyModifiers::NONE),
+                UICommand::StartEditCurrentEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
+                UICommand::StartEditCurrentEntry,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
+                UICommand::ReloadAll,
+            ),
+        ];
         Self {
             keymaps,
             state: ListState::default(),
         }
-    }
-
-    pub fn get_state_mut(&mut self) -> &mut ListState {
-        &mut self.state
     }
 
     fn get_widget<D: DataProvider>(&self, app: &'a App<D>) -> List<'a> {
@@ -100,8 +141,7 @@ impl<'a> UIComponent<'a> for EntriesList {
         app: &'a App<D>,
     ) {
         let entries_widget = self.get_widget(app);
-        let list_state = self.get_state_mut();
 
-        frame.render_stateful_widget(entries_widget, area, list_state);
+        frame.render_stateful_widget(entries_widget, area, &mut self.state);
     }
 }

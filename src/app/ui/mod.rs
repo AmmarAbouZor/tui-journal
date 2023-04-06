@@ -15,6 +15,7 @@ use tui::{
 };
 
 mod entries_list;
+mod entry_content;
 
 pub use entries_list::EntriesList;
 

@@ -501,6 +501,17 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tui",
+ "tui-textarea",
+]
+
+[[package]]
+name = "tui-textarea"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "437ad97a57d66f7231dab16f51ede1ff5a3aac68c83eb10fa3a178e454b63cae"
+dependencies = [
+ "crossterm 0.25.0",
+ "tui",
 ]
 
 [[package]]

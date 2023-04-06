@@ -6,6 +6,8 @@ pub enum UICommand {
     ShowHelp,
     CycleFocusedControlForward,
     CycleFocusedControlBack,
+    SelectedNextEntry,
+    SelectedPrevEntry,
     CreateEntry,
     DeleteCurrentEntry,
     StartEditCurrentEntry,
@@ -41,6 +43,13 @@ impl UICommand {
             UICommand::CycleFocusedControlBack => CommandInfo::new(
                 "Cycle focused control backward",
                 "Move focus to the previous control",
+            ),
+            UICommand::SelectedNextEntry => {
+                CommandInfo::new("Select next entry", "Select next entry in the entry list")
+            }
+            UICommand::SelectedPrevEntry => CommandInfo::new(
+                "Select previous entry",
+                "Select previous entry in the entry list",
             ),
             UICommand::CreateEntry => CommandInfo::new(
                 "Create new entry",
