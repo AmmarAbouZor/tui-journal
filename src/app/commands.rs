@@ -11,8 +11,9 @@ pub enum UICommand {
     CreateEntry,
     DeleteCurrentEntry,
     StartEditCurrentEntry,
-    SaveEntry,
-    DiscardEntry,
+    FinishEditEntryContent,
+    SaveEntryContent,
+    DiscardChangesEntryContent,
     ReloadAll,
 }
 
@@ -62,9 +63,15 @@ impl UICommand {
             UICommand::StartEditCurrentEntry => {
                 CommandInfo::new("Edit current entry", "Edit current journal entry if any")
             }
-            UICommand::SaveEntry => CommandInfo::new("Save", "Save changes on journal"),
-            UICommand::DiscardEntry => {
-                CommandInfo::new("Discard changes", "Discard changes on journal")
+            UICommand::FinishEditEntryContent => CommandInfo::new(
+                "End editing current entry",
+                "End editing current journal entry, and return focus to entries list",
+            ),
+            UICommand::SaveEntryContent => {
+                CommandInfo::new("Save", "Save changes on journal content")
+            }
+            UICommand::DiscardChangesEntryContent => {
+                CommandInfo::new("Discard changes", "Discard changes on journal content")
             }
             UICommand::ReloadAll => CommandInfo::new(
                 "Reload all",

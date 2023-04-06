@@ -109,7 +109,7 @@ impl<'a> EntriesList {
 }
 
 impl<'a> UIComponent<'a> for EntriesList {
-    fn get_keymaps(&self) -> &[crate::app::keymap::Keymap] {
+    fn get_keymaps(&self) -> &[Keymap] {
         &self.keymaps
     }
     fn get_type(&self) -> super::ControlType {
