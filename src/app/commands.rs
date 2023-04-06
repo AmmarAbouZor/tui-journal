@@ -4,6 +4,8 @@ use std::fmt::Debug;
 pub enum UICommand {
     Quit,
     ShowHelp,
+    CycleFocusedControlForward,
+    CycleFocusedControlBack,
     CreateEntry,
     DeleteCurrentEntry,
     StartEditCurrentEntry,
@@ -32,6 +34,14 @@ impl UICommand {
         match self {
             UICommand::Quit => CommandInfo::new("Exit", "Exit the program"),
             UICommand::ShowHelp => CommandInfo::new("Show help", "Show keybindings overview"),
+            UICommand::CycleFocusedControlForward => CommandInfo::new(
+                "Cycle focused control forward",
+                "Move focus to the next control",
+            ),
+            UICommand::CycleFocusedControlBack => CommandInfo::new(
+                "Cycle focused control backward",
+                "Move focus to the previous control",
+            ),
             UICommand::CreateEntry => CommandInfo::new(
                 "Create new entry",
                 "Opens dialog to add a new journal entry",

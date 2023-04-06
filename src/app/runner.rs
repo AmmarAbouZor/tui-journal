@@ -69,10 +69,6 @@ fn handle_input<D: DataProvider>(
     ui_components: &mut UIComponents,
 ) -> Result<HandleInputReturnType> {
     let input = Input::from(&key);
-    let global_handle_return = app.handle_input(&input);
-    if global_handle_return != HandleInputReturnType::NotFound {
-        return Ok(global_handle_return);
-    }
 
     ui_components.handle_input(&input, app)
 }

@@ -1,11 +1,13 @@
 use crate::data::DataProvider;
 
 use super::{
+    commands::UICommand,
     keymap::{Input, Keymap},
     runner::HandleInputReturnType,
     App,
 };
 use anyhow::Result;
+use crossterm::event::{KeyCode, KeyModifiers};
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -40,17 +42,37 @@ pub trait UIComponent<'a> {
 }
 
 pub struct UIComponents {
+    pub global_keymaps: Vec<Keymap>,
     pub entries_list: EntriesList,
     pub active_control: ControlType,
 }
 
 impl<'a> UIComponents {
     pub fn new() -> Self {
+        let global_keymaps = vec![
+            Keymap::new(
+                Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
+                UICommand::Quit,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('?'), KeyModifiers::SHIFT),
+                UICommand::ShowHelp,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('j'), KeyModifiers::CONTROL),
+                UICommand::CycleFocusedControlForward,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('k'), KeyModifiers::CONTROL),
+                UICommand::CycleFocusedControlBack,
+            ),
+        ];
         let entries_list = EntriesList::new();
         let active_control = ControlType::EntriesList;
         Self {
             entries_list,
             active_control,
+            global_keymaps,
         }
     }
 
@@ -92,8 +114,25 @@ impl<'a> UIComponents {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
-        let active_control = self.get_active_control();
+        if let Some(cmd) = self
+            .global_keymaps
+            .iter()
+            .find(|keymap| keymap.key == *input)
+            .and_then(|keymap| Some(keymap.command))
+        {
+            match cmd {
+                UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
+                UICommand::ShowHelp => {
+                    // TODO: show help
 
-        active_control.handle_input(input, app)
+                    Ok(HandleInputReturnType::Handled)
+                }
+                _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
+            }
+        } else {
+            let active_control = self.get_active_control();
+
+            active_control.handle_input(input, app)
+        }
     }
 }
