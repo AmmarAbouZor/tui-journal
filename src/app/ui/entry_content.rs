@@ -1,5 +1,10 @@
-use crossterm::event::{KeyCode, KeyModifiers};
-use tui::backend::Backend;
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
+use tui::{
+    backend::Backend,
+    layout::Rect,
+    widgets::{Block, Borders},
+    Frame,
+};
 
 use crate::{
     app::{
@@ -10,16 +15,19 @@ use crate::{
     },
     data::DataProvider,
 };
+use tui_textarea::TextArea;
 
 use super::{ControlType, UIComponent};
 
-pub struct EntryContent {
+pub struct EntryContent<'a> {
     keymaps: Vec<Keymap>,
+    text_area: TextArea<'a>,
+    // edit mode will be always on until I implement two modes for the editor
     pub is_edit_mode: bool,
 }
 
-impl EntryContent {
-    pub fn new() -> EntryContent {
+impl<'a> EntryContent<'a> {
+    pub fn new() -> EntryContent<'a> {
         let keymaps = vec![
             Keymap::new(
                 Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
@@ -35,18 +43,32 @@ impl EntryContent {
             ),
         ];
 
+        let text_area = TextArea::default();
+
         EntryContent {
             keymaps,
-            is_edit_mode: false,
+            text_area,
+            is_edit_mode: true,
         }
     }
 }
 
-impl<'a> UIComponent<'a> for EntryContent {
+impl From<&Input> for KeyEvent {
+    fn from(value: &Input) -> Self {
+        KeyEvent {
+            code: value.key_code,
+            modifiers: value.modifiers,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::NONE,
+        }
+    }
+}
+
+impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
     fn handle_input<D: DataProvider>(
-        &self,
+        &mut self,
         input: &Input,
-        app: &'a mut App<D>,
+        app: &'b mut App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
         if let Some(key) = self.keymaps.iter().find(|c| &c.key == input) {
             match key.command {
@@ -61,8 +83,11 @@ impl<'a> UIComponent<'a> for EntryContent {
             Ok(HandleInputReturnType::Handled)
         } else if self.is_edit_mode {
             // give the input to the editor
+            let key_event = KeyEvent::from(input);
+            self.text_area.input(key_event);
             Ok(HandleInputReturnType::Handled)
         } else {
+            //TODO: Implement vim normal modes shortcuts
             Ok(HandleInputReturnType::NotFound)
         }
     }
@@ -75,15 +100,17 @@ impl<'a> UIComponent<'a> for EntryContent {
         ControlType::EntryContentTxt
     }
 
-    fn render_widget<B, D>(
-        &mut self,
-        frame: &mut tui::Frame<B>,
-        area: tui::layout::Rect,
-        app: &'a crate::app::App<D>,
-    ) where
+    fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, app: &'b App<D>)
+    where
         B: Backend,
         D: DataProvider,
     {
-        todo!()
+        self.text_area.set_block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Jornal content"),
+        );
+
+        frame.render_widget(self.text_area.widget(), area);
     }
 }

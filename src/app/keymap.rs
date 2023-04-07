@@ -5,14 +5,14 @@ use super::commands::UICommand;
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq)]
 pub struct Input {
     pub key_code: KeyCode,
-    pub modmodifiers: KeyModifiers,
+    pub modifiers: KeyModifiers,
 }
 
 impl Input {
-    pub fn new(key_code: KeyCode, modmodifiers: KeyModifiers) -> Self {
+    pub fn new(key_code: KeyCode, modifiers: KeyModifiers) -> Self {
         Self {
             key_code,
-            modmodifiers,
+            modifiers,
         }
     }
 }
@@ -21,7 +21,7 @@ impl From<&KeyEvent> for Input {
     fn from(key_event: &KeyEvent) -> Self {
         Self {
             key_code: key_event.code.clone(),
-            modmodifiers: key_event.modifiers,
+            modifiers: key_event.modifiers,
         }
     }
 }

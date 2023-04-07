@@ -1,5 +1,7 @@
 use crate::data::DataProvider;
 
+use self::entry_content::EntryContent;
+
 use super::{
     commands::UICommand,
     keymap::{Input, Keymap},
@@ -28,7 +30,7 @@ pub enum ControlType {
 
 pub trait UIComponent<'a> {
     fn handle_input<D: DataProvider>(
-        &self,
+        &mut self,
         input: &Input,
         app: &'a mut App<D>,
     ) -> Result<HandleInputReturnType>;
@@ -42,13 +44,14 @@ pub trait UIComponent<'a> {
     );
 }
 
-pub struct UIComponents {
+pub struct UIComponents<'a> {
     pub global_keymaps: Vec<Keymap>,
     pub entries_list: EntriesList,
+    pub entry_content: EntryContent<'a>,
     pub active_control: ControlType,
 }
 
-impl<'a> UIComponents {
+impl<'a, 'b> UIComponents<'a> {
     pub fn new() -> Self {
         let global_keymaps = vec![
             Keymap::new(
@@ -69,11 +72,13 @@ impl<'a> UIComponents {
             ),
         ];
         let entries_list = EntriesList::new();
+        let entry_content = EntryContent::new();
         let active_control = ControlType::EntriesList;
         Self {
-            entries_list,
-            active_control,
             global_keymaps,
+            entries_list,
+            entry_content,
+            active_control,
         }
     }
 
@@ -93,7 +98,7 @@ impl<'a> UIComponents {
         }
     }
 
-    pub fn draw_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'a App<D>)
+    pub fn draw_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'b App<D>)
     where
         D: DataProvider,
         B: Backend,
@@ -104,6 +109,7 @@ impl<'a> UIComponents {
             .split(f.size());
 
         self.entries_list.render_widget(f, chunks[0], app);
+        self.entry_content.render_widget(f, chunks[1], app);
     }
 
     fn get_active_control(&mut self) -> &mut impl UIComponent {

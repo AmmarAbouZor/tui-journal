@@ -117,7 +117,7 @@ impl<'a> UIComponent<'a> for EntriesList {
     }
 
     fn handle_input<D: DataProvider>(
-        &self,
+        &mut self,
         input: &crate::app::keymap::Input,
         app: &'a mut crate::app::App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
