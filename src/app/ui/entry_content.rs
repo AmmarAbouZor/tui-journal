@@ -108,7 +108,7 @@ impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Jornal content"),
+                .title("Journal content"),
         );
 
         frame.render_widget(self.text_area.widget(), area);

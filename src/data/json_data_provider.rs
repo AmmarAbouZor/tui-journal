@@ -158,7 +158,7 @@ mod test {
     }
 
     #[test]
-    fn create_provider_with_default_entrie() {
+    fn create_provider_with_default_entries() {
         let temp_file = TempFile::new("json_create_default");
         let provider = create_provide_with_two_entries(temp_file.file_path.clone());
 
