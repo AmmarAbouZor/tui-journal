@@ -120,14 +120,6 @@ impl<'a, 'b> UIComponents<'a> {
         self.entry_content.render_widget(f, chunks[1], app);
     }
 
-    fn get_active_control(&mut self) -> &mut impl UIComponent {
-        match self.active_control {
-            ControlType::EntriesList => &mut self.entries_list,
-            ControlType::EntryContentTxt => todo!(),
-            ControlType::HelpPopup => todo!(),
-        }
-    }
-
     pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
@@ -147,24 +139,32 @@ impl<'a, 'b> UIComponents<'a> {
                     Ok(HandleInputReturnType::Handled)
                 }
                 UICommand::CycleFocusedControlForward => {
+                    self.set_control_is_active(self.active_control, false);
+
                     let next_control = match self.active_control {
                         ControlType::EntriesList => ControlType::EntryContentTxt,
                         ControlType::EntryContentTxt => ControlType::EntriesList,
                         ControlType::HelpPopup => ControlType::EntriesList,
                     };
 
-                    self.set_active_control(next_control);
+                    self.active_control = next_control;
+
+                    self.set_control_is_active(next_control, true);
 
                     Ok(HandleInputReturnType::Handled)
                 }
                 UICommand::CycleFocusedControlBack => {
+                    self.set_control_is_active(self.active_control, false);
+
                     let prev_control = match self.active_control {
                         ControlType::EntriesList => ControlType::EntryContentTxt,
                         ControlType::EntryContentTxt => ControlType::EntriesList,
                         ControlType::HelpPopup => ControlType::EntriesList,
                     };
 
-                    self.set_active_control(prev_control);
+                    self.active_control = prev_control;
+
+                    self.set_control_is_active(prev_control, true);
 
                     Ok(HandleInputReturnType::Handled)
                 }
@@ -172,23 +172,18 @@ impl<'a, 'b> UIComponents<'a> {
                 _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
             }
         } else {
-            let active_control = self.get_active_control();
-
-            active_control.handle_input(input, app)
+            match self.active_control {
+                ControlType::EntriesList => self.entries_list.handle_input(input, app),
+                ControlType::EntryContentTxt => self.entry_content.handle_input(input, app),
+                ControlType::HelpPopup => todo!(),
+            }
         }
     }
 
-    fn set_active_control(&mut self, control: ControlType) {
-        let current_active = self.get_active_control();
-        current_active.set_active(false);
-
-        // dbg!(control);
-        self.active_control = control;
-
-        dbg!(self.active_control);
+    fn set_control_is_active(&mut self, control: ControlType, is_active: bool) {
         match control {
-            ControlType::EntriesList => self.entries_list.set_active(true),
-            ControlType::EntryContentTxt => self.entry_content.set_active(true),
+            ControlType::EntriesList => self.entries_list.set_active(is_active),
+            ControlType::EntryContentTxt => self.entry_content.set_active(is_active),
             ControlType::HelpPopup => todo!(),
         }
     }
