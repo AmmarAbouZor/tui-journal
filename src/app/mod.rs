@@ -14,6 +14,7 @@ where
 {
     pub data_provide: D,
     pub entries: Vec<Entry>,
+    pub current_entry_id: Option<u32>,
 }
 
 impl<D> App<D>
@@ -25,6 +26,7 @@ where
         Self {
             data_provide,
             entries,
+            current_entry_id: None,
         }
     }
 
@@ -34,5 +36,9 @@ where
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
         Ok(())
+    }
+
+    pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
+        self.entries.iter().find(|e| e.id == entry_id)
     }
 }

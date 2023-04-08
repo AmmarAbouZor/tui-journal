@@ -33,7 +33,10 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     }
 
     let mut ui_components = UIComponents::new();
-    ui_components.set_current_entry(app.entries.last().and_then(|entry| Some(entry.id)), &app);
+    ui_components.set_current_entry(
+        app.entries.last().and_then(|entry| Some(entry.id)),
+        &mut app,
+    );
 
     loop {
         terminal.draw(|f| ui_components.draw_ui(f, &app))?;

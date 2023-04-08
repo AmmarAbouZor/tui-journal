@@ -53,6 +53,26 @@ impl<'a> EntryContent<'a> {
     }
 }
 
+impl<'a> EntryContent<'a> {
+    pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
+        let text_area = match entry_id {
+            Some(id) => {
+                if let Some(entry) = app.get_entry(id) {
+                    let lines = entry.content.lines().map(|line| line.to_owned()).collect();
+
+                    dbg!(&lines);
+                    TextArea::new(lines)
+                } else {
+                    TextArea::default()
+                }
+            }
+            None => TextArea::default(),
+        };
+
+        self.text_area = text_area;
+    }
+}
+
 impl From<&Input> for KeyEvent {
     fn from(value: &Input) -> Self {
         KeyEvent {

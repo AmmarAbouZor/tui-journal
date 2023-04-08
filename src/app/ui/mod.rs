@@ -94,19 +94,14 @@ impl<'a, 'b> UIComponents<'a> {
         }
     }
 
-    pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
+    pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
         if let Some(id) = entry_id {
+            app.current_entry_id = entry_id;
+
             let entry_index = app.entries.iter().position(|entry| entry.id == id);
-
             self.entries_list.state.select(entry_index);
-        }
-    }
 
-    pub fn get_current_entry_id<D: DataProvider>(&self, app: &App<D>) -> Option<u32> {
-        if let Some(index) = self.entries_list.state.selected() {
-            app.entries.get(index).and_then(|entry| Some(entry.id))
-        } else {
-            None
+            self.entry_content.set_current_entry(entry_id, app);
         }
     }
 
