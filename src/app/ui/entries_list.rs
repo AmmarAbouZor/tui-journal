@@ -18,6 +18,7 @@ use super::UIComponent;
 pub struct EntriesList {
     keymaps: Vec<Keymap>,
     pub state: ListState,
+    is_active: bool,
 }
 
 impl<'a> EntriesList {
@@ -67,6 +68,7 @@ impl<'a> EntriesList {
         Self {
             keymaps,
             state: ListState::default(),
+            is_active: false,
         }
     }
 
@@ -141,5 +143,9 @@ impl<'a> UIComponent<'a> for EntriesList {
         let entries_widget = self.get_widget(app);
 
         frame.render_stateful_widget(entries_widget, area, &mut self.state);
+    }
+
+    fn set_active(&mut self, active: bool) {
+        self.is_active = active;
     }
 }

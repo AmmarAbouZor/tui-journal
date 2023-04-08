@@ -23,6 +23,7 @@ pub struct EntryContent<'a> {
     keymaps: Vec<Keymap>,
     text_area: TextArea<'a>,
     // edit mode will be always on until I implement two modes for the editor
+    is_active: bool,
     pub is_edit_mode: bool,
 }
 
@@ -48,6 +49,7 @@ impl<'a> EntryContent<'a> {
         EntryContent {
             keymaps,
             text_area,
+            is_active: false,
             is_edit_mode: true,
         }
     }
@@ -59,8 +61,6 @@ impl<'a> EntryContent<'a> {
             Some(id) => {
                 if let Some(entry) = app.get_entry(id) {
                     let lines = entry.content.lines().map(|line| line.to_owned()).collect();
-
-                    dbg!(&lines);
                     TextArea::new(lines)
                 } else {
                     TextArea::default()
@@ -132,5 +132,9 @@ impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
         );
 
         frame.render_widget(self.text_area.widget(), area);
+    }
+
+    fn set_active(&mut self, active: bool) {
+        self.is_active = active;
     }
 }

@@ -21,9 +21,9 @@ mod entry_content;
 
 pub use entries_list::EntriesList;
 
+#[derive(Debug, Clone, Copy)]
 pub enum ControlType {
     EntriesList,
-    EntryNameTxt,
     EntryContentTxt,
     HelpPopup,
 }
@@ -42,6 +42,7 @@ pub trait UIComponent<'a> {
         area: Rect,
         app: &'a App<D>,
     );
+    fn set_active(&mut self, active: bool);
 }
 
 pub struct UIComponents<'a> {
@@ -67,7 +68,7 @@ impl<'a, 'b> UIComponents<'a> {
                 UICommand::CycleFocusedControlForward,
             ),
             Keymap::new(
-                Input::new(KeyCode::Tab, KeyModifiers::CONTROL),
+                Input::new(KeyCode::Tab, KeyModifiers::NONE),
                 UICommand::CycleFocusedControlForward,
             ),
             Keymap::new(
@@ -75,7 +76,7 @@ impl<'a, 'b> UIComponents<'a> {
                 UICommand::CycleFocusedControlBack,
             ),
             Keymap::new(
-                Input::new(KeyCode::Tab, KeyModifiers::CONTROL | KeyModifiers::SHIFT),
+                Input::new(KeyCode::BackTab, KeyModifiers::NONE),
                 UICommand::CycleFocusedControlBack,
             ),
             Keymap::new(
@@ -120,7 +121,11 @@ impl<'a, 'b> UIComponents<'a> {
     }
 
     fn get_active_control(&mut self) -> &mut impl UIComponent {
-        &mut self.entries_list
+        match self.active_control {
+            ControlType::EntriesList => &mut self.entries_list,
+            ControlType::EntryContentTxt => todo!(),
+            ControlType::HelpPopup => todo!(),
+        }
     }
 
     pub fn handle_input<D: DataProvider>(
@@ -141,15 +146,50 @@ impl<'a, 'b> UIComponents<'a> {
 
                     Ok(HandleInputReturnType::Handled)
                 }
-                UICommand::CycleFocusedControlForward => Ok(HandleInputReturnType::Handled),
-                UICommand::CycleFocusedControlBack => Ok(HandleInputReturnType::Handled),
-                UICommand::ReloadAll => Ok(HandleInputReturnType::Handled),
+                UICommand::CycleFocusedControlForward => {
+                    let next_control = match self.active_control {
+                        ControlType::EntriesList => ControlType::EntryContentTxt,
+                        ControlType::EntryContentTxt => ControlType::EntriesList,
+                        ControlType::HelpPopup => ControlType::EntriesList,
+                    };
+
+                    self.set_active_control(next_control);
+
+                    Ok(HandleInputReturnType::Handled)
+                }
+                UICommand::CycleFocusedControlBack => {
+                    let prev_control = match self.active_control {
+                        ControlType::EntriesList => ControlType::EntryContentTxt,
+                        ControlType::EntryContentTxt => ControlType::EntriesList,
+                        ControlType::HelpPopup => ControlType::EntriesList,
+                    };
+
+                    self.set_active_control(prev_control);
+
+                    Ok(HandleInputReturnType::Handled)
+                }
+                UICommand::ReloadAll => todo!(),
                 _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
             }
         } else {
             let active_control = self.get_active_control();
 
             active_control.handle_input(input, app)
+        }
+    }
+
+    fn set_active_control(&mut self, control: ControlType) {
+        let current_active = self.get_active_control();
+        current_active.set_active(false);
+
+        // dbg!(control);
+        self.active_control = control;
+
+        dbg!(self.active_control);
+        match control {
+            ControlType::EntriesList => self.entries_list.set_active(true),
+            ControlType::EntryContentTxt => self.entry_content.set_active(true),
+            ControlType::HelpPopup => todo!(),
         }
     }
 }
