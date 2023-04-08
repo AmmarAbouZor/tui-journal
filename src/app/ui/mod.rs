@@ -67,8 +67,20 @@ impl<'a, 'b> UIComponents<'a> {
                 UICommand::CycleFocusedControlForward,
             ),
             Keymap::new(
+                Input::new(KeyCode::Tab, KeyModifiers::CONTROL),
+                UICommand::CycleFocusedControlForward,
+            ),
+            Keymap::new(
                 Input::new(KeyCode::Char('k'), KeyModifiers::CONTROL),
                 UICommand::CycleFocusedControlBack,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Tab, KeyModifiers::CONTROL | KeyModifiers::SHIFT),
+                UICommand::CycleFocusedControlBack,
+            ),
+            Keymap::new(
+                Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
+                UICommand::ReloadAll,
             ),
         ];
         let entries_list = EntriesList::new();
@@ -134,6 +146,9 @@ impl<'a, 'b> UIComponents<'a> {
 
                     Ok(HandleInputReturnType::Handled)
                 }
+                UICommand::CycleFocusedControlForward => Ok(HandleInputReturnType::Handled),
+                UICommand::CycleFocusedControlBack => Ok(HandleInputReturnType::Handled),
+                UICommand::ReloadAll => Ok(HandleInputReturnType::Handled),
                 _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
             }
         } else {

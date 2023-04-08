@@ -63,10 +63,6 @@ impl<'a> EntriesList {
                 Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
                 UICommand::StartEditCurrentEntry,
             ),
-            Keymap::new(
-                Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
-                UICommand::ReloadAll,
-            ),
         ];
         Self {
             keymaps,
@@ -123,6 +119,8 @@ impl<'a> UIComponent<'a> for EntriesList {
     ) -> anyhow::Result<HandleInputReturnType> {
         if let Some(key) = self.keymaps.iter().find(|&c| &c.key == input) {
             match key.command {
+                UICommand::SelectedPrevEntry => {}
+                UICommand::SelectedNextEntry => {}
                 UICommand::CreateEntry => {}
                 UICommand::DeleteCurrentEntry => {}
                 UICommand::StartEditCurrentEntry => {}
