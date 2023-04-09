@@ -13,7 +13,7 @@ use crate::app::runner::HandleInputReturnType;
 use crate::app::App;
 use crate::data::DataProvider;
 
-use super::UIComponent;
+use super::{UIComponent, ACTIVE_CONTROL_COLOR};
 
 pub struct EntriesList {
     keymaps: Vec<Keymap>,
@@ -96,9 +96,18 @@ impl<'a> EntriesList {
             .collect();
 
         List::new(items)
-            .block(Block::default().borders(Borders::ALL).title("Journals"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Journals")
+                    .border_style(match self.is_active {
+                        true => Style::default().fg(ACTIVE_CONTROL_COLOR),
+                        false => Style::default(),
+                    }),
+            )
             .highlight_style(
                 Style::default()
+                    .fg(Color::Black)
                     .bg(Color::LightGreen)
                     .add_modifier(Modifier::BOLD),
             )

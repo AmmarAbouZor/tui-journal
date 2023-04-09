@@ -2,6 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifi
 use tui::{
     backend::Backend,
     layout::Rect,
+    style::Style,
     widgets::{Block, Borders},
     Frame,
 };
@@ -17,7 +18,7 @@ use crate::{
 };
 use tui_textarea::TextArea;
 
-use super::{ControlType, UIComponent};
+use super::{ControlType, UIComponent, ACTIVE_CONTROL_COLOR};
 
 pub struct EntryContent<'a> {
     keymaps: Vec<Keymap>,
@@ -128,6 +129,10 @@ impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_style(match self.is_active {
+                    true => Style::default().fg(ACTIVE_CONTROL_COLOR),
+                    false => Style::default(),
+                })
                 .title("Journal content"),
         );
 

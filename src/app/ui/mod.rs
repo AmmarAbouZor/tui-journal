@@ -13,6 +13,7 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
+    style::Color,
     Frame,
 };
 
@@ -21,6 +22,8 @@ mod entry_content;
 mod footer;
 
 pub use entries_list::EntriesList;
+
+pub const ACTIVE_CONTROL_COLOR: Color = Color::LightYellow;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ControlType {
@@ -85,9 +88,12 @@ impl<'a, 'b> UIComponents<'a> {
                 UICommand::ReloadAll,
             ),
         ];
-        let entries_list = EntriesList::new();
+        let mut entries_list = EntriesList::new();
         let entry_content = EntryContent::new();
+
         let active_control = ControlType::EntriesList;
+        entries_list.set_active(true);
+
         Self {
             global_keymaps,
             entries_list,
