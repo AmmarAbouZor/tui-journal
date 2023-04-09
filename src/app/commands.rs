@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UICommand {
     Quit,
     ShowHelp,
@@ -33,7 +33,7 @@ impl CommandInfo {
 }
 
 impl UICommand {
-    fn get_info(&self) -> CommandInfo {
+    pub fn get_info(&self) -> CommandInfo {
         match self {
             UICommand::Quit => CommandInfo::new("Exit", "Exit the program"),
             UICommand::ShowHelp => CommandInfo::new("Show help", "Show keybindings overview"),

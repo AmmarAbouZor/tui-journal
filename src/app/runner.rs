@@ -39,7 +39,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     );
 
     loop {
-        terminal.draw(|f| ui_components.draw_ui(f, &app))?;
+        terminal.draw(|f| ui_components.render_ui(f, &app))?;
 
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())

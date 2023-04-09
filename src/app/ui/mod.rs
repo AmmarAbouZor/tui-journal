@@ -1,6 +1,6 @@
 use crate::data::DataProvider;
 
-use self::entry_content::EntryContent;
+use self::{entry_content::EntryContent, footer::render_footer};
 
 use super::{
     commands::UICommand,
@@ -18,6 +18,7 @@ use tui::{
 
 mod entries_list;
 mod entry_content;
+mod footer;
 
 pub use entries_list::EntriesList;
 
@@ -106,18 +107,25 @@ impl<'a, 'b> UIComponents<'a> {
         }
     }
 
-    pub fn draw_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'b App<D>)
+    pub fn render_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'b App<D>)
     where
         D: DataProvider,
         B: Backend,
     {
         let chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(2), Constraint::Length(1)].as_ref())
             .split(f.size());
 
-        self.entries_list.render_widget(f, chunks[0], app);
-        self.entry_content.render_widget(f, chunks[1], app);
+        render_footer(f, chunks[1], &self.global_keymaps);
+
+        let entries_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+            .split(chunks[0]);
+
+        self.entries_list.render_widget(f, entries_chunks[0], app);
+        self.entry_content.render_widget(f, entries_chunks[1], app);
     }
 
     pub fn handle_input<D: DataProvider>(
