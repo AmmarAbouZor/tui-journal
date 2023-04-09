@@ -108,46 +108,7 @@ impl<'a, 'b> UIComponents<'a> {
             .find(|keymap| keymap.key == *input)
             .and_then(|keymap| Some(keymap.command))
         {
-            match cmd {
-                UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
-                UICommand::ShowHelp => {
-                    // TODO: show help
-
-                    Ok(HandleInputReturnType::Handled)
-                }
-                UICommand::CycleFocusedControlForward => {
-                    self.set_control_is_active(self.active_control, false);
-
-                    let next_control = match self.active_control {
-                        ControlType::EntriesList => ControlType::EntryContentTxt,
-                        ControlType::EntryContentTxt => ControlType::EntriesList,
-                        ControlType::HelpPopup => ControlType::EntriesList,
-                    };
-
-                    self.active_control = next_control;
-
-                    self.set_control_is_active(next_control, true);
-
-                    Ok(HandleInputReturnType::Handled)
-                }
-                UICommand::CycleFocusedControlBack => {
-                    self.set_control_is_active(self.active_control, false);
-
-                    let prev_control = match self.active_control {
-                        ControlType::EntriesList => ControlType::EntryContentTxt,
-                        ControlType::EntryContentTxt => ControlType::EntriesList,
-                        ControlType::HelpPopup => ControlType::EntriesList,
-                    };
-
-                    self.active_control = prev_control;
-
-                    self.set_control_is_active(prev_control, true);
-
-                    Ok(HandleInputReturnType::Handled)
-                }
-                UICommand::ReloadAll => todo!(),
-                _ => unreachable!("command '{:?}' is not implemented in global keymaps", cmd),
-            }
+            self.execute_global_command(cmd, app)
         } else {
             match self.active_control {
                 ControlType::EntriesList => {
@@ -176,6 +137,56 @@ impl<'a, 'b> UIComponents<'a> {
             ControlType::EntriesList => self.entries_list.set_active(is_active),
             ControlType::EntryContentTxt => self.entry_content.set_active(is_active),
             ControlType::HelpPopup => todo!(),
+        }
+    }
+
+    fn execute_global_command<D: DataProvider>(
+        &mut self,
+        command: UICommand,
+        app: &mut App<D>,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        match command {
+            UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
+            UICommand::ShowHelp => {
+                // TODO: show help
+
+                Ok(HandleInputReturnType::Handled)
+            }
+            UICommand::CycleFocusedControlForward => {
+                self.set_control_is_active(self.active_control, false);
+
+                let next_control = match self.active_control {
+                    ControlType::EntriesList => ControlType::EntryContentTxt,
+                    ControlType::EntryContentTxt => ControlType::EntriesList,
+                    ControlType::HelpPopup => ControlType::EntriesList,
+                };
+
+                self.active_control = next_control;
+
+                self.set_control_is_active(next_control, true);
+
+                Ok(HandleInputReturnType::Handled)
+            }
+            UICommand::CycleFocusedControlBack => {
+                self.set_control_is_active(self.active_control, false);
+
+                let prev_control = match self.active_control {
+                    ControlType::EntriesList => ControlType::EntryContentTxt,
+                    ControlType::EntryContentTxt => ControlType::EntriesList,
+                    ControlType::HelpPopup => ControlType::EntriesList,
+                };
+
+                self.active_control = prev_control;
+
+                self.set_control_is_active(prev_control, true);
+
+                Ok(HandleInputReturnType::Handled)
+            }
+            UICommand::ReloadAll => todo!(),
+            _ => unreachable!(
+                "command '{:?}' is not implemented in global keymaps",
+                command
+            ),
         }
     }
 }
