@@ -61,7 +61,7 @@ impl<'a, 'b> UIComponents<'a> {
                 UICommand::Quit,
             ),
             Keymap::new(
-                Input::new(KeyCode::Char('?'), KeyModifiers::SHIFT),
+                Input::new(KeyCode::Char('?'), KeyModifiers::CONTROL),
                 UICommand::ShowHelp,
             ),
             Keymap::new(

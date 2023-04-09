@@ -22,6 +22,7 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, global_keymap
 
     let spans = Spans::from(vec![
         get_keymap_spans(&close_keymap),
+        Span::raw(" | "),
         get_keymap_spans(&help_keymap),
     ]);
 
@@ -36,7 +37,7 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, global_keymap
 
 fn get_keymap_spans(keymap: &Keymap) -> Span {
     Span::styled(
-        format!("<C-{:?}> : {}", keymap.key, keymap.command.get_info().name),
+        format!("{}: {}", keymap.command.get_info().name, keymap.key),
         Style::default(),
     )
 }
