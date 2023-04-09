@@ -4,15 +4,17 @@ use self::{entry_content::EntryContent, footer::render_footer};
 
 use super::{
     commands::UICommand,
-    keymap::{Input, Keymap},
+    keymap::{
+        get_entries_list_keymaps, get_entry_content_keymaps, get_global_keymaps, Input, Keymap,
+    },
     runner::HandleInputReturnType,
     App,
 };
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyModifiers};
+
 use tui::{
     backend::Backend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     style::Color,
     Frame,
 };
@@ -33,7 +35,9 @@ pub enum ControlType {
 }
 
 pub struct UIComponents<'a> {
-    pub global_keymaps: Vec<Keymap>,
+    global_keymaps: Vec<Keymap>,
+    entries_list_keymaps: Vec<Keymap>,
+    entry_content_keymaps: Vec<Keymap>,
     pub entries_list: EntriesList,
     pub entry_content: EntryContent<'a>,
     pub active_control: ControlType,
@@ -41,36 +45,9 @@ pub struct UIComponents<'a> {
 
 impl<'a, 'b> UIComponents<'a> {
     pub fn new() -> Self {
-        let global_keymaps = vec![
-            Keymap::new(
-                Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
-                UICommand::Quit,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Char('?'), KeyModifiers::CONTROL),
-                UICommand::ShowHelp,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Char('j'), KeyModifiers::CONTROL),
-                UICommand::CycleFocusedControlForward,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Tab, KeyModifiers::NONE),
-                UICommand::CycleFocusedControlForward,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Char('k'), KeyModifiers::CONTROL),
-                UICommand::CycleFocusedControlBack,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::BackTab, KeyModifiers::NONE),
-                UICommand::CycleFocusedControlBack,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
-                UICommand::ReloadAll,
-            ),
-        ];
+        let global_keymaps = get_global_keymaps();
+        let entries_list_keymaps = get_entries_list_keymaps();
+        let entry_content_keymaps = get_entry_content_keymaps();
         let mut entries_list = EntriesList::new();
         let entry_content = EntryContent::new();
 
@@ -79,6 +56,8 @@ impl<'a, 'b> UIComponents<'a> {
 
         Self {
             global_keymaps,
+            entries_list_keymaps,
+            entry_content_keymaps,
             entries_list,
             entry_content,
             active_control,
@@ -171,8 +150,22 @@ impl<'a, 'b> UIComponents<'a> {
             }
         } else {
             match self.active_control {
-                ControlType::EntriesList => self.entries_list.handle_input(input, app),
-                ControlType::EntryContentTxt => self.entry_content.handle_input(input, app),
+                ControlType::EntriesList => {
+                    if let Some(key) = self.entries_list_keymaps.iter().find(|c| &c.key == input) {
+                        entries_list::execute_command(key.command, self, app)?;
+                        Ok(HandleInputReturnType::Handled)
+                    } else {
+                        Ok(HandleInputReturnType::NotFound)
+                    }
+                }
+                ControlType::EntryContentTxt => {
+                    if let Some(key) = self.entry_content_keymaps.iter().find(|c| &c.key == input) {
+                        entry_content::execute_command(key.command, self, app)?;
+                        Ok(HandleInputReturnType::Handled)
+                    } else {
+                        self.entry_content.handle_input(input)
+                    }
+                }
                 ControlType::HelpPopup => todo!(),
             }
         }

@@ -83,3 +83,98 @@ impl Keymap {
         Self { key, command }
     }
 }
+
+pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
+    vec![
+        Keymap::new(
+            Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
+            UICommand::Quit,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('?'), KeyModifiers::CONTROL),
+            UICommand::ShowHelp,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('j'), KeyModifiers::CONTROL),
+            UICommand::CycleFocusedControlForward,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Tab, KeyModifiers::NONE),
+            UICommand::CycleFocusedControlForward,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('k'), KeyModifiers::CONTROL),
+            UICommand::CycleFocusedControlBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::BackTab, KeyModifiers::NONE),
+            UICommand::CycleFocusedControlBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
+            UICommand::ReloadAll,
+        ),
+    ]
+}
+
+pub fn get_entries_list_keymaps() -> Vec<Keymap> {
+    vec![
+        Keymap::new(
+            Input::new(KeyCode::Up, KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('k'), KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Down, KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('j'), KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+            UICommand::CreateEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+            UICommand::CreateEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Delete, KeyModifiers::NONE),
+            UICommand::DeleteCurrentEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
+            UICommand::DeleteCurrentEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Enter, KeyModifiers::NONE),
+            UICommand::StartEditCurrentEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
+            UICommand::StartEditCurrentEntry,
+        ),
+    ]
+}
+
+pub(crate) fn get_entry_content_keymaps() -> Vec<Keymap> {
+    vec![
+        Keymap::new(
+            Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
+            UICommand::SaveEntryContent,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
+            UICommand::DiscardChangesEntryContent,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Esc, KeyModifiers::NONE),
+            UICommand::FinishEditEntryContent,
+        ),
+    ]
+}

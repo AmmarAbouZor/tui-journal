@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
+use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
 use tui::{
     backend::Backend,
     layout::Rect,
@@ -8,20 +8,17 @@ use tui::{
 };
 
 use crate::{
-    app::{
-        commands::UICommand,
-        keymap::{Input, Keymap},
-        runner::HandleInputReturnType,
-        App,
-    },
+    app::{keymap::Input, runner::HandleInputReturnType, App},
     data::DataProvider,
 };
 use tui_textarea::TextArea;
 
 use super::{ControlType, ACTIVE_CONTROL_COLOR};
 
+mod command_actions;
+pub(crate) use command_actions::execute_command;
+
 pub struct EntryContent<'a> {
-    keymaps: Vec<Keymap>,
     text_area: TextArea<'a>,
     // edit mode will be always on until I implement two modes for the editor
     is_active: bool,
@@ -41,25 +38,9 @@ impl From<&Input> for KeyEvent {
 
 impl<'a, 'b> EntryContent<'a> {
     pub fn new() -> EntryContent<'a> {
-        let keymaps = vec![
-            Keymap::new(
-                Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
-                UICommand::SaveEntryContent,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
-                UICommand::DiscardChangesEntryContent,
-            ),
-            Keymap::new(
-                Input::new(KeyCode::Esc, KeyModifiers::NONE),
-                UICommand::FinishEditEntryContent,
-            ),
-        ];
-
         let text_area = TextArea::default();
 
         EntryContent {
-            keymaps,
             text_area,
             is_active: false,
             is_edit_mode: true,
@@ -82,23 +63,8 @@ impl<'a, 'b> EntryContent<'a> {
         self.text_area = text_area;
     }
 
-    pub fn handle_input<D: DataProvider>(
-        &mut self,
-        input: &Input,
-        app: &'b mut App<D>,
-    ) -> anyhow::Result<HandleInputReturnType> {
-        if let Some(key) = self.keymaps.iter().find(|c| &c.key == input) {
-            match key.command {
-                UICommand::SaveEntryContent => {}
-                UICommand::DiscardChangesEntryContent => {}
-                UICommand::FinishEditEntryContent => {}
-                _ => unreachable!(
-                    "{:?} is not implemented for entry content text box",
-                    key.command
-                ),
-            }
-            Ok(HandleInputReturnType::Handled)
-        } else if self.is_edit_mode {
+    pub fn handle_input(&mut self, input: &Input) -> anyhow::Result<HandleInputReturnType> {
+        if self.is_edit_mode {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
@@ -107,10 +73,6 @@ impl<'a, 'b> EntryContent<'a> {
             //TODO: Implement vim normal modes shortcuts
             Ok(HandleInputReturnType::NotFound)
         }
-    }
-
-    fn get_keymaps(&self) -> &[Keymap] {
-        &self.keymaps
     }
 
     fn get_type(&self) -> super::ControlType {
