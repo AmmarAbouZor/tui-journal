@@ -32,23 +32,6 @@ pub enum ControlType {
     HelpPopup,
 }
 
-pub trait UIComponent<'a> {
-    fn handle_input<D: DataProvider>(
-        &mut self,
-        input: &Input,
-        app: &'a mut App<D>,
-    ) -> Result<HandleInputReturnType>;
-    fn get_keymaps(&self) -> &[Keymap];
-    fn get_type(&self) -> ControlType;
-    fn render_widget<B: Backend, D: DataProvider>(
-        &mut self,
-        frame: &mut Frame<B>,
-        area: Rect,
-        app: &'a App<D>,
-    );
-    fn set_active(&mut self, active: bool);
-}
-
 pub struct UIComponents<'a> {
     pub global_keymaps: Vec<Keymap>,
     pub entries_list: EntriesList,
@@ -130,7 +113,8 @@ impl<'a, 'b> UIComponents<'a> {
             .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
             .split(chunks[0]);
 
-        self.entries_list.render_widget(f, entries_chunks[0], app);
+        self.entries_list
+            .render_widget(f, entries_chunks[0], &app.entries);
         self.entry_content.render_widget(f, entries_chunks[1], app);
     }
 

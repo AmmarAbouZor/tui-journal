@@ -18,7 +18,7 @@ use crate::{
 };
 use tui_textarea::TextArea;
 
-use super::{ControlType, UIComponent, ACTIVE_CONTROL_COLOR};
+use super::{ControlType, ACTIVE_CONTROL_COLOR};
 
 pub struct EntryContent<'a> {
     keymaps: Vec<Keymap>,
@@ -28,7 +28,18 @@ pub struct EntryContent<'a> {
     pub is_edit_mode: bool,
 }
 
-impl<'a> EntryContent<'a> {
+impl From<&Input> for KeyEvent {
+    fn from(value: &Input) -> Self {
+        KeyEvent {
+            code: value.key_code,
+            modifiers: value.modifiers,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::NONE,
+        }
+    }
+}
+
+impl<'a, 'b> EntryContent<'a> {
     pub fn new() -> EntryContent<'a> {
         let keymaps = vec![
             Keymap::new(
@@ -54,9 +65,7 @@ impl<'a> EntryContent<'a> {
             is_edit_mode: true,
         }
     }
-}
 
-impl<'a> EntryContent<'a> {
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
         let text_area = match entry_id {
             Some(id) => {
@@ -72,21 +81,8 @@ impl<'a> EntryContent<'a> {
 
         self.text_area = text_area;
     }
-}
 
-impl From<&Input> for KeyEvent {
-    fn from(value: &Input) -> Self {
-        KeyEvent {
-            code: value.key_code,
-            modifiers: value.modifiers,
-            kind: KeyEventKind::Press,
-            state: KeyEventState::NONE,
-        }
-    }
-}
-
-impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
-    fn handle_input<D: DataProvider>(
+    pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &'b mut App<D>,
@@ -121,7 +117,7 @@ impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
         ControlType::EntryContentTxt
     }
 
-    fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, app: &'b App<D>)
+    pub fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, app: &'b App<D>)
     where
         B: Backend,
         D: DataProvider,
@@ -139,7 +135,7 @@ impl<'a, 'b> UIComponent<'b> for EntryContent<'a> {
         frame.render_widget(self.text_area.widget(), area);
     }
 
-    fn set_active(&mut self, active: bool) {
+    pub fn set_active(&mut self, active: bool) {
         self.is_active = active;
     }
 }

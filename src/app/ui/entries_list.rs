@@ -11,9 +11,9 @@ use crate::app::commands::UICommand;
 use crate::app::keymap::{Input, Keymap};
 use crate::app::runner::HandleInputReturnType;
 use crate::app::App;
-use crate::data::DataProvider;
+use crate::data::{DataProvider, Entry};
 
-use super::{UIComponent, ACTIVE_CONTROL_COLOR};
+use super::ACTIVE_CONTROL_COLOR;
 
 pub struct EntriesList {
     keymaps: Vec<Keymap>,
@@ -72,9 +72,8 @@ impl<'a> EntriesList {
         }
     }
 
-    fn get_widget<D: DataProvider>(&self, app: &'a App<D>) -> List<'a> {
-        let items: Vec<ListItem> = app
-            .entries
+    pub fn get_widget(&self, entries: &'a [Entry]) -> List<'a> {
+        let items: Vec<ListItem> = entries
             .iter()
             .map(|entry| {
                 let spans = Spans::from(vec![
@@ -113,17 +112,15 @@ impl<'a> EntriesList {
             )
             .highlight_symbol(">> ")
     }
-}
 
-impl<'a> UIComponent<'a> for EntriesList {
-    fn get_keymaps(&self) -> &[Keymap] {
+    pub fn get_keymaps(&self) -> &[Keymap] {
         &self.keymaps
     }
-    fn get_type(&self) -> super::ControlType {
+    pub fn get_type(&self) -> super::ControlType {
         super::ControlType::EntriesList
     }
 
-    fn handle_input<D: DataProvider>(
+    pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &crate::app::keymap::Input,
         app: &'a mut crate::app::App<D>,
@@ -143,18 +140,18 @@ impl<'a> UIComponent<'a> for EntriesList {
         }
     }
 
-    fn render_widget<B: Backend, D: DataProvider>(
+    pub fn render_widget<B: Backend>(
         &mut self,
         frame: &mut Frame<B>,
         area: Rect,
-        app: &'a App<D>,
+        entries: &'a [Entry],
     ) {
-        let entries_widget = self.get_widget(app);
+        let entries_widget = self.get_widget(entries);
 
         frame.render_stateful_widget(entries_widget, area, &mut self.state);
     }
 
-    fn set_active(&mut self, active: bool) {
+    pub fn set_active(&mut self, active: bool) {
         self.is_active = active;
     }
 }
