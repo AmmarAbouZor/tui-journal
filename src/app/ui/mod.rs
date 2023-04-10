@@ -1,6 +1,6 @@
 use crate::data::DataProvider;
 
-use self::{entry_content::EntryContent, footer::render_footer};
+use self::{entry_content::EntryContent, footer::render_footer, help_popup::render_help_popup};
 
 use super::{
     commands::UICommand,
@@ -22,6 +22,8 @@ use tui::{
 mod entries_list;
 mod entry_content;
 mod footer;
+mod help_popup;
+mod ui_functions;
 
 pub use entries_list::EntriesList;
 
@@ -41,6 +43,7 @@ pub struct UIComponents<'a> {
     pub entries_list: EntriesList,
     pub entry_content: EntryContent<'a>,
     pub active_control: ControlType,
+    show_help_popup: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -61,7 +64,12 @@ impl<'a, 'b> UIComponents<'a> {
             entries_list,
             entry_content,
             active_control,
+            show_help_popup: false,
         }
+    }
+
+    pub fn has_popup(&self) -> bool {
+        self.show_help_popup
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
@@ -95,6 +103,10 @@ impl<'a, 'b> UIComponents<'a> {
         self.entries_list
             .render_widget(f, entries_chunks[0], &app.entries);
         self.entry_content.render_widget(f, entries_chunks[1], app);
+
+        if self.show_help_popup {
+            render_help_popup(f, f.size(), self);
+        }
     }
 
     pub fn handle_input<D: DataProvider>(
@@ -102,6 +114,21 @@ impl<'a, 'b> UIComponents<'a> {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
+        if self.has_popup() {
+            match self.active_control {
+                ControlType::EntriesList | ControlType::EntryContentTxt => {
+                    unreachable!("{:?} is not an popup control", self.active_control)
+                }
+                ControlType::HelpPopup => {
+                    // Close the help pop up on anykey
+                    self.show_help_popup = false;
+                    self.active_control = ControlType::EntriesList;
+                    self.set_control_is_active(ControlType::EntriesList, true);
+                    return Ok(HandleInputReturnType::Handled);
+                }
+            }
+        }
+
         if let Some(cmd) = self
             .global_keymaps
             .iter()
@@ -148,7 +175,9 @@ impl<'a, 'b> UIComponents<'a> {
         match command {
             UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
             UICommand::ShowHelp => {
-                // TODO: show help
+                self.set_control_is_active(self.active_control, false);
+                self.show_help_popup = true;
+                self.active_control = ControlType::HelpPopup;
 
                 Ok(HandleInputReturnType::Handled)
             }

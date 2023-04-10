@@ -91,7 +91,7 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::Quit,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('?'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('?'), KeyModifiers::ALT),
             UICommand::ShowHelp,
         ),
         Keymap::new(

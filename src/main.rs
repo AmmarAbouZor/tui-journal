@@ -35,6 +35,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Clean up the terminal properly if the program panics
 fn chain_panic_hook() {
     let original_hook = std::panic::take_hook();
 
