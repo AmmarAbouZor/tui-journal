@@ -13,12 +13,12 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, global_keymap
     let close_keymap = global_keymaps
         .iter()
         .find(|keymap| keymap.command == UICommand::Quit)
-        .expect("Quit command must be in glabal commands");
+        .expect("Quit command must be in global commands");
 
     let help_keymap = global_keymaps
         .iter()
         .find(|keymap| keymap.command == UICommand::ShowHelp)
-        .expect("ShowHelp command must be in glabal commands");
+        .expect("ShowHelp command must be in global commands");
 
     let spans = Spans::from(vec![
         get_keymap_spans(&close_keymap),
