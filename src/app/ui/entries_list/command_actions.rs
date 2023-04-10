@@ -11,7 +11,7 @@ pub(crate) fn execute_command<D: DataProvider>(
     match command {
         UICommand::SelectedPrevEntry => select_prev_entry(ui_components, app),
         UICommand::SelectedNextEntry => select_next_entry(ui_components, app),
-        UICommand::CreateEntry => {}
+        UICommand::CreateEntry => todo!(),
         UICommand::DeleteCurrentEntry => {}
         UICommand::StartEditCurrentEntry => {}
         _ => unreachable!("{:?} is not implemented for entries list", command),

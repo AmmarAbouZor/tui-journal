@@ -18,6 +18,8 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    chain_panic_hook();
+
     let tick_rate = Duration::from_millis(250);
     app::run(&mut terminal, tick_rate)?;
 
@@ -31,4 +33,14 @@ fn main() -> Result<()> {
     terminal.show_cursor()?;
 
     Ok(())
+}
+
+fn chain_panic_hook() {
+    let original_hook = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |panic| {
+        disable_raw_mode().unwrap();
+        execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture).unwrap();
+        original_hook(panic);
+    }));
 }
