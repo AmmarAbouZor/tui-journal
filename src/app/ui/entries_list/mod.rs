@@ -32,19 +32,21 @@ impl<'a> EntriesList {
         let items: Vec<ListItem> = entries
             .iter()
             .map(|entry| {
-                let spans = Spans::from(vec![
-                    Span::from(entry.title.as_str()),
-                    Span::raw(" "),
-                    Span::styled(
+                let spans = vec![
+                    Spans::from(Span::styled(
+                        entry.title.as_str(),
+                        Style::default().add_modifier(Modifier::BOLD),
+                    )),
+                    Spans::from(Span::styled(
                         format!(
-                            "{}, {}, {}",
+                            "{},{},{}",
                             entry.date.day(),
                             entry.date.month(),
                             entry.date.year()
                         ),
-                        Style::default().add_modifier(Modifier::ITALIC),
-                    ),
-                ]);
+                        Style::default().add_modifier(Modifier::DIM),
+                    )),
+                ];
 
                 ListItem::new(spans)
             })

@@ -3,12 +3,18 @@
     "id": 0,
     "date": "2023-04-02T20:09:33.083299993Z",
     "title": "Test Title 1",
-    "content": "cotnent of title 1"
+    "content": "content of title 1"
   },
   {
     "id": 1,
     "date": "2023-04-01T20:09:33.083486237Z",
     "title": "Test Title 2",
     "content": "content of title 2"
+  },
+  {
+    "id": 2,
+    "date": "2023-04-05T20:09:33.083486237Z",
+    "title": "Test Title 3",
+    "content": "Content of Journal 3"
   }
 ]
