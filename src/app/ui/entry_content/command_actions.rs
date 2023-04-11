@@ -5,8 +5,8 @@ use crate::{
 
 pub(crate) fn execute_command<D: DataProvider>(
     command: UICommand,
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
+    _ui_components: &mut UIComponents,
+    _app: &mut App<D>,
 ) -> anyhow::Result<()> {
     match command {
         UICommand::SaveEntryContent => {}

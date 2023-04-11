@@ -71,10 +71,6 @@ impl<'a> EntriesList {
             .highlight_symbol(">> ")
     }
 
-    pub fn get_type(&self) -> super::ControlType {
-        super::ControlType::EntriesList
-    }
-
     pub fn render_widget<B: Backend>(
         &mut self,
         frame: &mut Frame<B>,

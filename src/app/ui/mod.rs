@@ -170,7 +170,7 @@ impl<'a, 'b> UIComponents<'a> {
     fn execute_global_command<D: DataProvider>(
         &mut self,
         command: UICommand,
-        app: &mut App<D>,
+        _app: &mut App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
         match command {
             UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
@@ -217,5 +217,13 @@ impl<'a, 'b> UIComponents<'a> {
                 command
             ),
         }
+    }
+
+    fn get_all_keymaps(&self) -> impl Iterator<Item = &Keymap> {
+        let global_maps = self.global_keymaps.iter();
+        let list_maps = self.entries_list_keymaps.iter();
+        let content_maps = self.entry_content_keymaps.iter();
+
+        global_maps.chain(list_maps).chain(content_maps)
     }
 }

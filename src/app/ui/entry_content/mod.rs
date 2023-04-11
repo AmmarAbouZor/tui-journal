@@ -13,7 +13,7 @@ use crate::{
 };
 use tui_textarea::TextArea;
 
-use super::{ControlType, ACTIVE_CONTROL_COLOR};
+use super::ACTIVE_CONTROL_COLOR;
 
 mod command_actions;
 pub(crate) use command_actions::execute_command;
@@ -75,11 +75,7 @@ impl<'a, 'b> EntryContent<'a> {
         }
     }
 
-    fn get_type(&self) -> super::ControlType {
-        ControlType::EntryContentTxt
-    }
-
-    pub fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, app: &'b App<D>)
+    pub fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, _app: &'b App<D>)
     where
         B: Backend,
         D: DataProvider,

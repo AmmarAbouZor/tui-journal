@@ -28,7 +28,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     let json_provider = JsonDataProvide::new(temp_path);
 
     let mut app = App::new(json_provider);
-    if let Err(info) = app.load_entries() {
+    if let Err(_info) = app.load_entries() {
         // TODO: handle error message with notify service
     }
 

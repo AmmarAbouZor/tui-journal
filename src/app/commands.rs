@@ -37,14 +37,12 @@ impl UICommand {
         match self {
             UICommand::Quit => CommandInfo::new("Exit", "Exit the program"),
             UICommand::ShowHelp => CommandInfo::new("Show help", "Show keybindings overview"),
-            UICommand::CycleFocusedControlForward => CommandInfo::new(
-                "Cycle focused control forward",
-                "Move focus to the next control",
-            ),
-            UICommand::CycleFocusedControlBack => CommandInfo::new(
-                "Cycle focused control backward",
-                "Move focus to the previous control",
-            ),
+            UICommand::CycleFocusedControlForward => {
+                CommandInfo::new("Cycle focus forward", "Move focus to the next control")
+            }
+            UICommand::CycleFocusedControlBack => {
+                CommandInfo::new("Cycle focus backward", "Move focus to the previous control")
+            }
             UICommand::SelectedNextEntry => {
                 CommandInfo::new("Select next entry", "Select next entry in the entry list")
             }
