@@ -22,8 +22,8 @@ pub(crate) fn execute_command<D: DataProvider>(
 }
 
 fn run_finish_editing(ui_components: &mut UIComponents) {
-    assert!(ui_components.active_control == ControlType::EntryContentTxt);
-    assert!(ui_components.is_editor_mode);
-
-    ui_components.is_editor_mode = false;
+    if ui_components.active_control == ControlType::EntryContentTxt && ui_components.is_editor_mode
+    {
+        ui_components.is_editor_mode = false;
+    }
 }

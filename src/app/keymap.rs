@@ -87,15 +87,15 @@ impl Keymap {
 pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
-            Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('q'), KeyModifiers::NONE),
             UICommand::Quit,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('?'), KeyModifiers::ALT),
+            Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
             UICommand::ShowHelp,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('j'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('l'), KeyModifiers::CONTROL),
             UICommand::CycleFocusedControlForward,
         ),
         Keymap::new(
@@ -103,7 +103,7 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::CycleFocusedControlForward,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('k'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('h'), KeyModifiers::CONTROL),
             UICommand::CycleFocusedControlBack,
         ),
         Keymap::new(
@@ -144,10 +144,6 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             UICommand::CreateEntry,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
-            UICommand::CreateEntry,
-        ),
-        Keymap::new(
             Input::new(KeyCode::Delete, KeyModifiers::NONE),
             UICommand::DeleteCurrentEntry,
         ),
@@ -165,7 +161,7 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
 pub(crate) fn get_entry_content_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
-            Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('s'), KeyModifiers::CONTROL),
             UICommand::SaveEntryContent,
         ),
         Keymap::new(

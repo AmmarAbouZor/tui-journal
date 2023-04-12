@@ -10,6 +10,7 @@ use tui::Frame;
 use crate::data::Entry;
 
 use super::ACTIVE_CONTROL_COLOR;
+use super::INACTIVE_CONTROL_COLOR;
 
 mod command_actions;
 
@@ -59,7 +60,7 @@ impl<'a> EntriesList {
                     .title("Journals")
                     .border_style(match self.is_active {
                         true => Style::default().fg(ACTIVE_CONTROL_COLOR),
-                        false => Style::default(),
+                        false => Style::default().fg(INACTIVE_CONTROL_COLOR),
                     }),
             )
             .highlight_style(

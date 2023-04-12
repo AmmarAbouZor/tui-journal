@@ -27,7 +27,9 @@ mod ui_functions;
 
 pub use entries_list::EntriesList;
 
-pub const ACTIVE_CONTROL_COLOR: Color = Color::LightYellow;
+pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
+pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(150, 150, 180);
+pub const EDITOR_MODE_COLOR: Color = Color::LightYellow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -104,7 +106,8 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.entries_list
             .render_widget(f, entries_chunks[0], &app.entries);
-        self.entry_content.render_widget(f, entries_chunks[1], app);
+        self.entry_content
+            .render_widget(f, entries_chunks[1], self.is_editor_mode);
 
         if self.show_help_popup {
             render_help_popup(f, f.size(), self);

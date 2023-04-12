@@ -2,7 +2,7 @@ use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
 use tui::{
     backend::Backend,
     layout::Rect,
-    style::Style,
+    style::{Color, Style},
     widgets::{Block, Borders},
     Frame,
 };
@@ -14,6 +14,8 @@ use crate::{
 use tui_textarea::TextArea;
 
 use super::ACTIVE_CONTROL_COLOR;
+use super::EDITOR_MODE_COLOR;
+use super::INACTIVE_CONTROL_COLOR;
 
 mod command_actions;
 pub(crate) use command_actions::execute_command;
@@ -76,20 +78,25 @@ impl<'a, 'b> EntryContent<'a> {
         }
     }
 
-    pub fn render_widget<B, D>(&mut self, frame: &mut Frame<B>, area: Rect, _app: &'b App<D>)
+    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_editor_mode: bool)
     where
         B: Backend,
-        D: DataProvider,
     {
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(match self.is_active {
-                    true => Style::default().fg(ACTIVE_CONTROL_COLOR),
-                    false => Style::default(),
+                .style(match (self.is_active, is_editor_mode) {
+                    (_, true) => Style::default().fg(EDITOR_MODE_COLOR),
+                    (true, false) => Style::default().fg(ACTIVE_CONTROL_COLOR),
+                    (false, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
                 })
                 .title("Journal content"),
         );
+
+        self.text_area.set_cursor_style(match is_editor_mode {
+            true => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
+            false => Style::default().bg(Color::White).fg(Color::Black),
+        });
 
         frame.render_widget(self.text_area.widget(), area);
     }
