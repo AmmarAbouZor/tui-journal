@@ -30,13 +30,21 @@ impl<'a> EntriesList {
     }
 
     pub fn get_widget(&self, entries: &'a [Entry]) -> List<'a> {
+        let (foreground_color, highlight_bg) = if self.is_active {
+            (ACTIVE_CONTROL_COLOR, Color::LightGreen)
+        } else {
+            (INACTIVE_CONTROL_COLOR, Color::LightBlue)
+        };
+
         let items: Vec<ListItem> = entries
             .iter()
             .map(|entry| {
                 let spans = vec![
                     Spans::from(Span::styled(
                         entry.title.as_str(),
-                        Style::default().add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(foreground_color)
+                            .add_modifier(Modifier::BOLD),
                     )),
                     Spans::from(Span::styled(
                         format!(
@@ -45,7 +53,9 @@ impl<'a> EntriesList {
                             entry.date.month(),
                             entry.date.year()
                         ),
-                        Style::default().add_modifier(Modifier::DIM),
+                        Style::default()
+                            .fg(foreground_color)
+                            .add_modifier(Modifier::DIM),
                     )),
                 ];
 
@@ -59,14 +69,16 @@ impl<'a> EntriesList {
                     .borders(Borders::ALL)
                     .title("Journals")
                     .border_style(match self.is_active {
-                        true => Style::default().fg(ACTIVE_CONTROL_COLOR),
+                        true => Style::default()
+                            .fg(ACTIVE_CONTROL_COLOR)
+                            .add_modifier(Modifier::BOLD),
                         false => Style::default().fg(INACTIVE_CONTROL_COLOR),
                     }),
             )
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
-                    .bg(Color::LightGreen)
+                    .bg(highlight_bg)
                     .add_modifier(Modifier::BOLD),
             )
             .highlight_symbol(">> ")

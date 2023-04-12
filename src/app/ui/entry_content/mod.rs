@@ -2,7 +2,7 @@ use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
 use tui::{
     backend::Backend,
     layout::Rect,
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     widgets::{Block, Borders},
     Frame,
 };
@@ -86,8 +86,12 @@ impl<'a, 'b> EntryContent<'a> {
             Block::default()
                 .borders(Borders::ALL)
                 .style(match (self.is_active, is_editor_mode) {
-                    (_, true) => Style::default().fg(EDITOR_MODE_COLOR),
-                    (true, false) => Style::default().fg(ACTIVE_CONTROL_COLOR),
+                    (_, true) => Style::default()
+                        .fg(EDITOR_MODE_COLOR)
+                        .add_modifier(Modifier::BOLD),
+                    (true, false) => Style::default()
+                        .fg(ACTIVE_CONTROL_COLOR)
+                        .add_modifier(Modifier::BOLD),
                     (false, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
                 })
                 .title("Journal content"),

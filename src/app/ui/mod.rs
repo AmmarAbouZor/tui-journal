@@ -28,7 +28,7 @@ mod ui_functions;
 pub use entries_list::EntriesList;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
-pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(150, 150, 180);
+pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
 pub const EDITOR_MODE_COLOR: Color = Color::LightYellow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
