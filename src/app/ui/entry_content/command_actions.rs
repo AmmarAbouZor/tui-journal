@@ -1,17 +1,17 @@
 use crate::{
-    app::{commands::UICommand, App, UIComponents},
+    app::{commands::UICommand, ui::ControlType, App, UIComponents},
     data::DataProvider,
 };
 
 pub(crate) fn execute_command<D: DataProvider>(
     command: UICommand,
-    _ui_components: &mut UIComponents,
+    ui_components: &mut UIComponents,
     _app: &mut App<D>,
 ) -> anyhow::Result<()> {
     match command {
         UICommand::SaveEntryContent => {}
         UICommand::DiscardChangesEntryContent => {}
-        UICommand::FinishEditEntryContent => {}
+        UICommand::FinishEditEntryContent => run_finish_editing(ui_components),
         _ => unreachable!(
             "{:?} is not implemented for entry content text box",
             command
@@ -19,4 +19,11 @@ pub(crate) fn execute_command<D: DataProvider>(
     }
 
     Ok(())
+}
+
+fn run_finish_editing(ui_components: &mut UIComponents) {
+    assert!(ui_components.active_control == ControlType::EntryContentTxt);
+    assert!(ui_components.is_editor_mode);
+
+    ui_components.is_editor_mode = false;
 }

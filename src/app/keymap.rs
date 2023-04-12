@@ -111,6 +111,10 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::CycleFocusedControlBack,
         ),
         Keymap::new(
+            Input::new(KeyCode::Enter, KeyModifiers::NONE),
+            UICommand::StartEditCurrentEntry,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
             UICommand::ReloadAll,
         ),
@@ -150,10 +154,6 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
             UICommand::DeleteCurrentEntry,
-        ),
-        Keymap::new(
-            Input::new(KeyCode::Enter, KeyModifiers::NONE),
-            UICommand::StartEditCurrentEntry,
         ),
         Keymap::new(
             Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),

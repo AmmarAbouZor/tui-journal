@@ -29,7 +29,7 @@ pub use entries_list::EntriesList;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::LightYellow;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
     EntriesList,
     EntryContentTxt,
@@ -44,6 +44,7 @@ pub struct UIComponents<'a> {
     pub entry_content: EntryContent<'a>,
     pub active_control: ControlType,
     show_help_popup: bool,
+    is_editor_mode: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -65,6 +66,7 @@ impl<'a, 'b> UIComponents<'a> {
             entry_content,
             active_control,
             show_help_popup: false,
+            is_editor_mode: false,
         }
     }
 
@@ -129,6 +131,16 @@ impl<'a, 'b> UIComponents<'a> {
             }
         }
 
+        if self.is_editor_mode {
+            if let Some(key) = self.entry_content_keymaps.iter().find(|c| &c.key == input) {
+                if key.command == UICommand::FinishEditEntryContent {
+                    entry_content::execute_command(key.command, self, app)?;
+                    return Ok(HandleInputReturnType::Handled);
+                }
+            }
+            return self.entry_content.handle_input(input, true);
+        }
+
         if let Some(cmd) = self
             .global_keymaps
             .iter()
@@ -151,7 +163,7 @@ impl<'a, 'b> UIComponents<'a> {
                         entry_content::execute_command(key.command, self, app)?;
                         Ok(HandleInputReturnType::Handled)
                     } else {
-                        self.entry_content.handle_input(input)
+                        self.entry_content.handle_input(input, self.is_editor_mode)
                     }
                 }
                 ControlType::HelpPopup => todo!(),
@@ -165,6 +177,17 @@ impl<'a, 'b> UIComponents<'a> {
             ControlType::EntryContentTxt => self.entry_content.set_active(is_active),
             ControlType::HelpPopup => todo!(),
         }
+    }
+
+    pub fn change_active_control(&mut self, control: ControlType) {
+        if self.active_control == control {
+            return;
+        }
+
+        self.set_control_is_active(self.active_control, false);
+        self.active_control = control;
+
+        self.set_control_is_active(control, true);
     }
 
     fn execute_global_command<D: DataProvider>(
@@ -182,41 +205,46 @@ impl<'a, 'b> UIComponents<'a> {
                 Ok(HandleInputReturnType::Handled)
             }
             UICommand::CycleFocusedControlForward => {
-                self.set_control_is_active(self.active_control, false);
-
                 let next_control = match self.active_control {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
                     ControlType::HelpPopup => ControlType::EntriesList,
                 };
 
-                self.active_control = next_control;
-
-                self.set_control_is_active(next_control, true);
+                self.change_active_control(next_control);
 
                 Ok(HandleInputReturnType::Handled)
             }
             UICommand::CycleFocusedControlBack => {
-                self.set_control_is_active(self.active_control, false);
-
                 let prev_control = match self.active_control {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
                     ControlType::HelpPopup => ControlType::EntriesList,
                 };
 
-                self.active_control = prev_control;
-
-                self.set_control_is_active(prev_control, true);
+                self.change_active_control(prev_control);
 
                 Ok(HandleInputReturnType::Handled)
             }
+            UICommand::StartEditCurrentEntry => self.start_edit_current_entry(),
             UICommand::ReloadAll => todo!(),
             _ => unreachable!(
                 "command '{:?}' is not implemented in global keymaps",
                 command
             ),
         }
+    }
+
+    fn start_edit_current_entry(&mut self) -> Result<HandleInputReturnType> {
+        if self.entries_list.state.selected().is_none() {
+            return Ok(HandleInputReturnType::Handled);
+        }
+
+        self.change_active_control(ControlType::EntryContentTxt);
+
+        assert!(self.is_editor_mode == false);
+        self.is_editor_mode = true;
+        Ok(HandleInputReturnType::Handled)
     }
 
     fn get_all_keymaps(&self) -> impl Iterator<Item = &Keymap> {

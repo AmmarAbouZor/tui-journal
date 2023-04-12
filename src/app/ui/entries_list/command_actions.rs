@@ -13,7 +13,6 @@ pub(crate) fn execute_command<D: DataProvider>(
         UICommand::SelectedNextEntry => select_next_entry(ui_components, app),
         UICommand::CreateEntry => todo!(),
         UICommand::DeleteCurrentEntry => {}
-        UICommand::StartEditCurrentEntry => {}
         _ => unreachable!("{:?} is not implemented for entries list", command),
     }
 

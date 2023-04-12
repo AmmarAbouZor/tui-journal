@@ -20,9 +20,7 @@ pub(crate) use command_actions::execute_command;
 
 pub struct EntryContent<'a> {
     text_area: TextArea<'a>,
-    // edit mode will be always on until I implement two modes for the editor
     is_active: bool,
-    pub is_edit_mode: bool,
 }
 
 impl From<&Input> for KeyEvent {
@@ -43,7 +41,6 @@ impl<'a, 'b> EntryContent<'a> {
         EntryContent {
             text_area,
             is_active: false,
-            is_edit_mode: true,
         }
     }
 
@@ -63,8 +60,12 @@ impl<'a, 'b> EntryContent<'a> {
         self.text_area = text_area;
     }
 
-    pub fn handle_input(&mut self, input: &Input) -> anyhow::Result<HandleInputReturnType> {
-        if self.is_edit_mode {
+    pub fn handle_input(
+        &mut self,
+        input: &Input,
+        is_edit_mode: bool,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        if is_edit_mode {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
