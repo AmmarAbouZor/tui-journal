@@ -20,7 +20,7 @@ use super::INACTIVE_CONTROL_COLOR;
 mod command_actions;
 pub(crate) use command_actions::execute_command;
 
-pub struct EntryContent<'a> {
+pub struct Editor<'a> {
     text_area: TextArea<'a>,
     is_active: bool,
 }
@@ -36,11 +36,11 @@ impl From<&Input> for KeyEvent {
     }
 }
 
-impl<'a, 'b> EntryContent<'a> {
-    pub fn new() -> EntryContent<'a> {
+impl<'a, 'b> Editor<'a> {
+    pub fn new() -> Editor<'a> {
         let text_area = TextArea::default();
 
-        EntryContent {
+        Editor {
             text_area,
             is_active: false,
         }

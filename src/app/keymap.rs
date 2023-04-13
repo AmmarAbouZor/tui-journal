@@ -158,7 +158,7 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
     ]
 }
 
-pub(crate) fn get_entry_content_keymaps() -> Vec<Keymap> {
+pub(crate) fn get_editor_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
             Input::new(KeyCode::Char('s'), KeyModifiers::CONTROL),

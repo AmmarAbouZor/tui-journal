@@ -1,12 +1,10 @@
 use crate::data::DataProvider;
 
-use self::{entry_content::EntryContent, footer::render_footer, help_popup::render_help_popup};
+use self::{editor::Editor, footer::render_footer, help_popup::render_help_popup};
 
 use super::{
     commands::UICommand,
-    keymap::{
-        get_entries_list_keymaps, get_entry_content_keymaps, get_global_keymaps, Input, Keymap,
-    },
+    keymap::{get_editor_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap},
     runner::HandleInputReturnType,
     App,
 };
@@ -19,8 +17,8 @@ use tui::{
     Frame,
 };
 
+mod editor;
 mod entries_list;
-mod entry_content;
 mod footer;
 mod help_popup;
 mod ui_functions;
@@ -41,9 +39,9 @@ pub enum ControlType {
 pub struct UIComponents<'a> {
     global_keymaps: Vec<Keymap>,
     entries_list_keymaps: Vec<Keymap>,
-    entry_content_keymaps: Vec<Keymap>,
+    editor_keymaps: Vec<Keymap>,
     pub entries_list: EntriesList,
-    pub entry_content: EntryContent<'a>,
+    pub editor: Editor<'a>,
     pub active_control: ControlType,
     show_help_popup: bool,
     is_editor_mode: bool,
@@ -53,9 +51,9 @@ impl<'a, 'b> UIComponents<'a> {
     pub fn new() -> Self {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
-        let entry_content_keymaps = get_entry_content_keymaps();
+        let editor_keymaps = get_editor_keymaps();
         let mut entries_list = EntriesList::new();
-        let entry_content = EntryContent::new();
+        let editor = Editor::new();
 
         let active_control = ControlType::EntriesList;
         entries_list.set_active(true);
@@ -63,9 +61,9 @@ impl<'a, 'b> UIComponents<'a> {
         Self {
             global_keymaps,
             entries_list_keymaps,
-            entry_content_keymaps,
+            editor_keymaps,
             entries_list,
-            entry_content,
+            editor,
             active_control,
             show_help_popup: false,
             is_editor_mode: false,
@@ -83,7 +81,7 @@ impl<'a, 'b> UIComponents<'a> {
             let entry_index = app.entries.iter().position(|entry| entry.id == id);
             self.entries_list.state.select(entry_index);
 
-            self.entry_content.set_current_entry(entry_id, app);
+            self.editor.set_current_entry(entry_id, app);
         }
     }
 
@@ -106,7 +104,7 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.entries_list
             .render_widget(f, entries_chunks[0], &app.entries);
-        self.entry_content
+        self.editor
             .render_widget(f, entries_chunks[1], self.is_editor_mode);
 
         if self.show_help_popup {
@@ -135,13 +133,13 @@ impl<'a, 'b> UIComponents<'a> {
         }
 
         if self.is_editor_mode {
-            if let Some(key) = self.entry_content_keymaps.iter().find(|c| &c.key == input) {
+            if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 if key.command == UICommand::FinishEditEntryContent {
-                    entry_content::execute_command(key.command, self, app)?;
+                    editor::execute_command(key.command, self, app)?;
                     return Ok(HandleInputReturnType::Handled);
                 }
             }
-            return self.entry_content.handle_input(input, true);
+            return self.editor.handle_input(input, true);
         }
 
         if let Some(cmd) = self
@@ -162,11 +160,11 @@ impl<'a, 'b> UIComponents<'a> {
                     }
                 }
                 ControlType::EntryContentTxt => {
-                    if let Some(key) = self.entry_content_keymaps.iter().find(|c| &c.key == input) {
-                        entry_content::execute_command(key.command, self, app)?;
+                    if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
+                        editor::execute_command(key.command, self, app)?;
                         Ok(HandleInputReturnType::Handled)
                     } else {
-                        self.entry_content.handle_input(input, self.is_editor_mode)
+                        self.editor.handle_input(input, self.is_editor_mode)
                     }
                 }
                 ControlType::HelpPopup => todo!(),
@@ -177,7 +175,7 @@ impl<'a, 'b> UIComponents<'a> {
     fn set_control_is_active(&mut self, control: ControlType, is_active: bool) {
         match control {
             ControlType::EntriesList => self.entries_list.set_active(is_active),
-            ControlType::EntryContentTxt => self.entry_content.set_active(is_active),
+            ControlType::EntryContentTxt => self.editor.set_active(is_active),
             ControlType::HelpPopup => todo!(),
         }
     }
@@ -253,8 +251,8 @@ impl<'a, 'b> UIComponents<'a> {
     fn get_all_keymaps(&self) -> impl Iterator<Item = &Keymap> {
         let global_maps = self.global_keymaps.iter();
         let list_maps = self.entries_list_keymaps.iter();
-        let content_maps = self.entry_content_keymaps.iter();
+        let editor_maps = self.editor_keymaps.iter();
 
-        global_maps.chain(list_maps).chain(content_maps)
+        global_maps.chain(list_maps).chain(editor_maps)
     }
 }

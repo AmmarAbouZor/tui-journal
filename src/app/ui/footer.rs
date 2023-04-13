@@ -14,7 +14,7 @@ use super::UIComponents;
 pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components: &UIComponents) {
     let spans = if ui_components.is_editor_mode {
         let exit_editor_mode_keymap = ui_components
-            .entry_content_keymaps
+            .editor_keymaps
             .iter()
             .find(|keymap| keymap.command == UICommand::FinishEditEntryContent)
             .expect("Exit editor mode command must be in content editor commands");
