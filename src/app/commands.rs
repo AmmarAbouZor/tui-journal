@@ -9,8 +9,9 @@ pub enum UICommand {
     SelectedNextEntry,
     SelectedPrevEntry,
     CreateEntry,
+    EditCurrentEntry,
     DeleteCurrentEntry,
-    StartEditCurrentEntry,
+    StartEditEntryContent,
     FinishEditEntryContent,
     SaveEntryContent,
     DiscardChangesEntryContent,
@@ -54,13 +55,17 @@ impl UICommand {
                 "Create new entry",
                 "Opens dialog to add a new journal entry",
             ),
+            UICommand::EditCurrentEntry => {
+                CommandInfo::new("Edit current entry", "Edit current journal entry if any")
+            }
             UICommand::DeleteCurrentEntry => CommandInfo::new(
                 "Delete current entry",
                 "Delete current journal entry if any",
             ),
-            UICommand::StartEditCurrentEntry => {
-                CommandInfo::new("Edit current entry", "Edit current journal entry if any")
-            }
+            UICommand::StartEditEntryContent => CommandInfo::new(
+                "Edit current entry content",
+                "Edit current journal entry content if any",
+            ),
             UICommand::FinishEditEntryContent => CommandInfo::new(
                 "End editing current entry",
                 "End editing current journal entry, and return focus to entries list",

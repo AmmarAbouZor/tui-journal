@@ -36,7 +36,7 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
         let enter_editor_keymap = ui_components
             .global_keymaps
             .iter()
-            .find(|keymap| keymap.command == UICommand::StartEditCurrentEntry)
+            .find(|keymap| keymap.command == UICommand::StartEditEntryContent)
             .expect("Start editor mode command must be in global commands");
 
         Spans::from(vec![

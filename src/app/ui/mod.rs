@@ -1,6 +1,11 @@
 use crate::data::DataProvider;
 
-use self::{editor::Editor, footer::render_footer, help_popup::render_help_popup};
+use self::{
+    editor::Editor,
+    entry_popup::{EntryPopup, EntryPopupInputReturn},
+    footer::render_footer,
+    help_popup::render_help_popup,
+};
 
 use super::{
     commands::UICommand,
@@ -19,6 +24,7 @@ use tui::{
 
 mod editor;
 mod entries_list;
+mod entry_popup;
 mod footer;
 mod help_popup;
 mod ui_functions;
@@ -34,17 +40,20 @@ pub enum ControlType {
     EntriesList,
     EntryContentTxt,
     HelpPopup,
+    EntryPopup,
 }
 
 pub struct UIComponents<'a> {
     global_keymaps: Vec<Keymap>,
     entries_list_keymaps: Vec<Keymap>,
     editor_keymaps: Vec<Keymap>,
-    pub entries_list: EntriesList,
-    pub editor: Editor<'a>,
+    entries_list: EntriesList,
+    editor: Editor<'a>,
+    entry_popup: EntryPopup,
     pub active_control: ControlType,
     show_help_popup: bool,
     is_editor_mode: bool,
+    show_entry_popup: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -54,6 +63,7 @@ impl<'a, 'b> UIComponents<'a> {
         let editor_keymaps = get_editor_keymaps();
         let mut entries_list = EntriesList::new();
         let editor = Editor::new();
+        let entry_popup = EntryPopup::default();
 
         let active_control = ControlType::EntriesList;
         entries_list.set_active(true);
@@ -64,14 +74,16 @@ impl<'a, 'b> UIComponents<'a> {
             editor_keymaps,
             entries_list,
             editor,
+            entry_popup,
             active_control,
             show_help_popup: false,
             is_editor_mode: false,
+            show_entry_popup: false,
         }
     }
 
     pub fn has_popup(&self) -> bool {
-        self.show_help_popup
+        self.show_help_popup || self.show_entry_popup
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
@@ -108,7 +120,13 @@ impl<'a, 'b> UIComponents<'a> {
             .render_widget(f, entries_chunks[1], self.is_editor_mode);
 
         if self.show_help_popup {
+            assert!(!self.show_entry_popup);
             render_help_popup(f, f.size(), self);
+        }
+
+        if self.show_entry_popup {
+            assert!(!self.show_help_popup);
+            self.entry_popup.render_widget(f, f.size());
         }
     }
 
@@ -125,8 +143,18 @@ impl<'a, 'b> UIComponents<'a> {
                 ControlType::HelpPopup => {
                     // Close the help pop up on anykey
                     self.show_help_popup = false;
-                    self.active_control = ControlType::EntriesList;
-                    self.set_control_is_active(ControlType::EntriesList, true);
+                    self.change_active_control(ControlType::EntriesList);
+                    return Ok(HandleInputReturnType::Handled);
+                }
+                ControlType::EntryPopup => {
+                    //TODO: handle err case
+                    if self.entry_popup.handle_input(input, app)?
+                        == EntryPopupInputReturn::ClosePopup
+                    {
+                        self.show_entry_popup = false;
+                        self.change_active_control(ControlType::EntriesList);
+                    }
+
                     return Ok(HandleInputReturnType::Handled);
                 }
             }
@@ -167,7 +195,9 @@ impl<'a, 'b> UIComponents<'a> {
                         self.editor.handle_input(input, self.is_editor_mode)
                     }
                 }
-                ControlType::HelpPopup => todo!(),
+                ControlType::HelpPopup | ControlType::EntryPopup => {
+                    unreachable!("Popups must be handled at first, if they are active")
+                }
             }
         }
     }
@@ -176,7 +206,10 @@ impl<'a, 'b> UIComponents<'a> {
         match control {
             ControlType::EntriesList => self.entries_list.set_active(is_active),
             ControlType::EntryContentTxt => self.editor.set_active(is_active),
-            ControlType::HelpPopup => todo!(),
+            ControlType::HelpPopup => {
+                // HelpPopup doesn't have avctiv logic
+            }
+            ControlType::EntryPopup => self.entry_popup.set_active(is_active),
         }
     }
 
@@ -210,6 +243,7 @@ impl<'a, 'b> UIComponents<'a> {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
                     ControlType::HelpPopup => ControlType::EntriesList,
+                    ControlType::EntryPopup => todo!(),
                 };
 
                 self.change_active_control(next_control);
@@ -221,13 +255,14 @@ impl<'a, 'b> UIComponents<'a> {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
                     ControlType::HelpPopup => ControlType::EntriesList,
+                    ControlType::EntryPopup => todo!(),
                 };
 
                 self.change_active_control(prev_control);
 
                 Ok(HandleInputReturnType::Handled)
             }
-            UICommand::StartEditCurrentEntry => self.start_edit_current_entry(),
+            UICommand::StartEditEntryContent => self.start_edit_current_entry(),
             UICommand::ReloadAll => todo!(),
             _ => unreachable!(
                 "command '{:?}' is not implemented in global keymaps",

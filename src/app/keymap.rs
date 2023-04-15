@@ -33,7 +33,7 @@ impl Display for Input {
         let mut char_convert_tmp = [0; 4];
         let key_text = match self.key_code {
             KeyCode::Backspace => "<Backspace>",
-            KeyCode::Enter => "<Return>",
+            KeyCode::Enter => "Enter",
             KeyCode::Left => "Left",
             KeyCode::Right => "Right",
             KeyCode::Up => "Up",
@@ -112,7 +112,11 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
         ),
         Keymap::new(
             Input::new(KeyCode::Enter, KeyModifiers::NONE),
-            UICommand::StartEditCurrentEntry,
+            UICommand::StartEditEntryContent,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
+            UICommand::StartEditEntryContent,
         ),
         Keymap::new(
             Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
@@ -140,8 +144,12 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             UICommand::SelectedNextEntry,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('n'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('n'), KeyModifiers::NONE),
             UICommand::CreateEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('e'), KeyModifiers::NONE),
+            UICommand::EditCurrentEntry,
         ),
         Keymap::new(
             Input::new(KeyCode::Delete, KeyModifiers::NONE),
@@ -150,10 +158,6 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
             UICommand::DeleteCurrentEntry,
-        ),
-        Keymap::new(
-            Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
-            UICommand::StartEditCurrentEntry,
         ),
     ]
 }

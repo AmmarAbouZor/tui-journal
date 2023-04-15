@@ -16,6 +16,7 @@ mod command_actions;
 
 pub(crate) use command_actions::execute_command;
 
+#[derive(Debug)]
 pub struct EntriesList {
     pub state: ListState,
     is_active: bool,
