@@ -1,25 +1,34 @@
-use chrono::{DateTime, Utc};
-use crossterm::event::KeyCode;
+use chrono::{Datelike, NaiveDate, Utc};
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::{
     backend::Backend,
-    layout::Rect,
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
     widgets::{Block, Borders, Clear, Paragraph},
     Frame,
 };
+use tui_textarea::TextArea;
 
 use crate::{
     app::{keymap::Input, App},
     data::{DataProvider, Entry},
 };
 
-use super::ui_functions::centered_rect;
+use super::{ui_functions::centered_rect, ACTIVE_CONTROL_COLOR};
 
-#[derive(Debug, Default)]
-pub struct EntryPopup {
+pub struct EntryPopup<'a> {
     is_active: bool,
-    title: String,
-    date: Option<DateTime<Utc>>,
-    is_edit_existed_entry: bool,
+    title_txt: TextArea<'a>,
+    date_txt: TextArea<'a>,
+    is_edit_entry: bool,
+    active_txt: ActiveText,
+    title_err_msg: String,
+    date_err_msg: String,
+}
+
+enum ActiveText {
+    Title,
+    Date,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -28,13 +37,131 @@ pub enum EntryPopupInputReturn {
     ClosePopup,
 }
 
-impl EntryPopup {
+impl<'a> EntryPopup<'a> {
+    pub fn new() -> Self {
+        let mut title_txt = TextArea::default();
+        title_txt.set_style(Style::default());
+
+        let mut date_txt = TextArea::default();
+        date_txt.set_style(Style::default());
+
+        Self {
+            is_active: false,
+            title_txt,
+            date_txt,
+            is_edit_entry: false,
+            active_txt: ActiveText::Title,
+            title_err_msg: String::default(),
+            date_err_msg: String::default(),
+        }
+    }
+
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect(80, 50, area);
-        let test = Paragraph::new("Entry Popup").block(Block::default().borders(Borders::ALL));
+        let area = centered_rect(80, 30, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title(if self.is_edit_entry {
+                "Edit journal"
+            } else {
+                "Create journal"
+            });
 
         frame.render_widget(Clear, area);
-        frame.render_widget(test, area);
+        frame.render_widget(block, area);
+
+        let area = centered_rect(90, 70, area);
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(
+                [
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Min(1),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+
+        self.title_txt.set_cursor_line_style(Style::default());
+        self.date_txt.set_cursor_line_style(Style::default());
+
+        let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
+        let deactive_cursor_style = Style::default().bg(Color::Reset);
+
+        match self.active_txt {
+            ActiveText::Title => {
+                self.title_txt.set_cursor_style(active_cursor_style);
+                self.date_txt.set_cursor_style(deactive_cursor_style);
+            }
+            ActiveText::Date => {
+                self.title_txt.set_cursor_style(deactive_cursor_style);
+                self.date_txt.set_cursor_style(active_cursor_style);
+            }
+        };
+
+        if self.title_err_msg.is_empty() {
+            self.title_txt
+                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
+            self.title_txt
+                .set_block(Block::default().borders(Borders::ALL).title("Title"));
+        } else {
+            self.title_txt
+                .set_style(Style::default().fg(Color::LightRed));
+            self.title_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(format!("Title : {}", self.title_err_msg)),
+            );
+        }
+
+        if self.date_err_msg.is_empty() {
+            self.date_txt
+                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
+            self.date_txt
+                .set_block(Block::default().borders(Borders::ALL).title("Date"));
+        } else {
+            self.date_txt
+                .set_style(Style::default().fg(Color::LightRed));
+            self.date_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(format!("Date : {}", self.date_err_msg)),
+            );
+        }
+
+        frame.render_widget(self.title_txt.widget(), chunks[0]);
+        frame.render_widget(self.date_txt.widget(), chunks[1]);
+
+        let footer = Paragraph::new("Enter: confirm | Tab: Change focused input box | Esc: Cancel")
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::NONE)
+                    .style(Style::default()),
+            );
+        frame.render_widget(footer, chunks[2]);
+    }
+
+    pub fn is_input_valid(&self) -> bool {
+        self.title_err_msg.is_empty() && self.date_err_msg.is_empty()
+    }
+
+    fn validate_title(&mut self) {
+        if self.title_txt.lines()[0].is_empty() {
+            self.title_err_msg = "Title can't be empty".into();
+        } else {
+            self.title_err_msg.clear();
+        }
+    }
+
+    fn validat_date(&mut self) {
+        if let Err(err) = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y") {
+            self.date_err_msg = err.to_string();
+        } else {
+            self.date_err_msg.clear();
+        }
     }
 
     pub fn set_active(&mut self, active: bool) {
@@ -42,15 +169,33 @@ impl EntryPopup {
     }
 
     pub fn start_new_entry(&mut self) {
-        self.title = String::default();
-        self.date = Some(Utc::now());
-        self.is_edit_existed_entry = false;
+        self.title_txt = TextArea::default();
+        let date = Utc::now();
+
+        self.date_txt = TextArea::new(vec![format!(
+            "{:02}-{:02}-{}",
+            date.day(),
+            date.month(),
+            date.year()
+        )]);
+        self.is_edit_entry = false;
+
+        self.validat_date();
+        self.validate_title();
     }
 
     pub fn start_edit_entry(&mut self, entry: &Entry) {
-        self.title = entry.title.to_owned();
-        self.date = Some(entry.date.to_owned());
-        self.is_edit_existed_entry = true;
+        self.title_txt = TextArea::new(vec![entry.title.to_owned()]);
+        self.date_txt = TextArea::new(vec![format!(
+            "{:02}-{:02}-{}",
+            entry.date.day(),
+            entry.date.month(),
+            entry.date.year()
+        )]);
+        self.is_edit_entry = true;
+
+        self.validat_date();
+        self.validate_title();
     }
 
     pub fn handle_input<D: DataProvider>(
@@ -60,8 +205,26 @@ impl EntryPopup {
     ) -> anyhow::Result<EntryPopupInputReturn> {
         return match input.key_code {
             KeyCode::Esc | KeyCode::Enter => Ok(EntryPopupInputReturn::ClosePopup),
+            KeyCode::Tab => {
+                self.active_txt = match self.active_txt {
+                    ActiveText::Title => ActiveText::Date,
+                    ActiveText::Date => ActiveText::Title,
+                };
+                Ok(EntryPopupInputReturn::KeepPupup)
+            }
             _ => {
-                //TODO: handle input to text boxes
+                match self.active_txt {
+                    ActiveText::Title => {
+                        if self.title_txt.input(KeyEvent::from(input)) {
+                            self.validate_title();
+                        }
+                    }
+                    ActiveText::Date => {
+                        if self.date_txt.input(KeyEvent::from(input)) {
+                            self.validat_date();
+                        }
+                    }
+                }
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
         };

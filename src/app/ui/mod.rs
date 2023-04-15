@@ -49,7 +49,7 @@ pub struct UIComponents<'a> {
     editor_keymaps: Vec<Keymap>,
     entries_list: EntriesList,
     editor: Editor<'a>,
-    entry_popup: EntryPopup,
+    entry_popup: EntryPopup<'a>,
     pub active_control: ControlType,
     show_help_popup: bool,
     is_editor_mode: bool,
@@ -63,7 +63,7 @@ impl<'a, 'b> UIComponents<'a> {
         let editor_keymaps = get_editor_keymaps();
         let mut entries_list = EntriesList::new();
         let editor = Editor::new();
-        let entry_popup = EntryPopup::default();
+        let entry_popup = EntryPopup::new();
 
         let active_control = ControlType::EntriesList;
         entries_list.set_active(true);
