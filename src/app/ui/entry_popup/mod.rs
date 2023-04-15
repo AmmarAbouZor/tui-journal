@@ -14,7 +14,10 @@ use crate::{
     data::{DataProvider, Entry},
 };
 
-use super::{ui_functions::centered_rect, ACTIVE_CONTROL_COLOR};
+use super::{
+    ui_functions::{centered_rect, centered_rect_exact_hight},
+    ACTIVE_CONTROL_COLOR,
+};
 
 pub struct EntryPopup<'a> {
     is_active: bool,
@@ -57,7 +60,7 @@ impl<'a> EntryPopup<'a> {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect(80, 30, area);
+        let area = centered_rect_exact_hight(80, 12, area);
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -70,7 +73,7 @@ impl<'a> EntryPopup<'a> {
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
 
-        let area = centered_rect(90, 70, area);
+        let area = centered_rect(90, 60, area);
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
