@@ -31,6 +31,7 @@ pub struct Entry {
 }
 
 impl Entry {
+    #[allow(dead_code)]
     pub fn new(id: u32, date: DateTime<Utc>, title: String, content: String) -> Self {
         Self {
             id,
