@@ -136,38 +136,7 @@ impl<'a, 'b> UIComponents<'a> {
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
         if self.has_popup() {
-            match self.active_control {
-                ControlType::EntriesList | ControlType::EntryContentTxt => {
-                    unreachable!("{:?} is not an popup control", self.active_control)
-                }
-                ControlType::HelpPopup => {
-                    // Close the help pop up on anykey
-                    self.show_help_popup = false;
-                    self.change_active_control(ControlType::EntriesList);
-                    return Ok(HandleInputReturnType::Handled);
-                }
-                ControlType::EntryPopup => {
-                    //TODO: handle err case
-                    let close_popup = match self.entry_popup.handle_input(input, app)? {
-                        EntryPopupInputReturn::Cancel => true,
-                        EntryPopupInputReturn::KeepPupup => false,
-                        EntryPopupInputReturn::AddEntry(entry_id) => {
-                            self.set_current_entry(Some(entry_id), app);
-                            true
-                        }
-                        EntryPopupInputReturn::UpdateCurrentEntry => {
-                            self.set_current_entry(app.current_entry_id, app);
-                            true
-                        }
-                    };
-
-                    if close_popup {
-                        self.show_entry_popup = false;
-                        self.change_active_control(ControlType::EntriesList);
-                    }
-                    return Ok(HandleInputReturnType::Handled);
-                }
-            }
+            return self.handle_popup_input(input, app);
         }
 
         if self.is_editor_mode {
@@ -208,6 +177,45 @@ impl<'a, 'b> UIComponents<'a> {
                 ControlType::HelpPopup | ControlType::EntryPopup => {
                     unreachable!("Popups must be handled at first, if they are active")
                 }
+            }
+        }
+    }
+
+    fn handle_popup_input<D: DataProvider>(
+        &mut self,
+        input: &Input,
+        app: &mut App<D>,
+    ) -> Result<HandleInputReturnType> {
+        match self.active_control {
+            ControlType::EntriesList | ControlType::EntryContentTxt => {
+                unreachable!("{:?} is not an popup control", self.active_control)
+            }
+            ControlType::HelpPopup => {
+                // Close the help pop up on anykey
+                self.show_help_popup = false;
+                self.change_active_control(ControlType::EntriesList);
+                Ok(HandleInputReturnType::Handled)
+            }
+            ControlType::EntryPopup => {
+                //TODO: handle err case
+                let close_popup = match self.entry_popup.handle_input(input, app)? {
+                    EntryPopupInputReturn::Cancel => true,
+                    EntryPopupInputReturn::KeepPupup => false,
+                    EntryPopupInputReturn::AddEntry(entry_id) => {
+                        self.set_current_entry(Some(entry_id), app);
+                        true
+                    }
+                    EntryPopupInputReturn::UpdateCurrentEntry => {
+                        self.set_current_entry(app.current_entry_id, app);
+                        true
+                    }
+                };
+
+                if close_popup {
+                    self.show_entry_popup = false;
+                    self.change_active_control(ControlType::EntriesList);
+                }
+                Ok(HandleInputReturnType::Handled)
             }
         }
     }
