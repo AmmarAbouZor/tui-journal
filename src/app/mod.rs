@@ -1,5 +1,7 @@
-use crate::data::{DataProvider, Entry};
+use crate::data::{DataProvider, Entry, EntryDraft};
 
+use anyhow::Context;
+use chrono::{DateTime, Utc};
 pub use runner::run;
 pub use ui::UIComponents;
 
@@ -40,5 +42,39 @@ where
 
     pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
         self.entries.iter().find(|e| e.id == entry_id)
+    }
+
+    pub fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
+        let entry = self.data_provide.add_entry(EntryDraft::new(date, title))?;
+        let entry_id = entry.id;
+
+        self.entries.push(entry);
+
+        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        Ok(entry_id)
+    }
+
+    pub fn update_current_entry(
+        &mut self,
+        title: String,
+        date: DateTime<Utc>,
+    ) -> anyhow::Result<()> {
+        assert!(self.current_entry_id.is_some());
+
+        let entry = self
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == self.current_entry_id.unwrap())
+            .context("journal entry not found")?;
+
+        entry.title = title;
+        entry.date = date;
+
+        self.data_provide.update_entry(entry.clone())?;
+
+        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        Ok(())
     }
 }

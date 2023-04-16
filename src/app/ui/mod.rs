@@ -148,13 +148,23 @@ impl<'a, 'b> UIComponents<'a> {
                 }
                 ControlType::EntryPopup => {
                     //TODO: handle err case
-                    if self.entry_popup.handle_input(input, app)?
-                        == EntryPopupInputReturn::ClosePopup
-                    {
+                    let close_popup = match self.entry_popup.handle_input(input, app)? {
+                        EntryPopupInputReturn::Cancel => true,
+                        EntryPopupInputReturn::KeepPupup => false,
+                        EntryPopupInputReturn::AddEntry(entry_id) => {
+                            self.set_current_entry(Some(entry_id), app);
+                            true
+                        }
+                        EntryPopupInputReturn::UpdateCurrentEntry => {
+                            self.set_current_entry(app.current_entry_id, app);
+                            true
+                        }
+                    };
+
+                    if close_popup {
                         self.show_entry_popup = false;
                         self.change_active_control(ControlType::EntriesList);
                     }
-
                     return Ok(HandleInputReturnType::Handled);
                 }
             }

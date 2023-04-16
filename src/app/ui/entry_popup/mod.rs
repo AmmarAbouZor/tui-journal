@@ -1,5 +1,6 @@
-use chrono::{Datelike, NaiveDate, Utc};
-use crossterm::event::{KeyCode, KeyEvent};
+use anyhow::Ok;
+use chrono::{Datelike, NaiveDate, TimeZone, Utc};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -37,7 +38,9 @@ enum ActiveText {
 #[derive(Debug, PartialEq, Eq)]
 pub enum EntryPopupInputReturn {
     KeepPupup,
-    ClosePopup,
+    Cancel,
+    AddEntry(u32),
+    UpdateCurrentEntry,
 }
 
 impl<'a> EntryPopup<'a> {
@@ -137,13 +140,15 @@ impl<'a> EntryPopup<'a> {
         frame.render_widget(self.title_txt.widget(), chunks[0]);
         frame.render_widget(self.date_txt.widget(), chunks[1]);
 
-        let footer = Paragraph::new("Enter: confirm | Tab: Change focused input box | Esc: Cancel")
-            .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::NONE)
-                    .style(Style::default()),
-            );
+        let footer = Paragraph::new(
+            "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel",
+        )
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::NONE)
+                .style(Style::default()),
+        );
         frame.render_widget(footer, chunks[2]);
     }
 
@@ -204,10 +209,14 @@ impl<'a> EntryPopup<'a> {
     pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
-        _app: &mut App<D>,
+        app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
+        let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
+
         return match input.key_code {
-            KeyCode::Esc | KeyCode::Enter => Ok(EntryPopupInputReturn::ClosePopup),
+            KeyCode::Esc => Ok(EntryPopupInputReturn::Cancel),
+            KeyCode::Char('c') if has_ctrl => Ok(EntryPopupInputReturn::Cancel),
+            KeyCode::Enter => self.handle_confirm(app),
             KeyCode::Tab => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
@@ -231,5 +240,29 @@ impl<'a> EntryPopup<'a> {
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
         };
+    }
+
+    fn handle_confirm<D: DataProvider>(
+        &mut self,
+        app: &mut App<D>,
+    ) -> anyhow::Result<EntryPopupInputReturn> {
+        if !self.is_input_valid() {
+            return Ok(EntryPopupInputReturn::KeepPupup);
+        }
+        let title = self.title_txt.lines()[0].to_owned();
+        let date = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y")
+            .expect("Date must be valid here");
+
+        let date = Utc
+            .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
+            .unwrap();
+
+        if self.is_edit_entry {
+            app.update_current_entry(title, date)?;
+            Ok(EntryPopupInputReturn::UpdateCurrentEntry)
+        } else {
+            let entry_id = app.add_entry(title, date)?;
+            Ok(EntryPopupInputReturn::AddEntry(entry_id))
+        }
     }
 }
