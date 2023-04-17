@@ -2,9 +2,11 @@ use crate::data::DataProvider;
 
 use self::{
     editor::Editor,
+    entries_list::EntriesList,
     entry_popup::{EntryPopup, EntryPopupInputReturn},
     footer::render_footer,
     help_popup::render_help_popup,
+    msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
 };
 
 use super::{
@@ -27,9 +29,8 @@ mod entries_list;
 mod entry_popup;
 mod footer;
 mod help_popup;
+mod msg_box;
 mod ui_functions;
-
-pub use entries_list::EntriesList;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
@@ -50,6 +51,7 @@ pub struct UIComponents<'a> {
     entries_list: EntriesList,
     editor: Editor<'a>,
     entry_popup: EntryPopup<'a>,
+    msg_box: Option<MsgBox>,
     pub active_control: ControlType,
     show_help_popup: bool,
     is_editor_mode: bool,
@@ -75,6 +77,7 @@ impl<'a, 'b> UIComponents<'a> {
             entries_list,
             editor,
             entry_popup,
+            msg_box: None,
             active_control,
             show_help_popup: false,
             is_editor_mode: false,
@@ -83,7 +86,11 @@ impl<'a, 'b> UIComponents<'a> {
     }
 
     pub fn has_popup(&self) -> bool {
-        self.show_help_popup || self.show_entry_popup
+        self.show_help_popup || self.show_entry_popup || self.has_msg_box()
+    }
+
+    fn has_msg_box(&self) -> bool {
+        self.msg_box.is_some()
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
@@ -127,6 +134,10 @@ impl<'a, 'b> UIComponents<'a> {
         if self.show_entry_popup {
             assert!(!self.show_help_popup);
             self.entry_popup.render_widget(f, f.size());
+        }
+
+        if let Some(msg_box) = &mut self.msg_box {
+            msg_box.render_widget(f, f.size());
         }
     }
 
@@ -186,6 +197,17 @@ impl<'a, 'b> UIComponents<'a> {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
+        if let Some(msg_box) = &self.msg_box {
+            match msg_box.handle_input(input) {
+                msg_box::MsgBoxInputResult::Keep => {}
+                msg_box::MsgBoxInputResult::Close(_msg_box_result) => {
+                    self.msg_box = None;
+                    //TODO: check who is pending message box answer and let it handle the response
+                }
+            }
+            return Ok(HandleInputReturnType::Handled);
+        }
+
         match self.active_control {
             ControlType::EntriesList | ControlType::EntryContentTxt => {
                 unreachable!("{:?} is not an popup control", self.active_control)
@@ -225,7 +247,7 @@ impl<'a, 'b> UIComponents<'a> {
             ControlType::EntriesList => self.entries_list.set_active(is_active),
             ControlType::EntryContentTxt => self.editor.set_active(is_active),
             ControlType::HelpPopup => {
-                // HelpPopup doesn't have avctiv logic
+                // HelpPopup doesn't have active logic
             }
             ControlType::EntryPopup => self.entry_popup.set_active(is_active),
         }
@@ -281,7 +303,17 @@ impl<'a, 'b> UIComponents<'a> {
                 Ok(HandleInputReturnType::Handled)
             }
             UICommand::StartEditEntryContent => self.start_edit_current_entry(),
-            UICommand::ReloadAll => todo!(),
+            UICommand::ReloadAll => {
+                //TODO: Remove test code and implement ReloadAll
+                let test_msg_box = MsgBox::new(
+                    MsgBoxType::Question("Message very very long text to check the wrapping very very long text to check the wrapping".into()),
+                    MsgBoxActions::YesNoCancel,
+                );
+
+                self.msg_box = Some(test_msg_box);
+
+                Ok(HandleInputReturnType::Handled)
+            }
             _ => unreachable!(
                 "command '{:?}' is not implemented in global keymaps",
                 command
