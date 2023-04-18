@@ -1,5 +1,9 @@
 use crate::{
-    app::{commands::UICommand, ui::ControlType, App, UIComponents},
+    app::{
+        commands::UICommand,
+        ui::{entry_popup::EntryPopup, Popup},
+        App, UIComponents,
+    },
     data::DataProvider,
 };
 
@@ -47,10 +51,9 @@ fn select_next_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
 }
 
 fn create_entry(ui_components: &mut UIComponents) {
-    ui_components.entry_popup.start_new_entry();
-    ui_components.change_active_control(ControlType::EntryPopup);
-    ui_components.show_entry_popup = true;
-    ui_components.show_help_popup = false;
+    ui_components
+        .popup_stack
+        .push(Popup::Entry(EntryPopup::new_entry()));
 }
 
 fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
@@ -58,9 +61,8 @@ fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &m
         .current_entry_id
         .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
     {
-        ui_components.entry_popup.start_edit_entry(entry);
-        ui_components.change_active_control(ControlType::EntryPopup);
-        ui_components.show_entry_popup = true;
-        ui_components.show_help_popup = false;
+        ui_components
+            .popup_stack
+            .push(Popup::Entry(EntryPopup::from_entry(entry)));
     }
 }

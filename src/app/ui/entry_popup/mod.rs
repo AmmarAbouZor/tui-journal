@@ -21,7 +21,6 @@ use super::{
 };
 
 pub struct EntryPopup<'a> {
-    is_active: bool,
     title_txt: TextArea<'a>,
     date_txt: TextArea<'a>,
     is_edit_entry: bool,
@@ -44,22 +43,56 @@ pub enum EntryPopupInputReturn {
 }
 
 impl<'a> EntryPopup<'a> {
-    pub fn new() -> Self {
-        let mut title_txt = TextArea::default();
-        title_txt.set_style(Style::default());
+    pub fn new_entry() -> Self {
+        let title_txt = TextArea::default();
 
-        let mut date_txt = TextArea::default();
-        date_txt.set_style(Style::default());
+        let date = Utc::now();
 
-        Self {
-            is_active: false,
+        let date_txt = TextArea::new(vec![format!(
+            "{:02}-{:02}-{}",
+            date.day(),
+            date.month(),
+            date.year()
+        )]);
+
+        let mut entry_pupop = Self {
             title_txt,
             date_txt,
             is_edit_entry: false,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
-        }
+        };
+
+        entry_pupop.validate_title();
+        entry_pupop.validat_date();
+
+        entry_pupop
+    }
+
+    pub fn from_entry(entry: &Entry) -> Self {
+        let title_txt = TextArea::new(vec![entry.title.to_owned()]);
+
+        let date_txt = TextArea::new(vec![format!(
+            "{:02}-{:02}-{}",
+            entry.date.day(),
+            entry.date.month(),
+            entry.date.year()
+        )]);
+
+        let mut entry_pupop = Self {
+            title_txt,
+            date_txt,
+            is_edit_entry: true,
+            active_txt: ActiveText::Title,
+            title_err_msg: String::default(),
+            date_err_msg: String::default(),
+        };
+
+        entry_pupop.validate_title();
+        entry_pupop.validat_date();
+
+        entry_pupop
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
@@ -170,40 +203,6 @@ impl<'a> EntryPopup<'a> {
         } else {
             self.date_err_msg.clear();
         }
-    }
-
-    pub fn set_active(&mut self, active: bool) {
-        self.is_active = active;
-    }
-
-    pub fn start_new_entry(&mut self) {
-        self.title_txt = TextArea::default();
-        let date = Utc::now();
-
-        self.date_txt = TextArea::new(vec![format!(
-            "{:02}-{:02}-{}",
-            date.day(),
-            date.month(),
-            date.year()
-        )]);
-        self.is_edit_entry = false;
-
-        self.validat_date();
-        self.validate_title();
-    }
-
-    pub fn start_edit_entry(&mut self, entry: &Entry) {
-        self.title_txt = TextArea::new(vec![entry.title.to_owned()]);
-        self.date_txt = TextArea::new(vec![format!(
-            "{:02}-{:02}-{}",
-            entry.date.day(),
-            entry.date.month(),
-            entry.date.year()
-        )]);
-        self.is_edit_entry = true;
-
-        self.validat_date();
-        self.validate_title();
     }
 
     pub fn handle_input<D: DataProvider>(

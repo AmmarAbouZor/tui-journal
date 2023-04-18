@@ -40,8 +40,12 @@ pub const EDITOR_MODE_COLOR: Color = Color::LightYellow;
 pub enum ControlType {
     EntriesList,
     EntryContentTxt,
-    HelpPopup,
-    EntryPopup,
+}
+
+pub enum Popup<'a> {
+    Help,
+    Entry(EntryPopup<'a>),
+    MsgBox(MsgBox),
 }
 
 pub struct UIComponents<'a> {
@@ -50,12 +54,9 @@ pub struct UIComponents<'a> {
     editor_keymaps: Vec<Keymap>,
     entries_list: EntriesList,
     editor: Editor<'a>,
-    entry_popup: EntryPopup<'a>,
-    msg_box: Option<MsgBox>,
+    popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
-    show_help_popup: bool,
     is_editor_mode: bool,
-    show_entry_popup: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -65,7 +66,6 @@ impl<'a, 'b> UIComponents<'a> {
         let editor_keymaps = get_editor_keymaps();
         let mut entries_list = EntriesList::new();
         let editor = Editor::new();
-        let entry_popup = EntryPopup::new();
 
         let active_control = ControlType::EntriesList;
         entries_list.set_active(true);
@@ -76,21 +76,14 @@ impl<'a, 'b> UIComponents<'a> {
             editor_keymaps,
             entries_list,
             editor,
-            entry_popup,
-            msg_box: None,
+            popup_stack: Vec::new(),
             active_control,
-            show_help_popup: false,
             is_editor_mode: false,
-            show_entry_popup: false,
         }
     }
 
     pub fn has_popup(&self) -> bool {
-        self.show_help_popup || self.show_entry_popup || self.has_msg_box()
-    }
-
-    fn has_msg_box(&self) -> bool {
-        self.msg_box.is_some()
+        !self.popup_stack.is_empty()
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
@@ -126,18 +119,19 @@ impl<'a, 'b> UIComponents<'a> {
         self.editor
             .render_widget(f, entries_chunks[1], self.is_editor_mode);
 
-        if self.show_help_popup {
-            assert!(!self.show_entry_popup);
-            render_help_popup(f, f.size(), self);
-        }
+        self.render_popup(f);
+    }
 
-        if self.show_entry_popup {
-            assert!(!self.show_help_popup);
-            self.entry_popup.render_widget(f, f.size());
-        }
-
-        if let Some(msg_box) = &mut self.msg_box {
-            msg_box.render_widget(f, f.size());
+    pub fn render_popup<B>(&mut self, f: &mut Frame<B>)
+    where
+        B: Backend,
+    {
+        if let Some(popup) = self.popup_stack.last_mut() {
+            match popup {
+                Popup::Help => render_help_popup(f, f.size(), self),
+                Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.size()),
+                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
+            }
         }
     }
 
@@ -185,9 +179,6 @@ impl<'a, 'b> UIComponents<'a> {
                         self.editor.handle_input(input, self.is_editor_mode)
                     }
                 }
-                ControlType::HelpPopup | ControlType::EntryPopup => {
-                    unreachable!("Popups must be handled at first, if they are active")
-                }
             }
         }
     }
@@ -197,48 +188,42 @@ impl<'a, 'b> UIComponents<'a> {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
-        if let Some(msg_box) = &self.msg_box {
-            match msg_box.handle_input(input) {
-                msg_box::MsgBoxInputResult::Keep => {}
-                msg_box::MsgBoxInputResult::Close(_msg_box_result) => {
-                    self.msg_box = None;
-                    //TODO: check who is pending message box answer and let it handle the response
+        if let Some(popup) = self.popup_stack.last_mut() {
+            match popup {
+                Popup::Help => {
+                    // Close the help pop up on anykey
+                    self.popup_stack.pop().expect("popup stack isn't empty");
                 }
-            }
-            return Ok(HandleInputReturnType::Handled);
-        }
+                Popup::Entry(entry_popup) => {
+                    //TODO: handle err case
+                    let close_popup = match entry_popup.handle_input(input, app)? {
+                        EntryPopupInputReturn::Cancel => true,
+                        EntryPopupInputReturn::KeepPupup => false,
+                        EntryPopupInputReturn::AddEntry(entry_id) => {
+                            self.set_current_entry(Some(entry_id), app);
+                            true
+                        }
+                        EntryPopupInputReturn::UpdateCurrentEntry => {
+                            self.set_current_entry(app.current_entry_id, app);
+                            true
+                        }
+                    };
 
-        match self.active_control {
-            ControlType::EntriesList | ControlType::EntryContentTxt => {
-                unreachable!("{:?} is not an popup control", self.active_control)
-            }
-            ControlType::HelpPopup => {
-                // Close the help pop up on anykey
-                self.show_help_popup = false;
-                self.change_active_control(ControlType::EntriesList);
-                Ok(HandleInputReturnType::Handled)
-            }
-            ControlType::EntryPopup => {
-                //TODO: handle err case
-                let close_popup = match self.entry_popup.handle_input(input, app)? {
-                    EntryPopupInputReturn::Cancel => true,
-                    EntryPopupInputReturn::KeepPupup => false,
-                    EntryPopupInputReturn::AddEntry(entry_id) => {
-                        self.set_current_entry(Some(entry_id), app);
-                        true
+                    if close_popup {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
                     }
-                    EntryPopupInputReturn::UpdateCurrentEntry => {
-                        self.set_current_entry(app.current_entry_id, app);
-                        true
-                    }
-                };
-
-                if close_popup {
-                    self.show_entry_popup = false;
-                    self.change_active_control(ControlType::EntriesList);
                 }
-                Ok(HandleInputReturnType::Handled)
+                Popup::MsgBox(msg_box) => match msg_box.handle_input(input) {
+                    msg_box::MsgBoxInputResult::Keep => {}
+                    msg_box::MsgBoxInputResult::Close(_msg_box_result) => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                        //TODO: check who is pending message box answer and let it handle the response
+                    }
+                },
             }
+            Ok(HandleInputReturnType::Handled)
+        } else {
+            Ok(HandleInputReturnType::NotFound)
         }
     }
 
@@ -246,10 +231,6 @@ impl<'a, 'b> UIComponents<'a> {
         match control {
             ControlType::EntriesList => self.entries_list.set_active(is_active),
             ControlType::EntryContentTxt => self.editor.set_active(is_active),
-            ControlType::HelpPopup => {
-                // HelpPopup doesn't have active logic
-            }
-            ControlType::EntryPopup => self.entry_popup.set_active(is_active),
         }
     }
 
@@ -272,9 +253,7 @@ impl<'a, 'b> UIComponents<'a> {
         match command {
             UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
             UICommand::ShowHelp => {
-                self.set_control_is_active(self.active_control, false);
-                self.show_help_popup = true;
-                self.active_control = ControlType::HelpPopup;
+                self.popup_stack.push(Popup::Help);
 
                 Ok(HandleInputReturnType::Handled)
             }
@@ -282,8 +261,6 @@ impl<'a, 'b> UIComponents<'a> {
                 let next_control = match self.active_control {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
-                    ControlType::HelpPopup => ControlType::EntriesList,
-                    ControlType::EntryPopup => todo!(),
                 };
 
                 self.change_active_control(next_control);
@@ -294,8 +271,6 @@ impl<'a, 'b> UIComponents<'a> {
                 let prev_control = match self.active_control {
                     ControlType::EntriesList => ControlType::EntryContentTxt,
                     ControlType::EntryContentTxt => ControlType::EntriesList,
-                    ControlType::HelpPopup => ControlType::EntriesList,
-                    ControlType::EntryPopup => todo!(),
                 };
 
                 self.change_active_control(prev_control);
@@ -310,7 +285,7 @@ impl<'a, 'b> UIComponents<'a> {
                     MsgBoxActions::YesNoCancel,
                 );
 
-                self.msg_box = Some(test_msg_box);
+                self.popup_stack.push(Popup::MsgBox(test_msg_box));
 
                 Ok(HandleInputReturnType::Handled)
             }
