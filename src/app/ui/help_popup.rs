@@ -6,9 +6,7 @@ use tui::{
     Frame,
 };
 
-use crate::app::commands::CommandInfo;
-
-use super::{ui_functions::centered_rect, UIComponents};
+use super::{commands::CommandInfo, ui_functions::centered_rect, UIComponents};
 
 const KEY_WIDTH: u16 = 10;
 const NAME_PERC: u16 = 30;

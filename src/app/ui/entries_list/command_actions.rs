@@ -1,7 +1,6 @@
 use crate::{
     app::{
-        commands::UICommand,
-        ui::{entry_popup::EntryPopup, Popup},
+        ui::{entry_popup::EntryPopup, Popup, UICommand},
         App, UIComponents,
     },
     data::DataProvider,

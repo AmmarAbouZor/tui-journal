@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::commands::UICommand;
+use super::ui::UICommand;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq)]
 pub struct Input {

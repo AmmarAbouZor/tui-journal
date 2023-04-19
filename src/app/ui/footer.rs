@@ -7,9 +7,9 @@ use tui::{
     Frame,
 };
 
-use crate::app::{commands::UICommand, keymap::Keymap};
+use crate::app::keymap::Keymap;
 
-use super::UIComponents;
+use super::{UICommand, UIComponents};
 
 pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components: &UIComponents) {
     let spans = if ui_components.is_editor_mode {

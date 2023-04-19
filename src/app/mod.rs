@@ -5,10 +5,11 @@ use chrono::{DateTime, Utc};
 pub use runner::run;
 pub use ui::UIComponents;
 
-mod commands;
 mod keymap;
 mod runner;
 mod ui;
+
+pub use runner::HandleInputReturnType;
 
 pub struct App<D>
 where

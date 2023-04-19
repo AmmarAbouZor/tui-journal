@@ -1,5 +1,8 @@
 use crate::{
-    app::{commands::UICommand, ui::ControlType, App, UIComponents},
+    app::{
+        ui::{ControlType, UICommand},
+        App, UIComponents,
+    },
     data::DataProvider,
 };
 

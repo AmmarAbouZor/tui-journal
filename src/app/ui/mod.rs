@@ -10,7 +10,6 @@ use self::{
 };
 
 use super::{
-    commands::UICommand,
     keymap::{get_editor_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap},
     runner::HandleInputReturnType,
     App,
@@ -24,6 +23,7 @@ use tui::{
     Frame,
 };
 
+mod commands;
 mod editor;
 mod entries_list;
 mod entry_popup;
@@ -31,6 +31,9 @@ mod footer;
 mod help_popup;
 mod msg_box;
 mod ui_functions;
+
+pub use commands::UICommand;
+pub use msg_box::MsgBoxResult;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);

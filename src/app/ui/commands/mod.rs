@@ -1,5 +1,9 @@
 use std::fmt::Debug;
 
+use crate::data::DataProvider;
+
+use super::{App, HandleInputReturnType, MsgBoxResult, UIComponents};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UICommand {
     Quit,
@@ -80,6 +84,53 @@ impl UICommand {
                 "Reload all",
                 "Reload all entries, discarding unsaved changes",
             ),
+        }
+    }
+
+    pub fn execute<D: DataProvider>(
+        &self,
+        ui_components: &mut UIComponents,
+        app: &mut App<D>,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        match self {
+            UICommand::Quit => todo!(),
+            UICommand::ShowHelp => todo!(),
+            UICommand::CycleFocusedControlForward => todo!(),
+            UICommand::CycleFocusedControlBack => todo!(),
+            UICommand::SelectedNextEntry => todo!(),
+            UICommand::SelectedPrevEntry => todo!(),
+            UICommand::CreateEntry => todo!(),
+            UICommand::EditCurrentEntry => todo!(),
+            UICommand::DeleteCurrentEntry => todo!(),
+            UICommand::StartEditEntryContent => todo!(),
+            UICommand::FinishEditEntryContent => todo!(),
+            UICommand::SaveEntryContent => todo!(),
+            UICommand::DiscardChangesEntryContent => todo!(),
+            UICommand::ReloadAll => todo!(),
+        }
+    }
+
+    pub fn continue_executing<D: DataProvider>(
+        &mut self,
+        ui_components: &mut UIComponents,
+        app: &mut App<D>,
+        msg_box_result: MsgBoxResult,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        match self {
+            UICommand::Quit => todo!(),
+            UICommand::ShowHelp => todo!(),
+            UICommand::CycleFocusedControlForward => todo!(),
+            UICommand::CycleFocusedControlBack => todo!(),
+            UICommand::SelectedNextEntry => todo!(),
+            UICommand::SelectedPrevEntry => todo!(),
+            UICommand::CreateEntry => todo!(),
+            UICommand::EditCurrentEntry => todo!(),
+            UICommand::DeleteCurrentEntry => todo!(),
+            UICommand::StartEditEntryContent => todo!(),
+            UICommand::FinishEditEntryContent => todo!(),
+            UICommand::SaveEntryContent => todo!(),
+            UICommand::DiscardChangesEntryContent => todo!(),
+            UICommand::ReloadAll => todo!(),
         }
     }
 }
