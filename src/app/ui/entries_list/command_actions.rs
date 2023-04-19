@@ -53,7 +53,7 @@ fn select_next_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
 fn create_entry(ui_components: &mut UIComponents) {
     ui_components
         .popup_stack
-        .push(Popup::Entry(EntryPopup::new_entry()));
+        .push(Popup::Entry(Box::new(EntryPopup::new_entry())));
 }
 
 fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
@@ -63,6 +63,6 @@ fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &m
     {
         ui_components
             .popup_stack
-            .push(Popup::Entry(EntryPopup::from_entry(entry)));
+            .push(Popup::Entry(Box::new(EntryPopup::from_entry(entry))));
     }
 }

@@ -44,8 +44,8 @@ pub enum ControlType {
 
 pub enum Popup<'a> {
     Help,
-    Entry(EntryPopup<'a>),
-    MsgBox(MsgBox),
+    Entry(Box<EntryPopup<'a>>),
+    MsgBox(Box<MsgBox>),
 }
 
 pub struct UIComponents<'a> {
@@ -285,7 +285,7 @@ impl<'a, 'b> UIComponents<'a> {
                     MsgBoxActions::YesNoCancel,
                 );
 
-                self.popup_stack.push(Popup::MsgBox(test_msg_box));
+                self.popup_stack.push(Popup::MsgBox(Box::new(test_msg_box)));
 
                 Ok(HandleInputReturnType::Handled)
             }
