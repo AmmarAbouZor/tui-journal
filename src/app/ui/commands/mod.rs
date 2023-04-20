@@ -4,9 +4,11 @@ use crate::data::DataProvider;
 
 use super::{App, HandleInputReturnType, MsgBoxResult, UIComponents};
 
+use editor_cmd::*;
 use entries_list_cmd::*;
 use global_cmd::*;
 
+mod editor_cmd;
 mod entries_list_cmd;
 mod global_cmd;
 
@@ -111,7 +113,7 @@ impl UICommand {
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
             UICommand::DeleteCurrentEntry => todo!(),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
-            UICommand::FinishEditEntryContent => todo!(),
+            UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
             UICommand::SaveEntryContent => todo!(),
             UICommand::DiscardChangesEntryContent => todo!(),
             UICommand::ReloadAll => exec_reload_all(ui_components, app),
@@ -142,7 +144,7 @@ impl UICommand {
             }
             UICommand::DeleteCurrentEntry => todo!(),
             UICommand::StartEditEntryContent => not_implemented(),
-            UICommand::FinishEditEntryContent => todo!(),
+            UICommand::FinishEditEntryContent => not_implemented(),
             UICommand::SaveEntryContent => todo!(),
             UICommand::DiscardChangesEntryContent => todo!(),
             UICommand::ReloadAll => continue_reload_all(ui_components, app),

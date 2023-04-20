@@ -150,8 +150,7 @@ impl<'a, 'b> UIComponents<'a> {
         if self.is_editor_mode {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 if key.command == UICommand::FinishEditEntryContent {
-                    editor::execute_command(key.command, self, app)?;
-                    return Ok(HandleInputReturnType::Handled);
+                    return key.command.clone().execute(self, app);
                 }
             }
             return self.editor.handle_input(input, true);
@@ -175,8 +174,7 @@ impl<'a, 'b> UIComponents<'a> {
                 }
                 ControlType::EntryContentTxt => {
                     if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                        editor::execute_command(key.command, self, app)?;
-                        Ok(HandleInputReturnType::Handled)
+                        key.command.clone().execute(self, app)
                     } else {
                         self.editor.handle_input(input, self.is_editor_mode)
                     }

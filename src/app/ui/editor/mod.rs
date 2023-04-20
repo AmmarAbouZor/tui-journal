@@ -17,9 +17,6 @@ use super::ACTIVE_CONTROL_COLOR;
 use super::EDITOR_MODE_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
 
-mod command_actions;
-pub(crate) use command_actions::execute_command;
-
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
     is_active: bool,
