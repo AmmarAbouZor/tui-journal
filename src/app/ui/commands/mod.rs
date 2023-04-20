@@ -4,6 +4,10 @@ use crate::data::DataProvider;
 
 use super::{App, HandleInputReturnType, MsgBoxResult, UIComponents};
 
+use global_cmd::*;
+
+mod global_cmd;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UICommand {
     Quit,
@@ -93,20 +97,20 @@ impl UICommand {
         app: &mut App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
         match self {
-            UICommand::Quit => todo!(),
-            UICommand::ShowHelp => todo!(),
-            UICommand::CycleFocusedControlForward => todo!(),
-            UICommand::CycleFocusedControlBack => todo!(),
+            UICommand::Quit => exec_quit(ui_components),
+            UICommand::ShowHelp => exec_show_help(ui_components),
+            UICommand::CycleFocusedControlForward => exec_cycle_forward(ui_components),
+            UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components),
             UICommand::SelectedNextEntry => todo!(),
             UICommand::SelectedPrevEntry => todo!(),
             UICommand::CreateEntry => todo!(),
             UICommand::EditCurrentEntry => todo!(),
             UICommand::DeleteCurrentEntry => todo!(),
-            UICommand::StartEditEntryContent => todo!(),
+            UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
             UICommand::FinishEditEntryContent => todo!(),
             UICommand::SaveEntryContent => todo!(),
             UICommand::DiscardChangesEntryContent => todo!(),
-            UICommand::ReloadAll => todo!(),
+            UICommand::ReloadAll => exec_reload_all(ui_components, app),
         }
     }
 
@@ -116,21 +120,22 @@ impl UICommand {
         app: &mut App<D>,
         msg_box_result: MsgBoxResult,
     ) -> anyhow::Result<HandleInputReturnType> {
+        let not_implemented = || unreachable!("continue exec isn't implemented for {:?}", self);
         match self {
-            UICommand::Quit => todo!(),
-            UICommand::ShowHelp => todo!(),
-            UICommand::CycleFocusedControlForward => todo!(),
-            UICommand::CycleFocusedControlBack => todo!(),
+            UICommand::Quit => continue_quit(ui_components, app, msg_box_result),
+            UICommand::ShowHelp => not_implemented(),
+            UICommand::CycleFocusedControlForward => not_implemented(),
+            UICommand::CycleFocusedControlBack => not_implemented(),
             UICommand::SelectedNextEntry => todo!(),
             UICommand::SelectedPrevEntry => todo!(),
             UICommand::CreateEntry => todo!(),
             UICommand::EditCurrentEntry => todo!(),
             UICommand::DeleteCurrentEntry => todo!(),
-            UICommand::StartEditEntryContent => todo!(),
+            UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => todo!(),
             UICommand::SaveEntryContent => todo!(),
             UICommand::DiscardChangesEntryContent => todo!(),
-            UICommand::ReloadAll => todo!(),
+            UICommand::ReloadAll => continue_reload_all(ui_components, app),
         }
     }
 }

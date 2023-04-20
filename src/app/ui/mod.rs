@@ -163,7 +163,7 @@ impl<'a, 'b> UIComponents<'a> {
             .find(|keymap| keymap.key == *input)
             .and_then(|keymap| Some(keymap.command))
         {
-            self.execute_global_command(cmd, app)
+            cmd.execute(self, app)
         } else {
             match self.active_control {
                 ControlType::EntriesList => {
@@ -246,57 +246,6 @@ impl<'a, 'b> UIComponents<'a> {
         self.active_control = control;
 
         self.set_control_is_active(control, true);
-    }
-
-    fn execute_global_command<D: DataProvider>(
-        &mut self,
-        command: UICommand,
-        _app: &mut App<D>,
-    ) -> anyhow::Result<HandleInputReturnType> {
-        match command {
-            UICommand::Quit => Ok(HandleInputReturnType::ExitApp),
-            UICommand::ShowHelp => {
-                self.popup_stack.push(Popup::Help);
-
-                Ok(HandleInputReturnType::Handled)
-            }
-            UICommand::CycleFocusedControlForward => {
-                let next_control = match self.active_control {
-                    ControlType::EntriesList => ControlType::EntryContentTxt,
-                    ControlType::EntryContentTxt => ControlType::EntriesList,
-                };
-
-                self.change_active_control(next_control);
-
-                Ok(HandleInputReturnType::Handled)
-            }
-            UICommand::CycleFocusedControlBack => {
-                let prev_control = match self.active_control {
-                    ControlType::EntriesList => ControlType::EntryContentTxt,
-                    ControlType::EntryContentTxt => ControlType::EntriesList,
-                };
-
-                self.change_active_control(prev_control);
-
-                Ok(HandleInputReturnType::Handled)
-            }
-            UICommand::StartEditEntryContent => self.start_edit_current_entry(),
-            UICommand::ReloadAll => {
-                //TODO: Remove test code and implement ReloadAll
-                let test_msg_box = MsgBox::new(
-                    MsgBoxType::Question("Message very very long text to check the wrapping very very long text to check the wrapping".into()),
-                    MsgBoxActions::YesNoCancel,
-                );
-
-                self.popup_stack.push(Popup::MsgBox(Box::new(test_msg_box)));
-
-                Ok(HandleInputReturnType::Handled)
-            }
-            _ => unreachable!(
-                "command '{:?}' is not implemented in global keymaps",
-                command
-            ),
-        }
     }
 
     fn start_edit_current_entry(&mut self) -> Result<HandleInputReturnType> {
