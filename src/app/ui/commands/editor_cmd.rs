@@ -21,5 +21,7 @@ pub fn exec_save_entry_content<D: DataProvider>(
     let entry_content = ui_components.editor.get_content();
     app.update_current_entry_content(entry_content)?;
 
+    ui_components.editor.refresh_has_unsaved(app);
+
     Ok(HandleInputReturnType::Handled)
 }

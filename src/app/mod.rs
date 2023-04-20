@@ -56,6 +56,16 @@ where
         Ok(entry_id)
     }
 
+    pub fn get_current_entry(&self) -> Option<&Entry> {
+        self.current_entry_id
+            .and_then(|id| self.entries.iter().find(|entry| entry.id == id))
+    }
+
+    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
+        self.current_entry_id
+            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
+    }
+
     pub fn update_current_entry(
         &mut self,
         title: String,
@@ -64,15 +74,15 @@ where
         assert!(self.current_entry_id.is_some());
 
         let entry = self
-            .entries
-            .iter_mut()
-            .find(|entry| entry.id == self.current_entry_id.unwrap())
+            .get_current_entry_mut()
             .context("journal entry should exist")?;
 
         entry.title = title;
         entry.date = date;
 
-        self.data_provide.update_entry(entry.clone())?;
+        let clone = entry.clone();
+
+        self.data_provide.update_entry(clone)?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
@@ -80,17 +90,13 @@ where
     }
 
     pub fn update_current_entry_content(&mut self, entry_content: String) -> anyhow::Result<()> {
-        assert!(self.current_entry_id.is_some());
+        if let Some(entry) = self.get_current_entry_mut() {
+            entry.content = entry_content;
 
-        let entry = self
-            .entries
-            .iter_mut()
-            .find(|entry| entry.id == self.current_entry_id.unwrap())
-            .context("journal entry should exist")?;
+            let clone = entry.clone();
 
-        entry.content = entry_content;
-
-        self.data_provide.update_entry(entry.clone())?;
+            self.data_provide.update_entry(clone)?;
+        }
 
         Ok(())
     }
