@@ -3,9 +3,9 @@ use crate::{
     data::DataProvider,
 };
 
-type Result = anyhow::Result<HandleInputReturnType>;
+use super::CmdResult;
 
-pub fn exec_quit(ui_components: &mut UIComponents) -> Result {
+pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
     //TODO: check if there is unsaved
 
     Ok(HandleInputReturnType::ExitApp)
@@ -15,17 +15,17 @@ pub fn continue_quit<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
-) -> Result {
+) -> CmdResult {
     todo!()
 }
 
-pub fn exec_show_help(ui_components: &mut UIComponents) -> Result {
+pub fn exec_show_help(ui_components: &mut UIComponents) -> CmdResult {
     ui_components.popup_stack.push(Popup::Help);
 
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_cycle_forward(ui_components: &mut UIComponents) -> Result {
+pub fn exec_cycle_forward(ui_components: &mut UIComponents) -> CmdResult {
     let next_control = match ui_components.active_control {
         ControlType::EntriesList => ControlType::EntryContentTxt,
         ControlType::EntryContentTxt => ControlType::EntriesList,
@@ -35,7 +35,7 @@ pub fn exec_cycle_forward(ui_components: &mut UIComponents) -> Result {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> Result {
+pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> CmdResult {
     let prev_control = match ui_components.active_control {
         ControlType::EntriesList => ControlType::EntryContentTxt,
         ControlType::EntryContentTxt => ControlType::EntriesList,
@@ -46,7 +46,7 @@ pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> Result {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> Result {
+pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> CmdResult {
     ui_components.start_edit_current_entry();
 
     Ok(HandleInputReturnType::Handled)
@@ -55,7 +55,7 @@ pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> Result {
 pub fn exec_reload_all<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
-) -> Result {
+) -> CmdResult {
     //TODO: Remove test code and implement ReloadAll
     let test_msg_box = MsgBox::new(
                     MsgBoxType::Question("Message very very long text to check the wrapping very very long text to check the wrapping".into()),
@@ -72,6 +72,6 @@ pub fn exec_reload_all<D: DataProvider>(
 pub fn continue_reload_all<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
-) -> Result {
+) -> CmdResult {
     todo!()
 }

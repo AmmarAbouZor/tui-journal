@@ -12,10 +12,6 @@ use crate::data::Entry;
 use super::ACTIVE_CONTROL_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
 
-mod command_actions;
-
-pub(crate) use command_actions::execute_command;
-
 #[derive(Debug)]
 pub struct EntriesList {
     pub state: ListState,

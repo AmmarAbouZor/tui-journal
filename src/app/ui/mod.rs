@@ -168,8 +168,7 @@ impl<'a, 'b> UIComponents<'a> {
             match self.active_control {
                 ControlType::EntriesList => {
                     if let Some(key) = self.entries_list_keymaps.iter().find(|c| &c.key == input) {
-                        entries_list::execute_command(key.command, self, app)?;
-                        Ok(HandleInputReturnType::Handled)
+                        key.command.clone().execute(self, app)
                     } else {
                         Ok(HandleInputReturnType::NotFound)
                     }
