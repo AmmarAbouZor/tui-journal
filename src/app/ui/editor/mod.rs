@@ -105,4 +105,19 @@ impl<'a, 'b> Editor<'a> {
     pub fn set_active(&mut self, active: bool) {
         self.is_active = active;
     }
+
+    pub fn get_content(&self) -> String {
+        self.text_area
+            .lines()
+            .iter()
+            .cloned()
+            .map(|line| {
+                if line.is_empty() {
+                    String::from("\n\r")
+                } else {
+                    line
+                }
+            })
+            .collect()
+    }
 }

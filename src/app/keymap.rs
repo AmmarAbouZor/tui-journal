@@ -119,6 +119,10 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::StartEditEntryContent,
         ),
         Keymap::new(
+            Input::new(KeyCode::Char('s'), KeyModifiers::NONE),
+            UICommand::SaveEntryContent,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Char('r'), KeyModifiers::CONTROL),
             UICommand::ReloadAll,
         ),
@@ -162,7 +166,7 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
     ]
 }
 
-pub(crate) fn get_editor_keymaps() -> Vec<Keymap> {
+pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
             Input::new(KeyCode::Char('s'), KeyModifiers::CONTROL),

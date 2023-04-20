@@ -114,7 +114,7 @@ impl UICommand {
             UICommand::DeleteCurrentEntry => todo!(),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
             UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
-            UICommand::SaveEntryContent => todo!(),
+            UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app),
             UICommand::DiscardChangesEntryContent => todo!(),
             UICommand::ReloadAll => exec_reload_all(ui_components, app),
         }
@@ -145,7 +145,7 @@ impl UICommand {
             UICommand::DeleteCurrentEntry => todo!(),
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
-            UICommand::SaveEntryContent => todo!(),
+            UICommand::SaveEntryContent => not_implemented(),
             UICommand::DiscardChangesEntryContent => todo!(),
             UICommand::ReloadAll => continue_reload_all(ui_components, app),
         }

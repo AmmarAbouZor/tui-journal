@@ -67,7 +67,7 @@ where
             .entries
             .iter_mut()
             .find(|entry| entry.id == self.current_entry_id.unwrap())
-            .context("journal entry not found")?;
+            .context("journal entry should exist")?;
 
         entry.title = title;
         entry.date = date;
@@ -75,6 +75,22 @@ where
         self.data_provide.update_entry(entry.clone())?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        Ok(())
+    }
+
+    pub fn update_current_entry_content(&mut self, entry_content: String) -> anyhow::Result<()> {
+        assert!(self.current_entry_id.is_some());
+
+        let entry = self
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == self.current_entry_id.unwrap())
+            .context("journal entry should exist")?;
+
+        entry.content = entry_content;
+
+        self.data_provide.update_entry(entry.clone())?;
 
         Ok(())
     }

@@ -10,7 +10,9 @@ use self::{
 };
 
 use super::{
-    keymap::{get_editor_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap},
+    keymap::{
+        get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap,
+    },
     runner::HandleInputReturnType,
     App,
 };
@@ -66,7 +68,7 @@ impl<'a, 'b> UIComponents<'a> {
     pub fn new() -> Self {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
-        let editor_keymaps = get_editor_keymaps();
+        let editor_keymaps = get_editor_mode_keymaps();
         let mut entries_list = EntriesList::new();
         let editor = Editor::new();
 
@@ -149,9 +151,7 @@ impl<'a, 'b> UIComponents<'a> {
 
         if self.is_editor_mode {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                if key.command == UICommand::FinishEditEntryContent {
-                    return key.command.clone().execute(self, app);
-                }
+                return key.command.clone().execute(self, app);
             }
             return self.editor.handle_input(input, true);
         }
