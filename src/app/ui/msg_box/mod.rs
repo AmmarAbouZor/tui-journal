@@ -54,13 +54,13 @@ impl MsgBox {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect_exact_hight(60, 8, area);
+        let area = centered_rect_exact_hight(55, 8, area);
 
         let (title, color, text) = match &self.msg_type {
             MsgBoxType::Error(text) => ("Error", Color::LightRed, text),
             MsgBoxType::Warning(text) => ("Warning", Color::Yellow, text),
             MsgBoxType::Info(text) => ("Info", Color::LightGreen, text),
-            MsgBoxType::Question(text) => ("Question", Color::LightBlue, text),
+            MsgBoxType::Question(text) => ("", Color::LightBlue, text),
         };
 
         let border = Block::default()
@@ -80,7 +80,7 @@ impl MsgBox {
 
         let text_paragraph = Paragraph::new(Span::raw(text))
             .style(Style::default().fg(color))
-            .alignment(Alignment::Left)
+            .alignment(Alignment::Center)
             .wrap(Wrap { trim: false });
 
         frame.render_widget(text_paragraph, chunks[0]);
@@ -93,7 +93,6 @@ impl MsgBox {
         };
 
         let actions_paragraph = Paragraph::new(Span::raw(actions_text))
-            .style(Style::default().fg(Color::Blue))
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: false });
 
