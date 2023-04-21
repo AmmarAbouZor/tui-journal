@@ -173,7 +173,7 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
             UICommand::SaveEntryContent,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('q'), KeyModifiers::CONTROL),
             UICommand::DiscardChangesEntryContent,
         ),
         Keymap::new(

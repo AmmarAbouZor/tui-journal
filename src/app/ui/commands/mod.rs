@@ -115,7 +115,7 @@ impl UICommand {
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
             UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app),
-            UICommand::DiscardChangesEntryContent => todo!(),
+            UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
             UICommand::ReloadAll => exec_reload_all(ui_components, app),
         }
     }
@@ -144,7 +144,9 @@ impl UICommand {
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
             UICommand::SaveEntryContent => not_implemented(),
-            UICommand::DiscardChangesEntryContent => todo!(),
+            UICommand::DiscardChangesEntryContent => {
+                continue_discard_content(ui_components, app, msg_box_result)
+            }
             UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result),
         }
     }
