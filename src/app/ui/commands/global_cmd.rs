@@ -66,18 +66,39 @@ pub fn exec_reload_all<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
-    //TODO: Remove test code and implement ReloadAll
-    ui_components.show_msg_box(
-                    MsgBoxType::Question("Message very very long text to check the wrapping very very long text to check the wrapping".into()),
-                    MsgBoxActions::YesNoCancel, None
-                );
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ReloadAll));
+    } else {
+        reload_all(ui_components, app)?;
+    }
 
     Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn reload_all<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> anyhow::Result<()> {
+    app.load_entries()?;
+    ui_components.set_current_entry(app.current_entry_id, app);
+
+    Ok(())
 }
 
 pub fn continue_reload_all<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
 ) -> CmdResult {
-    todo!()
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app)?;
+            reload_all(ui_components, app)?;
+        }
+        MsgBoxResult::No => reload_all(ui_components, app)?,
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }

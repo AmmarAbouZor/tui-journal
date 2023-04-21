@@ -145,7 +145,7 @@ impl UICommand {
             UICommand::FinishEditEntryContent => not_implemented(),
             UICommand::SaveEntryContent => not_implemented(),
             UICommand::DiscardChangesEntryContent => todo!(),
-            UICommand::ReloadAll => continue_reload_all(ui_components, app),
+            UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result),
         }
     }
 }
