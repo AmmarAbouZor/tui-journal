@@ -27,12 +27,13 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     let temp_path = PathBuf::from("./entries.json");
     let json_provider = JsonDataProvide::new(temp_path);
 
+    let mut ui_components = UIComponents::new();
+
     let mut app = App::new(json_provider);
-    if let Err(_info) = app.load_entries() {
-        // TODO: handle error message with notify service
+    if let Err(err) = app.load_entries() {
+        ui_components.show_err_msg(err.to_string());
     }
 
-    let mut ui_components = UIComponents::new();
     ui_components.set_current_entry(
         app.entries.first().and_then(|entry| Some(entry.id)),
         &mut app,
@@ -53,8 +54,8 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
                             return Ok(());
                         }
                     }
-                    Err(_) => {
-                        //TODO: handle error message with notify service
+                    Err(err) => {
+                        ui_components.show_err_msg(err.to_string());
                     }
                 }
             }

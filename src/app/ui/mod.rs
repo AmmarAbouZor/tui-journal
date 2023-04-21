@@ -196,7 +196,6 @@ impl<'a, 'b> UIComponents<'a> {
                     self.popup_stack.pop().expect("popup stack isn't empty");
                 }
                 Popup::Entry(entry_popup) => {
-                    //TODO: handle err case
                     let close_popup = match entry_popup.handle_input(input, app)? {
                         EntryPopupInputReturn::Cancel => true,
                         EntryPopupInputReturn::KeepPupup => false,
@@ -293,5 +292,9 @@ impl<'a, 'b> UIComponents<'a> {
     #[inline]
     pub fn has_unsaved(&self) -> bool {
         self.editor.has_unsaved()
+    }
+
+    pub fn show_err_msg(&mut self, err_txt: String) {
+        self.show_msg_box(MsgBoxType::Error(err_txt), MsgBoxActions::Ok, None);
     }
 }
