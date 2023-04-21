@@ -59,6 +59,8 @@ impl<'a, 'b> Editor<'a> {
         };
 
         self.text_area = text_area;
+
+        self.refresh_has_unsaved(app);
     }
 
     pub fn handle_input<D: DataProvider>(
@@ -108,6 +110,8 @@ impl<'a, 'b> Editor<'a> {
             true => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
             false => Style::default().bg(Color::White).fg(Color::Black),
         });
+
+        self.text_area.set_cursor_line_style(Style::default());
 
         frame.render_widget(self.text_area.widget(), area);
     }
