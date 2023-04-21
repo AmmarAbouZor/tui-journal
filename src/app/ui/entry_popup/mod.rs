@@ -96,7 +96,7 @@ impl<'a> EntryPopup<'a> {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect_exact_hight(80, 12, area);
+        let area = centered_rect_exact_hight(70, 11, area);
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -109,10 +109,10 @@ impl<'a> EntryPopup<'a> {
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
 
-        let area = centered_rect(90, 60, area);
-
         let chunks = Layout::default()
             .direction(Direction::Vertical)
+            .horizontal_margin(4)
+            .vertical_margin(2)
             .constraints(
                 [
                     Constraint::Length(3),
