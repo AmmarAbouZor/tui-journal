@@ -94,9 +94,8 @@ impl<'a, 'b> UIComponents<'a> {
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
+        app.current_entry_id = entry_id;
         if let Some(id) = entry_id {
-            app.current_entry_id = entry_id;
-
             let entry_index = app.entries.iter().position(|entry| entry.id == id);
             self.entries_list.state.select(entry_index);
 
