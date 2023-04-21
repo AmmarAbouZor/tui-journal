@@ -142,3 +142,39 @@ pub fn exec_edit_current_entry<D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_delete_current_entry<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    if app.current_entry_id.is_some() {
+        let msg = MsgBoxType::Question("Do you want to remove the current journal?".into());
+        let msg_actions = MsgBoxActions::YesNo;
+        ui_components.show_msg_box(msg, msg_actions, Some(UICommand::DeleteCurrentEntry));
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn continue_delete_current_entry<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Yes => {
+            app.delete_entry(
+                ui_components,
+                app.current_entry_id
+                    .expect("current entry must have a value"),
+            )?;
+        }
+        MsgBoxResult::No => {}
+        _ => unreachable!(
+            "{:?} not implemeted for delete current entry",
+            msg_box_result
+        ),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}

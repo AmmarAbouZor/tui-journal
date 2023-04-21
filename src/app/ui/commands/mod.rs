@@ -111,7 +111,7 @@ impl UICommand {
             UICommand::SelectedPrevEntry => exec_select_prev_entry(ui_components, app),
             UICommand::CreateEntry => exec_create_entry(ui_components),
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
-            UICommand::DeleteCurrentEntry => todo!(),
+            UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
             UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app),
@@ -140,7 +140,9 @@ impl UICommand {
             }
             UICommand::CreateEntry => continue_create_entry(ui_components, app, msg_box_result),
             UICommand::EditCurrentEntry => not_implemented(),
-            UICommand::DeleteCurrentEntry => todo!(),
+            UICommand::DeleteCurrentEntry => {
+                continue_delete_current_entry(ui_components, app, msg_box_result)
+            }
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
             UICommand::SaveEntryContent => not_implemented(),
