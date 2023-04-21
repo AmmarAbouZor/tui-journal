@@ -3,12 +3,23 @@ use crate::{
     data::DataProvider,
 };
 
-use super::CmdResult;
+use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
 pub fn exec_select_prev_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::SelectedPrevEntry));
+    } else {
+        select_prev_entry(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn select_prev_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     let prev_id = ui_components
         .entries_list
         .state
@@ -19,8 +30,6 @@ pub fn exec_select_prev_entry<D: DataProvider>(
     if prev_id.is_some() {
         ui_components.set_current_entry(prev_id, app);
     }
-
-    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn continue_select_prev_entry<D: DataProvider>(
@@ -28,13 +37,33 @@ pub fn continue_select_prev_entry<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
-    todo!()
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app)?;
+            select_prev_entry(ui_components, app);
+        }
+        MsgBoxResult::No => select_prev_entry(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn exec_select_next_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::SelectedNextEntry));
+    } else {
+        select_next_entry(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn select_next_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     let next_id = ui_components
         .entries_list
         .state
@@ -45,8 +74,6 @@ pub fn exec_select_next_entry<D: DataProvider>(
     if next_id.is_some() {
         ui_components.set_current_entry(next_id, app);
     }
-
-    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn continue_select_next_entry<D: DataProvider>(
@@ -54,16 +81,33 @@ pub fn continue_select_next_entry<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
-    todo!()
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app)?;
+            select_next_entry(ui_components, app);
+        }
+        MsgBoxResult::No => select_next_entry(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn exec_create_entry(ui_components: &mut UIComponents) -> CmdResult {
-    //TODO: Check if unsaved changes
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::CreateEntry));
+    } else {
+        create_entry(ui_components);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+pub fn create_entry(ui_components: &mut UIComponents) {
     ui_components
         .popup_stack
         .push(Popup::Entry(Box::new(EntryPopup::new_entry())));
-
-    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn continue_create_entry<D: DataProvider>(
@@ -71,7 +115,16 @@ pub fn continue_create_entry<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
-    todo!()
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app)?;
+            create_entry(ui_components);
+        }
+        MsgBoxResult::No => create_entry(ui_components),
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn exec_edit_current_entry<D: DataProvider>(
@@ -88,12 +141,4 @@ pub fn exec_edit_current_entry<D: DataProvider>(
     }
 
     Ok(HandleInputReturnType::Handled)
-}
-
-pub fn continue_edit_current_entry<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-    msg_box_result: MsgBoxResult,
-) -> CmdResult {
-    todo!()
 }

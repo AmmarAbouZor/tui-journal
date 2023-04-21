@@ -62,6 +62,7 @@ pub struct UIComponents<'a> {
     popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
     is_editor_mode: bool,
+    pending_command: Option<UICommand>,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -84,6 +85,7 @@ impl<'a, 'b> UIComponents<'a> {
             popup_stack: Vec::new(),
             active_control,
             is_editor_mode: false,
+            pending_command: None,
         }
     }
 
@@ -215,9 +217,11 @@ impl<'a, 'b> UIComponents<'a> {
                 }
                 Popup::MsgBox(msg_box) => match msg_box.handle_input(input) {
                     msg_box::MsgBoxInputResult::Keep => {}
-                    msg_box::MsgBoxInputResult::Close(_msg_box_result) => {
+                    msg_box::MsgBoxInputResult::Close(msg_box_result) => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
-                        //TODO: check who is pending message box answer and let it handle the response
+                        if let Some(cmd) = self.pending_command.take() {
+                            return cmd.continue_executing(self, app, msg_box_result);
+                        }
                     }
                 },
             }
@@ -263,5 +267,32 @@ impl<'a, 'b> UIComponents<'a> {
         let editor_maps = self.editor_keymaps.iter();
 
         global_maps.chain(list_maps).chain(editor_maps)
+    }
+
+    pub fn show_msg_box(
+        &mut self,
+        msg: MsgBoxType,
+        msg_actions: MsgBoxActions,
+        pending_cmd: Option<UICommand>,
+    ) {
+        self.pending_command = pending_cmd;
+        let msg_box = MsgBox::new(msg, msg_actions);
+
+        self.popup_stack.push(Popup::MsgBox(Box::new(msg_box)));
+    }
+
+    pub fn show_unsaved_msg_box(&mut self, pending_cmd: Option<UICommand>) {
+        self.pending_command = pending_cmd;
+        let msg =
+            MsgBoxType::Question("Do you want to save the changes on the current journal?".into());
+        let msg_actions = MsgBoxActions::YesNoCancel;
+        let msg_box = MsgBox::new(msg, msg_actions);
+
+        self.popup_stack.push(Popup::MsgBox(Box::new(msg_box)));
+    }
+
+    #[inline]
+    pub fn has_unsaved(&self) -> bool {
+        self.editor.has_unsaved()
     }
 }

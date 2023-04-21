@@ -121,7 +121,7 @@ impl UICommand {
     }
 
     pub fn continue_executing<D: DataProvider>(
-        &mut self,
+        &self,
         ui_components: &mut UIComponents,
         app: &mut App<D>,
         msg_box_result: MsgBoxResult,
@@ -139,9 +139,7 @@ impl UICommand {
                 continue_select_prev_entry(ui_components, app, msg_box_result)
             }
             UICommand::CreateEntry => continue_create_entry(ui_components, app, msg_box_result),
-            UICommand::EditCurrentEntry => {
-                continue_edit_current_entry(ui_components, app, msg_box_result)
-            }
+            UICommand::EditCurrentEntry => not_implemented(),
             UICommand::DeleteCurrentEntry => todo!(),
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),

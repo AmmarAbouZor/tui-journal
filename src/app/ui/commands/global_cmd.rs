@@ -3,12 +3,15 @@ use crate::{
     data::DataProvider,
 };
 
-use super::CmdResult;
+use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
 pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
-    //TODO: check if there is unsaved
-
-    Ok(HandleInputReturnType::ExitApp)
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::Quit));
+        Ok(HandleInputReturnType::Handled)
+    } else {
+        Ok(HandleInputReturnType::ExitApp)
+    }
 }
 
 pub fn continue_quit<D: DataProvider>(
@@ -16,7 +19,14 @@ pub fn continue_quit<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
-    todo!()
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => Ok(HandleInputReturnType::Handled),
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app)?;
+            Ok(HandleInputReturnType::ExitApp)
+        }
+        MsgBoxResult::No => Ok(HandleInputReturnType::ExitApp),
+    }
 }
 
 pub fn exec_show_help(ui_components: &mut UIComponents) -> CmdResult {
@@ -47,7 +57,7 @@ pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> CmdResult {
 }
 
 pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> CmdResult {
-    ui_components.start_edit_current_entry();
+    ui_components.start_edit_current_entry()?;
 
     Ok(HandleInputReturnType::Handled)
 }
@@ -57,14 +67,10 @@ pub fn exec_reload_all<D: DataProvider>(
     app: &mut App<D>,
 ) -> CmdResult {
     //TODO: Remove test code and implement ReloadAll
-    let test_msg_box = MsgBox::new(
+    ui_components.show_msg_box(
                     MsgBoxType::Question("Message very very long text to check the wrapping very very long text to check the wrapping".into()),
-                    MsgBoxActions::YesNoCancel,
+                    MsgBoxActions::YesNoCancel, None
                 );
-
-    ui_components
-        .popup_stack
-        .push(Popup::MsgBox(Box::new(test_msg_box)));
 
     Ok(HandleInputReturnType::Handled)
 }
