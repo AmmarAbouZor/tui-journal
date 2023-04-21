@@ -1,4 +1,4 @@
-use crossterm::event::{KeyEvent, KeyEventKind, KeyEventState};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use tui::{
     backend::Backend,
     layout::Rect,
@@ -75,11 +75,33 @@ impl<'a, 'b> Editor<'a> {
             if self.text_area.input(key_event) {
                 self.refresh_has_unsaved(app);
             }
-            Ok(HandleInputReturnType::Handled)
         } else {
-            //TODO: Implement vim normal modes shortcuts
-            Ok(HandleInputReturnType::NotFound)
+            let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
+            let has_alt = input.modifiers.contains(KeyModifiers::ALT);
+            let is_navigation = match input.key_code {
+                KeyCode::Left
+                | KeyCode::Right
+                | KeyCode::Up
+                | KeyCode::Down
+                | KeyCode::Home
+                | KeyCode::End
+                | KeyCode::PageUp
+                | KeyCode::PageDown => true,
+                KeyCode::Char('p') if has_control || has_alt => true,
+                KeyCode::Char('n') if has_control || has_alt => true,
+                KeyCode::Char('f') if has_control || has_alt => true,
+                KeyCode::Char('b') if has_control || has_alt => true,
+                KeyCode::Char('e') if has_control || has_alt => true,
+                KeyCode::Char('a') if has_control || has_alt => true,
+                KeyCode::Char('v') if has_control || has_alt => true,
+                _ => false,
+            };
+            if is_navigation {
+                let key_event = KeyEvent::from(input);
+                self.text_area.input(key_event);
+            }
         }
+        Ok(HandleInputReturnType::Handled)
     }
 
     pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_editor_mode: bool)
