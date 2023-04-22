@@ -50,7 +50,10 @@ impl<'a, 'b> Editor<'a> {
             Some(id) => {
                 if let Some(entry) = app.get_entry(id) {
                     let lines = entry.content.lines().map(|line| line.to_owned()).collect();
-                    TextArea::new(lines)
+                    let mut text_area = TextArea::new(lines);
+                    text_area.move_cursor(tui_textarea::CursorMove::Bottom);
+                    text_area.move_cursor(tui_textarea::CursorMove::End);
+                    text_area
                 } else {
                     TextArea::default()
                 }
@@ -128,10 +131,12 @@ impl<'a, 'b> Editor<'a> {
                 .title(title),
         );
 
-        self.text_area.set_cursor_style(match is_editor_mode {
-            true => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
-            false => Style::default().bg(Color::White).fg(Color::Black),
-        });
+        self.text_area
+            .set_cursor_style(match (is_editor_mode, self.is_active) {
+                (_, false) => Style::default(),
+                (true, true) => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
+                (false, true) => Style::default().bg(Color::White).fg(Color::Black),
+            });
 
         self.text_area.set_cursor_line_style(Style::default());
 
