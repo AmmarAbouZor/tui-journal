@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 
 use super::*;
 
@@ -21,7 +21,11 @@ impl DataProvider for JsonDataProvide {
         }
 
         let json_content = fs::read_to_string(&self.file_path)?;
-        let entries = serde_json::from_str(&json_content)?;
+        if json_content.is_empty() {
+            return Ok(Vec::new());
+        }
+        let entries =
+            serde_json::from_str(&json_content).context("Error while parsing entries json data")?;
 
         Ok(entries)
     }

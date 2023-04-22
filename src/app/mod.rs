@@ -7,6 +7,7 @@ pub use ui::UIComponents;
 
 mod keymap;
 mod runner;
+mod settings;
 mod ui;
 
 pub use runner::HandleInputReturnType;

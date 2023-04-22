@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
@@ -13,7 +10,7 @@ use crate::{
 
 use anyhow::Result;
 
-use super::keymap::Input;
+use super::{keymap::Input, settings::Settings};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {
@@ -24,8 +21,8 @@ pub enum HandleInputReturnType {
 
 pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
     let mut last_tick = Instant::now();
-    let temp_path = PathBuf::from("./entries.json");
-    let json_provider = JsonDataProvide::new(temp_path);
+    let settings = Settings::new()?;
+    let json_provider = JsonDataProvide::new(settings.json_file_path);
 
     let mut ui_components = UIComponents::new();
 
