@@ -15,10 +15,7 @@ use crate::{
     data::{DataProvider, Entry},
 };
 
-use super::{
-    ui_functions::{centered_rect, centered_rect_exact_hight},
-    ACTIVE_CONTROL_COLOR,
-};
+use super::{ui_functions::centered_rect_exact_hight, ACTIVE_CONTROL_COLOR};
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
