@@ -12,6 +12,8 @@ use crate::app::keymap::Input;
 
 use super::ui_functions::centered_rect_exact_hight;
 
+// Not all enums are used in this app at this point
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum MsgBoxType {
     Error(String),
@@ -20,6 +22,8 @@ pub enum MsgBoxType {
     Question(String),
 }
 
+// Not all enums are used in this app at this point
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MsgBoxActions {
     Ok,
