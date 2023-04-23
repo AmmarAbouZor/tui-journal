@@ -180,5 +180,9 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Esc, KeyModifiers::NONE),
             UICommand::FinishEditEntryContent,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
+            UICommand::FinishEditEntryContent,
+        ),
     ]
 }

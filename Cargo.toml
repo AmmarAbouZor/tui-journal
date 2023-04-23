@@ -14,5 +14,6 @@ directories = "5.0.0"
 serde = { version = "1.0.158", features = ["derive"] }
 serde_json = "1.0.95"
 thiserror = "1.0.40"
+toml = "0.7.3"
 tui = "0.19.0"
 tui-textarea = "0.2.0"

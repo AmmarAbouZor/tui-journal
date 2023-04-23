@@ -1,11 +1,11 @@
 use std::{fs, path::PathBuf};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context, Ok};
 use config::{Config, File};
 use directories::{BaseDirs, UserDirs};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
     pub json_file_path: PathBuf,
 }
@@ -23,17 +23,29 @@ impl Settings {
 
         let config = Config::builder()
             .add_source(File::from(settings_path))
-            .set_default(
-                "json_file_path",
-                get_default_json_path()?
-                    .to_str()
-                    .expect("Default path should be converted to string"),
-            )?
+            .set_default("json_file_path", "")?
             .build()?;
 
-        let settings = config.try_deserialize()?;
+        let mut settings: Settings = config.try_deserialize()?;
+
+        if settings.json_file_path.to_str().unwrap().is_empty() {
+            settings.json_file_path = get_default_json_path()?;
+            settings.write_current_settings()?;
+        }
 
         Ok(settings)
+    }
+
+    pub fn write_current_settings(&self) -> anyhow::Result<()> {
+        let toml = toml::to_string(&self)
+            .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))?;
+
+        let settings_path = get_settings_path()?;
+
+        fs::write(settings_path, toml)
+            .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
+
+        Ok(())
     }
 }
 
