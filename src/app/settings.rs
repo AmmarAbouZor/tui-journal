@@ -13,20 +13,22 @@ pub struct Settings {
 impl Settings {
     pub fn new() -> anyhow::Result<Self> {
         let settings_path = get_settings_path()?;
-        if !settings_path.exists() {
-            let parent = settings_path
-                .parent()
-                .expect("Default settings path have parent dir");
-            fs::create_dir_all(parent)?;
-            fs::File::create(settings_path.clone())?;
-        }
+        let mut settings = if settings_path.exists() {
+            let config = Config::builder()
+                .add_source(File::from(settings_path))
+                .set_default("json_file_path", "")?
+                .build()?;
 
-        let config = Config::builder()
-            .add_source(File::from(settings_path))
-            .set_default("json_file_path", "")?
-            .build()?;
+            config.try_deserialize()?
+        } else {
+            let defaults = Settings::get_default()?;
+            if let Some(parent) = settings_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            defaults.write_current_settings()?;
 
-        let mut settings: Settings = config.try_deserialize()?;
+            defaults
+        };
 
         if settings.json_file_path.to_str().unwrap().is_empty() {
             settings.json_file_path = get_default_json_path()?;
@@ -34,6 +36,12 @@ impl Settings {
         }
 
         Ok(settings)
+    }
+
+    fn get_default() -> anyhow::Result<Self> {
+        Ok(Settings {
+            json_file_path: get_default_json_path()?,
+        })
     }
 
     pub fn write_current_settings(&self) -> anyhow::Result<()> {

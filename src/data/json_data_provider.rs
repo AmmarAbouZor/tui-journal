@@ -96,6 +96,11 @@ impl DataProvider for JsonDataProvide {
 impl JsonDataProvide {
     fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
         let entries_text = serde_json::to_vec(&entries)?;
+        if !self.file_path.exists() {
+            if let Some(parent) = self.file_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+        }
         fs::write(&self.file_path, &entries_text)?;
 
         Ok(())
