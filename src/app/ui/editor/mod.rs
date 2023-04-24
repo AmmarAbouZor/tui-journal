@@ -34,7 +34,7 @@ impl From<&Input> for KeyEvent {
     }
 }
 
-impl<'a, 'b> Editor<'a> {
+impl<'a> Editor<'a> {
     pub fn new() -> Editor<'a> {
         let text_area = TextArea::default();
 
@@ -148,7 +148,7 @@ impl<'a, 'b> Editor<'a> {
     }
 
     pub fn get_content(&self) -> String {
-        let lines: Vec<String> = self.text_area.lines().iter().cloned().collect();
+        let lines = self.text_area.lines().to_vec();
 
         lines.join("\n")
     }

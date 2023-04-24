@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use thiserror;
 
 use chrono::{DateTime, Utc};
 

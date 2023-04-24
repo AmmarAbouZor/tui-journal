@@ -22,7 +22,7 @@ impl Input {
 impl From<&KeyEvent> for Input {
     fn from(key_event: &KeyEvent) -> Self {
         Self {
-            key_code: key_event.code.clone(),
+            key_code: key_event.code,
             modifiers: key_event.modifiers,
         }
     }

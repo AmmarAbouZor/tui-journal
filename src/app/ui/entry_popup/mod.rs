@@ -209,7 +209,7 @@ impl<'a> EntryPopup<'a> {
     ) -> anyhow::Result<EntryPopupInputReturn> {
         let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
 
-        return match input.key_code {
+        match input.key_code {
             KeyCode::Esc => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Char('c') if has_ctrl => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Enter => self.handle_confirm(app),
@@ -235,7 +235,7 @@ impl<'a> EntryPopup<'a> {
                 }
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
-        };
+        }
     }
 
     fn handle_confirm<D: DataProvider>(

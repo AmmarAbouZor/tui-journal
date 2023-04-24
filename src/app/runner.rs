@@ -31,10 +31,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
         ui_components.show_err_msg(err.to_string());
     }
 
-    ui_components.set_current_entry(
-        app.entries.first().and_then(|entry| Some(entry.id)),
-        &mut app,
-    );
+    ui_components.set_current_entry(app.entries.first().map(|entry| entry.id), &mut app);
 
     loop {
         terminal.draw(|f| ui_components.render_ui(f, &app))?;

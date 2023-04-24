@@ -113,11 +113,11 @@ where
             .entries
             .iter()
             .position(|entry| entry.id == entry_id)
-            .and_then(|index| Some(self.entries.remove(index)))
+            .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
 
         if self.current_entry_id.unwrap_or(0) == removed_entry.id {
-            let first_id = self.entries.first().and_then(|entry| Some(entry.id));
+            let first_id = self.entries.first().map(|entry| entry.id);
             ui_components.set_current_entry(first_id, self);
         }
         Ok(())

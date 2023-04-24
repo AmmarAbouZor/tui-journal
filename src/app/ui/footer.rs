@@ -19,7 +19,7 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
             .find(|keymap| keymap.command == UICommand::FinishEditEntryContent)
             .expect("Exit editor mode command must be in content editor commands");
 
-        Spans::from(vec![get_keymap_spans(&exit_editor_mode_keymap)])
+        Spans::from(vec![get_keymap_spans(exit_editor_mode_keymap)])
     } else {
         let close_keymap = ui_components
             .global_keymaps
@@ -40,11 +40,11 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
             .expect("Start editor mode command must be in global commands");
 
         Spans::from(vec![
-            get_keymap_spans(&close_keymap),
+            get_keymap_spans(close_keymap),
             Span::raw(" | "),
-            get_keymap_spans(&enter_editor_keymap),
+            get_keymap_spans(enter_editor_keymap),
             Span::raw(" | "),
-            get_keymap_spans(&help_keymap),
+            get_keymap_spans(help_keymap),
         ])
     };
     let footer = Paragraph::new(spans).alignment(Alignment::Left).block(

@@ -41,10 +41,7 @@ impl DataProvider for JsonDataProvide {
 
         entries.sort_by_key(|e| e.id);
 
-        let id: u32 = entries
-            .last()
-            .and_then(|entry| Some(entry.id + 1))
-            .unwrap_or(0);
+        let id: u32 = entries.last().map(|entry| entry.id + 1).unwrap_or(0);
 
         let new_entry = Entry::from_draft(id, entry);
 
@@ -101,7 +98,7 @@ impl JsonDataProvide {
                 fs::create_dir_all(parent)?;
             }
         }
-        fs::write(&self.file_path, &entries_text)?;
+        fs::write(&self.file_path, entries_text)?;
 
         Ok(())
     }

@@ -161,7 +161,7 @@ impl<'a, 'b> UIComponents<'a> {
             .global_keymaps
             .iter()
             .find(|keymap| keymap.key == *input)
-            .and_then(|keymap| Some(keymap.command))
+            .map(|keymap| keymap.command)
         {
             cmd.execute(self, app)
         } else {
@@ -254,7 +254,7 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.change_active_control(ControlType::EntryContentTxt);
 
-        assert!(self.is_editor_mode == false);
+        assert!(!self.is_editor_mode);
         self.is_editor_mode = true;
         Ok(HandleInputReturnType::Handled)
     }

@@ -59,27 +59,23 @@ impl Settings {
 
 fn get_settings_path() -> anyhow::Result<PathBuf> {
     BaseDirs::new()
-        .and_then(|base_dirs| {
-            Some(
-                base_dirs
-                    .config_dir()
-                    .join("tui-journal")
-                    .join("config.toml"),
-            )
+        .map(|base_dirs| {
+            base_dirs
+                .config_dir()
+                .join("tui-journal")
+                .join("config.toml")
         })
         .context("Config file path couldn't be retrieved")
 }
 
 fn get_default_json_path() -> anyhow::Result<PathBuf> {
     UserDirs::new()
-        .and_then(|user_dirs| {
-            Some(
-                user_dirs
-                    .document_dir()
-                    .unwrap_or(user_dirs.home_dir())
-                    .join("tui-journal")
-                    .join("entries.json"),
-            )
+        .map(|user_dirs| {
+            user_dirs
+                .document_dir()
+                .unwrap_or(user_dirs.home_dir())
+                .join("tui-journal")
+                .join("entries.json")
         })
         .context("Default entries file path couldn't be retrieved")
 }
