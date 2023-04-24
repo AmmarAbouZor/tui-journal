@@ -2,12 +2,15 @@
 name = "tui-journal"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ammar Abou Zor"]
+description = "Journal Tui app. It saves the data in a simple json file with a configurable path"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.70"
 chrono = { version = "0.4.24", features = ["serde"] }
+clap = { version = "4.2.4", features = ["derive"] }
 config = { version = "0.13.3", defaut_features = false, features = ["toml"] }
 crossterm = "0.25"
 directories = "5.0.0"

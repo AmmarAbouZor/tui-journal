@@ -11,6 +11,7 @@ mod settings;
 mod ui;
 
 pub use runner::HandleInputReturnType;
+pub use settings::Settings;
 
 pub struct App<D>
 where

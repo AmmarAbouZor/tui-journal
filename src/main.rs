@@ -1,6 +1,7 @@
 use std::{io, time::Duration};
 
 use anyhow::Result;
+use clap::Parser;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
@@ -9,9 +10,19 @@ use crossterm::{
 use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
+mod cli;
 mod data;
 
 fn main() -> Result<()> {
+    let cli = cli::Cli::parse();
+
+    if let Some(command) = cli.command {
+        match command.exec()? {
+            cli::CommandResult::Return => return Ok(()),
+            cli::CommandResult::Continue => {}
+        }
+    }
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
