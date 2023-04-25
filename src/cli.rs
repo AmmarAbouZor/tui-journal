@@ -62,6 +62,14 @@ fn exec_get_json_path() -> anyhow::Result<()> {
 fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
     let mut settings = Settings::new()?;
 
+    if !path.exists() {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        fs::File::create(path.clone())?;
+    }
+
     settings.json_file_path = fs::canonicalize(path)?;
 
     settings.write_current_settings()?;
