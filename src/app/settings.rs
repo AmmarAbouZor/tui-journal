@@ -1,7 +1,6 @@
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Context, Ok};
-use config::{Config, File};
 use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
@@ -14,12 +13,8 @@ impl Settings {
     pub fn new() -> anyhow::Result<Self> {
         let settings_path = get_settings_path()?;
         let mut settings = if settings_path.exists() {
-            let config = Config::builder()
-                .add_source(File::from(settings_path))
-                .set_default("json_file_path", "")?
-                .build()?;
-
-            config.try_deserialize()?
+            let file_content = fs::read_to_string(settings_path)?;
+            toml::from_str(file_content.as_str())?
         } else {
             let defaults = Settings::get_default()?;
             if let Some(parent) = settings_path.parent() {
