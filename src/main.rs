@@ -16,11 +16,9 @@ mod data;
 fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
-    if let Some(command) = cli.command {
-        match command.exec()? {
-            cli::CommandResult::Return => return Ok(()),
-            cli::CommandResult::Continue => {}
-        }
+    match cli.handle_cli()? {
+        cli::CliResult::Return => return Ok(()),
+        cli::CliResult::Continue => {}
     }
 
     enable_raw_mode()?;

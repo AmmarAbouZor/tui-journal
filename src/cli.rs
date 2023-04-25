@@ -6,6 +6,9 @@ use crate::app::Settings;
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct Cli {
+    /// Sets the entries Json file path
+    #[arg(short, long, value_name = "FILE PATH")]
+    json_file_path: Option<PathBuf>,
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
@@ -13,47 +16,55 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Gets the current entries Json file path
-    #[clap(visible_alias = "gjp")]
+    #[clap(visible_alias = "gj")]
     GetJsonPath,
-    /// Sets the current entries Json file path and start the app using it
-    #[clap(visible_alias = "sjp")]
-    SetJsonPath {
-        /// Path of the json file to set
-        path: PathBuf,
-    },
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum CommandResult {
+pub enum CliResult {
     Return,
     Continue,
 }
 
 impl Commands {
-    pub fn exec(self) -> anyhow::Result<CommandResult> {
+    pub fn exec(self) -> anyhow::Result<()> {
         match self {
             Commands::GetJsonPath => exec_get_json_path(),
-            Commands::SetJsonPath { path } => exec_set_json_path(path),
         }
     }
 }
 
-fn exec_get_json_path() -> anyhow::Result<CommandResult> {
+impl Cli {
+    pub fn handle_cli(mut self) -> anyhow::Result<CliResult> {
+        if let Some(path) = self.json_file_path.take() {
+            set_json_path(path)?;
+        }
+
+        if let Some(cmd) = self.command.take() {
+            cmd.exec()?;
+            Ok(CliResult::Return)
+        } else {
+            Ok(CliResult::Continue)
+        }
+    }
+}
+
+fn exec_get_json_path() -> anyhow::Result<()> {
     let settings = Settings::new()?;
     println!(
         "{}",
         fs::canonicalize(settings.json_file_path)?.to_string_lossy()
     );
 
-    Ok(CommandResult::Return)
+    Ok(())
 }
 
-fn exec_set_json_path(path: PathBuf) -> anyhow::Result<CommandResult> {
+fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
     let mut settings = Settings::new()?;
 
     settings.json_file_path = fs::canonicalize(path)?;
 
     settings.write_current_settings()?;
 
-    Ok(CommandResult::Continue)
+    Ok(())
 }
