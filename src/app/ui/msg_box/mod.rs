@@ -10,7 +10,7 @@ use tui::{
 
 use crate::app::keymap::Input;
 
-use super::ui_functions::centered_rect_exact_hight;
+use super::ui_functions::centered_rect_exact_height;
 
 // Not all enums are used in this app at this point
 #[allow(dead_code)]
@@ -58,7 +58,7 @@ impl MsgBox {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect_exact_hight(55, 8, area);
+        let area = centered_rect_exact_height(55, 8, area);
 
         let (title, color, text) = match &self.msg_type {
             MsgBoxType::Error(text) => ("Error", Color::LightRed, text),

@@ -15,7 +15,7 @@ use crate::{
     data::{DataProvider, Entry},
 };
 
-use super::{ui_functions::centered_rect_exact_hight, ACTIVE_CONTROL_COLOR};
+use super::{ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR};
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
@@ -93,7 +93,7 @@ impl<'a> EntryPopup<'a> {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect_exact_hight(70, 11, area);
+        let area = centered_rect_exact_height(70, 11, area);
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -124,15 +124,15 @@ impl<'a> EntryPopup<'a> {
         self.date_txt.set_cursor_line_style(Style::default());
 
         let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
-        let deactive_cursor_style = Style::default().bg(Color::Reset);
+        let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         match self.active_txt {
             ActiveText::Title => {
                 self.title_txt.set_cursor_style(active_cursor_style);
-                self.date_txt.set_cursor_style(deactive_cursor_style);
+                self.date_txt.set_cursor_style(deactivate_cursor_style);
             }
             ActiveText::Date => {
-                self.title_txt.set_cursor_style(deactive_cursor_style);
+                self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.date_txt.set_cursor_style(active_cursor_style);
             }
         };

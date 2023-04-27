@@ -26,7 +26,7 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-pub fn centered_rect_exact_hight(percent_x: u16, height: u16, r: Rect) -> Rect {
+pub fn centered_rect_exact_height(percent_x: u16, height: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(

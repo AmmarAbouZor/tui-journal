@@ -171,7 +171,7 @@ pub fn continue_delete_current_entry<D: DataProvider>(
         }
         MsgBoxResult::No => {}
         _ => unreachable!(
-            "{:?} not implemeted for delete current entry",
+            "{:?} not implemented for delete current entry",
             msg_box_result
         ),
     }
