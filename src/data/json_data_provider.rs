@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Context};
 
@@ -99,7 +99,7 @@ impl JsonDataProvide {
         let entries_text = serde_json::to_vec(&entries)?;
         if !self.file_path.exists() {
             if let Some(parent) = self.file_path.parent() {
-                fs::create_dir_all(parent)?;
+                tokio::fs::create_dir_all(parent).await?;
             }
         }
         tokio::fs::write(&self.file_path, entries_text).await?;
