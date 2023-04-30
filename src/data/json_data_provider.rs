@@ -21,7 +21,7 @@ impl DataProvider for JsonDataProvide {
             return Ok(Vec::new());
         }
 
-        let json_content = fs::read_to_string(&self.file_path)?;
+        let json_content = tokio::fs::read_to_string(&self.file_path).await?;
         if json_content.is_empty() {
             return Ok(Vec::new());
         }
@@ -49,6 +49,7 @@ impl DataProvider for JsonDataProvide {
         entries.push(new_entry);
 
         self.write_entries_to_file(&entries)
+            .await
             .map_err(|err| anyhow!(err))?;
 
         Ok(entries.into_iter().last().unwrap())
@@ -61,6 +62,7 @@ impl DataProvider for JsonDataProvide {
             entries.remove(pos);
 
             self.write_entries_to_file(&entries)
+                .await
                 .map_err(|err| anyhow!(err))?;
         }
 
@@ -80,6 +82,7 @@ impl DataProvider for JsonDataProvide {
             *entry_to_modify = entry.clone();
 
             self.write_entries_to_file(&entries)
+                .await
                 .map_err(|err| anyhow!(err))?;
 
             Ok(entry)
@@ -92,14 +95,14 @@ impl DataProvider for JsonDataProvide {
 }
 
 impl JsonDataProvide {
-    fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
+    async fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
         let entries_text = serde_json::to_vec(&entries)?;
         if !self.file_path.exists() {
             if let Some(parent) = self.file_path.parent() {
                 fs::create_dir_all(parent)?;
             }
         }
-        fs::write(&self.file_path, entries_text)?;
+        tokio::fs::write(&self.file_path, entries_text).await?;
 
         Ok(())
     }
