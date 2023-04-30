@@ -1,12 +1,14 @@
-use std::{io, time::Duration};
+use std::{fs::File, io, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use log::LevelFilter;
+use simplelog::{Config, WriteLogger};
 use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
@@ -22,6 +24,9 @@ async fn main() -> Result<()> {
         cli::CliResult::Continue => {}
     }
 
+    //TODO: add verbose logging clap argument
+    setup_logging(LevelFilter::Trace)?;
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -31,7 +36,10 @@ async fn main() -> Result<()> {
     chain_panic_hook();
 
     let tick_rate = Duration::from_millis(250);
-    app::run(&mut terminal, tick_rate).await?;
+    app::run(&mut terminal, tick_rate).await.map_err(|err| {
+        log::error!("[PANIC] {}", err.to_string());
+        err
+    })?;
 
     // restore terminal
     disable_raw_mode()?;
@@ -54,4 +62,14 @@ fn chain_panic_hook() {
         execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture).unwrap();
         original_hook(panic);
     }));
+}
+
+fn setup_logging(level: LevelFilter) -> anyhow::Result<()> {
+    let path = directories::BaseDirs::new()
+        .map(|base_dir| base_dir.cache_dir().join("tui-journal.log"))
+        .ok_or_else(|| anyhow!("Log file path couldn't be retieved"))?;
+
+    WriteLogger::init(level, Config::default(), File::create(path)?)?;
+
+    Ok(())
 }
