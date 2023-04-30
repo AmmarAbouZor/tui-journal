@@ -27,21 +27,21 @@ pub enum CliResult {
 }
 
 impl Commands {
-    pub fn exec(self) -> anyhow::Result<()> {
+    pub async fn exec(self) -> anyhow::Result<()> {
         match self {
-            Commands::GetJsonPath => exec_get_json_path(),
+            Commands::GetJsonPath => exec_get_json_path().await,
         }
     }
 }
 
 impl Cli {
-    pub fn handle_cli(mut self) -> anyhow::Result<CliResult> {
+    pub async fn handle_cli(mut self) -> anyhow::Result<CliResult> {
         if let Some(path) = self.json_file_path.take() {
-            set_json_path(path)?;
+            set_json_path(path).await?;
         }
 
         if let Some(cmd) = self.command.take() {
-            cmd.exec()?;
+            cmd.exec().await?;
             Ok(CliResult::Return)
         } else {
             Ok(CliResult::Continue)
@@ -49,18 +49,20 @@ impl Cli {
     }
 }
 
-fn exec_get_json_path() -> anyhow::Result<()> {
-    let settings = Settings::new()?;
+async fn exec_get_json_path() -> anyhow::Result<()> {
+    let settings = Settings::new().await?;
     println!(
         "{}",
-        fs::canonicalize(settings.json_file_path)?.to_string_lossy()
+        tokio::fs::canonicalize(settings.json_file_path)
+            .await?
+            .to_string_lossy()
     );
 
     Ok(())
 }
 
-fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
-    let mut settings = Settings::new()?;
+async fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
+    let mut settings = Settings::new().await?;
 
     if !path.exists() {
         if let Some(parent) = path.parent() {
@@ -72,7 +74,7 @@ fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
 
     settings.json_file_path = fs::canonicalize(path)?;
 
-    settings.write_current_settings()?;
+    settings.write_current_settings().await?;
 
     Ok(())
 }

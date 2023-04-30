@@ -32,15 +32,15 @@ fn select_prev_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
     }
 }
 
-pub fn continue_select_prev_entry<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_select_prev_entry<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
-            exec_save_entry_content(ui_components, app)?;
+            exec_save_entry_content(ui_components, app).await?;
             select_prev_entry(ui_components, app);
         }
         MsgBoxResult::No => select_prev_entry(ui_components, app),
@@ -76,15 +76,15 @@ fn select_next_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
     }
 }
 
-pub fn continue_select_next_entry<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_select_next_entry<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
-            exec_save_entry_content(ui_components, app)?;
+            exec_save_entry_content(ui_components, app).await?;
             select_next_entry(ui_components, app);
         }
         MsgBoxResult::No => select_next_entry(ui_components, app),
@@ -110,15 +110,15 @@ pub fn create_entry(ui_components: &mut UIComponents) {
         .push(Popup::Entry(Box::new(EntryPopup::new_entry())));
 }
 
-pub fn continue_create_entry<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_create_entry<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
-            exec_save_entry_content(ui_components, app)?;
+            exec_save_entry_content(ui_components, app).await?;
             create_entry(ui_components);
         }
         MsgBoxResult::No => create_entry(ui_components),
@@ -156,8 +156,8 @@ pub fn exec_delete_current_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn continue_delete_current_entry<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_delete_current_entry<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -167,7 +167,8 @@ pub fn continue_delete_current_entry<D: DataProvider>(
                 ui_components,
                 app.current_entry_id
                     .expect("current entry must have a value"),
-            )?;
+            )
+            .await?;
         }
         MsgBoxResult::No => {}
         _ => unreachable!(

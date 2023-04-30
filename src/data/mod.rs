@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use chrono::{DateTime, Utc};
 
+use async_trait::async_trait;
+
 mod json_data_provider;
 
 pub use json_data_provider::JsonDataProvide;
@@ -14,11 +16,12 @@ pub enum ModifyEntryError {
     DataError(#[from] anyhow::Error),
 }
 
+#[async_trait]
 pub trait DataProvider {
-    fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
-    fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
-    fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
-    fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
+    async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
+    async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
+    async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
+    async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

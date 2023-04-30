@@ -97,9 +97,9 @@ impl UICommand {
         }
     }
 
-    pub fn execute<D: DataProvider>(
+    pub async fn execute<'a, D: DataProvider>(
         &self,
-        ui_components: &mut UIComponents,
+        ui_components: &mut UIComponents<'a>,
         app: &mut App<D>,
     ) -> CmdResult {
         match self {
@@ -114,34 +114,36 @@ impl UICommand {
             UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
             UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
-            UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app),
+            UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app).await,
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
-            UICommand::ReloadAll => exec_reload_all(ui_components, app),
+            UICommand::ReloadAll => exec_reload_all(ui_components, app).await,
         }
     }
 
-    pub fn continue_executing<D: DataProvider>(
+    pub async fn continue_executing<'a, D: DataProvider>(
         &self,
-        ui_components: &mut UIComponents,
+        ui_components: &mut UIComponents<'a>,
         app: &mut App<D>,
         msg_box_result: MsgBoxResult,
     ) -> CmdResult {
         let not_implemented = || unreachable!("continue exec isn't implemented for {:?}", self);
         match self {
-            UICommand::Quit => continue_quit(ui_components, app, msg_box_result),
+            UICommand::Quit => continue_quit(ui_components, app, msg_box_result).await,
             UICommand::ShowHelp => not_implemented(),
             UICommand::CycleFocusedControlForward => not_implemented(),
             UICommand::CycleFocusedControlBack => not_implemented(),
             UICommand::SelectedNextEntry => {
-                continue_select_next_entry(ui_components, app, msg_box_result)
+                continue_select_next_entry(ui_components, app, msg_box_result).await
             }
             UICommand::SelectedPrevEntry => {
-                continue_select_prev_entry(ui_components, app, msg_box_result)
+                continue_select_prev_entry(ui_components, app, msg_box_result).await
             }
-            UICommand::CreateEntry => continue_create_entry(ui_components, app, msg_box_result),
+            UICommand::CreateEntry => {
+                continue_create_entry(ui_components, app, msg_box_result).await
+            }
             UICommand::EditCurrentEntry => not_implemented(),
             UICommand::DeleteCurrentEntry => {
-                continue_delete_current_entry(ui_components, app, msg_box_result)
+                continue_delete_current_entry(ui_components, app, msg_box_result).await
             }
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
@@ -149,7 +151,7 @@ impl UICommand {
             UICommand::DiscardChangesEntryContent => {
                 continue_discard_content(ui_components, app, msg_box_result)
             }
-            UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result),
+            UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result).await,
         }
     }
 }

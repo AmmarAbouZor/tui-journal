@@ -14,12 +14,12 @@ pub fn exec_finish_editing(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_save_entry_content<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn exec_save_entry_content<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
 ) -> CmdResult {
     let entry_content = ui_components.editor.get_content();
-    app.update_current_entry_content(entry_content)?;
+    app.update_current_entry_content(entry_content).await?;
 
     ui_components.editor.refresh_has_unsaved(app);
 
