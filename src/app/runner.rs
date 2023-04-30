@@ -19,7 +19,7 @@ pub enum HandleInputReturnType {
     ExitApp,
 }
 
-pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
+pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
     let mut last_tick = Instant::now();
     let settings = Settings::new()?;
     let json_provider = JsonDataProvide::new(settings.json_file_path);
@@ -27,7 +27,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     let mut ui_components = UIComponents::new();
 
     let mut app = App::new(json_provider);
-    if let Err(err) = app.load_entries() {
+    if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
     }
 
@@ -42,7 +42,7 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
 
         if crossterm::event::poll(timeout)? {
             if let Event::Key(key) = crossterm::event::read()? {
-                match handle_input(key, &mut app, &mut ui_components) {
+                match handle_input(key, &mut app, &mut ui_components).await {
                     Ok(return_type) => {
                         if return_type == HandleInputReturnType::ExitApp {
                             return Ok(());
@@ -61,12 +61,12 @@ pub fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Resul
     }
 }
 
-fn handle_input<D: DataProvider>(
+async fn handle_input<'a, D: DataProvider>(
     key: crossterm::event::KeyEvent,
     app: &mut App<D>,
-    ui_components: &mut UIComponents,
+    ui_components: &mut UIComponents<'a>,
 ) -> Result<HandleInputReturnType> {
     let input = Input::from(&key);
 
-    ui_components.handle_input(&input, app)
+    ui_components.handle_input(&input, app).await
 }

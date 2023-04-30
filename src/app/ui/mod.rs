@@ -141,18 +141,18 @@ impl<'a, 'b> UIComponents<'a> {
         }
     }
 
-    pub fn handle_input<D: DataProvider>(
+    pub async fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
         if self.has_popup() {
-            return self.handle_popup_input(input, app);
+            return self.handle_popup_input(input, app).await;
         }
 
         if self.is_editor_mode {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                return key.command.clone().execute(self, app);
+                return key.command.clone().execute(self, app).await;
             }
             return self.editor.handle_input(input, true, app);
         }
@@ -163,19 +163,19 @@ impl<'a, 'b> UIComponents<'a> {
             .find(|keymap| keymap.key == *input)
             .map(|keymap| keymap.command)
         {
-            cmd.execute(self, app)
+            cmd.execute(self, app).await
         } else {
             match self.active_control {
                 ControlType::EntriesList => {
                     if let Some(key) = self.entries_list_keymaps.iter().find(|c| &c.key == input) {
-                        key.command.clone().execute(self, app)
+                        key.command.clone().execute(self, app).await
                     } else {
                         Ok(HandleInputReturnType::NotFound)
                     }
                 }
                 ControlType::EntryContentTxt => {
                     if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                        key.command.clone().execute(self, app)
+                        key.command.clone().execute(self, app).await
                     } else {
                         self.editor.handle_input(input, self.is_editor_mode, app)
                     }
@@ -184,7 +184,7 @@ impl<'a, 'b> UIComponents<'a> {
         }
     }
 
-    fn handle_popup_input<D: DataProvider>(
+    async fn handle_popup_input<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &mut App<D>,
@@ -196,7 +196,7 @@ impl<'a, 'b> UIComponents<'a> {
                     self.popup_stack.pop().expect("popup stack isn't empty");
                 }
                 Popup::Entry(entry_popup) => {
-                    let close_popup = match entry_popup.handle_input(input, app)? {
+                    let close_popup = match entry_popup.handle_input(input, app).await? {
                         EntryPopupInputReturn::Cancel => true,
                         EntryPopupInputReturn::KeepPupup => false,
                         EntryPopupInputReturn::AddEntry(entry_id) => {
@@ -218,7 +218,7 @@ impl<'a, 'b> UIComponents<'a> {
                     msg_box::MsgBoxInputResult::Close(msg_box_result) => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                         if let Some(cmd) = self.pending_command.take() {
-                            return cmd.continue_executing(self, app, msg_box_result);
+                            return cmd.continue_executing(self, app, msg_box_result).await;
                         }
                     }
                 },

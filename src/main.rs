@@ -13,7 +13,8 @@ mod app;
 mod cli;
 mod data;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
     match cli.handle_cli()? {
@@ -30,7 +31,7 @@ fn main() -> Result<()> {
     chain_panic_hook();
 
     let tick_rate = Duration::from_millis(250);
-    app::run(&mut terminal, tick_rate)?;
+    app::run(&mut terminal, tick_rate).await?;
 
     // restore terminal
     disable_raw_mode()?;

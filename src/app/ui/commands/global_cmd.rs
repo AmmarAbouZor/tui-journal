@@ -14,15 +14,15 @@ pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
     }
 }
 
-pub fn continue_quit<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_quit<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Ok | MsgBoxResult::Cancel => Ok(HandleInputReturnType::Handled),
         MsgBoxResult::Yes => {
-            exec_save_entry_content(ui_components, app)?;
+            exec_save_entry_content(ui_components, app).await?;
             Ok(HandleInputReturnType::ExitApp)
         }
         MsgBoxResult::No => Ok(HandleInputReturnType::ExitApp),
@@ -62,42 +62,42 @@ pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_reload_all<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn exec_reload_all<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::ReloadAll));
     } else {
-        reload_all(ui_components, app)?;
+        reload_all(ui_components, app).await?;
     }
 
     Ok(HandleInputReturnType::Handled)
 }
 
 #[inline]
-fn reload_all<D: DataProvider>(
-    ui_components: &mut UIComponents,
+async fn reload_all<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
 ) -> anyhow::Result<()> {
-    app.load_entries()?;
+    app.load_entries().await?;
     ui_components.set_current_entry(app.current_entry_id, app);
 
     Ok(())
 }
 
-pub fn continue_reload_all<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn continue_reload_all<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
-            exec_save_entry_content(ui_components, app)?;
-            reload_all(ui_components, app)?;
+            exec_save_entry_content(ui_components, app).await?;
+            reload_all(ui_components, app).await?;
         }
-        MsgBoxResult::No => reload_all(ui_components, app)?,
+        MsgBoxResult::No => reload_all(ui_components, app).await?,
     }
 
     Ok(HandleInputReturnType::Handled)

@@ -202,7 +202,7 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
-    pub fn handle_input<D: DataProvider>(
+    pub async fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &mut App<D>,
@@ -212,7 +212,7 @@ impl<'a> EntryPopup<'a> {
         match input.key_code {
             KeyCode::Esc => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Char('c') if has_ctrl => Ok(EntryPopupInputReturn::Cancel),
-            KeyCode::Enter => self.handle_confirm(app),
+            KeyCode::Enter => self.handle_confirm(app).await,
             KeyCode::Tab => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
@@ -238,7 +238,7 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
-    fn handle_confirm<D: DataProvider>(
+    async fn handle_confirm<D: DataProvider>(
         &mut self,
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
@@ -254,10 +254,10 @@ impl<'a> EntryPopup<'a> {
             .unwrap();
 
         if self.is_edit_entry {
-            app.update_current_entry(title, date)?;
+            app.update_current_entry(title, date).await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {
-            let entry_id = app.add_entry(title, date)?;
+            let entry_id = app.add_entry(title, date).await?;
             Ok(EntryPopupInputReturn::AddEntry(entry_id))
         }
     }

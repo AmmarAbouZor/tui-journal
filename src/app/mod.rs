@@ -35,8 +35,8 @@ where
         }
     }
 
-    pub fn load_entries(&mut self) -> anyhow::Result<()> {
-        self.entries = self.data_provide.load_all_entries()?;
+    pub async fn load_entries(&mut self) -> anyhow::Result<()> {
+        self.entries = self.data_provide.load_all_entries().await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
@@ -47,8 +47,11 @@ where
         self.entries.iter().find(|e| e.id == entry_id)
     }
 
-    pub fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
-        let entry = self.data_provide.add_entry(EntryDraft::new(date, title))?;
+    pub async fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
+        let entry = self
+            .data_provide
+            .add_entry(EntryDraft::new(date, title))
+            .await?;
         let entry_id = entry.id;
 
         self.entries.push(entry);
@@ -68,7 +71,7 @@ where
             .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
-    pub fn update_current_entry(
+    pub async fn update_current_entry(
         &mut self,
         title: String,
         date: DateTime<Utc>,
@@ -84,31 +87,34 @@ where
 
         let clone = entry.clone();
 
-        self.data_provide.update_entry(clone)?;
+        self.data_provide.update_entry(clone).await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
         Ok(())
     }
 
-    pub fn update_current_entry_content(&mut self, entry_content: String) -> anyhow::Result<()> {
+    pub async fn update_current_entry_content(
+        &mut self,
+        entry_content: String,
+    ) -> anyhow::Result<()> {
         if let Some(entry) = self.get_current_entry_mut() {
             entry.content = entry_content;
 
             let clone = entry.clone();
 
-            self.data_provide.update_entry(clone)?;
+            self.data_provide.update_entry(clone).await?;
         }
 
         Ok(())
     }
 
-    pub fn delete_entry(
+    pub async fn delete_entry<'a>(
         &mut self,
-        ui_components: &mut UIComponents,
+        ui_components: &mut UIComponents<'a>,
         entry_id: u32,
     ) -> anyhow::Result<()> {
-        self.data_provide.remove_entry(entry_id)?;
+        self.data_provide.remove_entry(entry_id).await?;
         let removed_entry = self
             .entries
             .iter()
