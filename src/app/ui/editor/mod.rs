@@ -20,6 +20,7 @@ use super::INACTIVE_CONTROL_COLOR;
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
     is_active: bool,
+    is_dirty: bool,
     has_unsaved: bool,
 }
 
@@ -41,6 +42,7 @@ impl<'a> Editor<'a> {
         Editor {
             text_area,
             is_active: false,
+            is_dirty: false,
             has_unsaved: false,
         }
     }
@@ -49,6 +51,7 @@ impl<'a> Editor<'a> {
         let text_area = match entry_id {
             Some(id) => {
                 if let Some(entry) = app.get_entry(id) {
+                    self.is_dirty = false;
                     let lines = entry.content.lines().map(|line| line.to_owned()).collect();
                     let mut text_area = TextArea::new(lines);
                     text_area.move_cursor(tui_textarea::CursorMove::Bottom);
@@ -76,6 +79,7 @@ impl<'a> Editor<'a> {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
+                self.is_dirty = true;
                 self.refresh_has_unsaved(app);
             }
         } else {
@@ -158,10 +162,15 @@ impl<'a> Editor<'a> {
     }
 
     pub fn refresh_has_unsaved<D: DataProvider>(&mut self, app: &App<D>) {
-        self.has_unsaved = if let Some(entry) = app.get_current_entry() {
-            entry.content != self.get_content().as_str()
-        } else {
-            false
+        self.has_unsaved = match self.is_dirty {
+            true => {
+                if let Some(entry) = app.get_current_entry() {
+                    self.is_dirty && entry.content != self.get_content()
+                } else {
+                    false
+                }
+            }
+            false => false,
         }
     }
 }
