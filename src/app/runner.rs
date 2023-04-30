@@ -21,7 +21,7 @@ pub enum HandleInputReturnType {
 
 pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
     let mut last_tick = Instant::now();
-    let settings = Settings::new()?;
+    let settings = Settings::new().await?;
     let json_provider = JsonDataProvide::new(settings.json_file_path);
 
     let mut ui_components = UIComponents::new();

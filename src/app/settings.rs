@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Ok};
 use directories::{BaseDirs, UserDirs};
@@ -10,24 +10,24 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new() -> anyhow::Result<Self> {
+    pub async fn new() -> anyhow::Result<Self> {
         let settings_path = get_settings_path()?;
         let mut settings = if settings_path.exists() {
-            let file_content = fs::read_to_string(settings_path)?;
+            let file_content = tokio::fs::read_to_string(settings_path).await?;
             toml::from_str(file_content.as_str())?
         } else {
             let defaults = Settings::get_default()?;
             if let Some(parent) = settings_path.parent() {
-                fs::create_dir_all(parent)?;
+                tokio::fs::create_dir_all(parent).await?;
             }
-            defaults.write_current_settings()?;
+            defaults.write_current_settings().await?;
 
             defaults
         };
 
         if settings.json_file_path.to_str().unwrap().is_empty() {
             settings.json_file_path = get_default_json_path()?;
-            settings.write_current_settings()?;
+            settings.write_current_settings().await?;
         }
 
         Ok(settings)
@@ -39,13 +39,14 @@ impl Settings {
         })
     }
 
-    pub fn write_current_settings(&self) -> anyhow::Result<()> {
+    pub async fn write_current_settings(&self) -> anyhow::Result<()> {
         let toml = toml::to_string(&self)
             .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))?;
 
         let settings_path = get_settings_path()?;
 
-        fs::write(settings_path, toml)
+        tokio::fs::write(settings_path, toml)
+            .await
             .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
 
         Ok(())

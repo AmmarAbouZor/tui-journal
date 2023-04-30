@@ -17,7 +17,7 @@ mod data;
 async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
-    match cli.handle_cli()? {
+    match cli.handle_cli().await? {
         cli::CliResult::Return => return Ok(()),
         cli::CliResult::Continue => {}
     }
