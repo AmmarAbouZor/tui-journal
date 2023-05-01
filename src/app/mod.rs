@@ -36,6 +36,8 @@ where
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
+        log::trace!("Loading entries");
+
         self.entries = self.data_provide.load_all_entries().await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
@@ -48,6 +50,8 @@ where
     }
 
     pub async fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
+        log::trace!("Adding entry");
+
         let entry = self
             .data_provide
             .add_entry(EntryDraft::new(date, title))
@@ -76,6 +80,8 @@ where
         title: String,
         date: DateTime<Utc>,
     ) -> anyhow::Result<()> {
+        log::trace!("Updating entry");
+
         assert!(self.current_entry_id.is_some());
 
         let entry = self
@@ -98,6 +104,8 @@ where
         &mut self,
         entry_content: String,
     ) -> anyhow::Result<()> {
+        log::trace!("Updating entry content");
+
         if let Some(entry) = self.get_current_entry_mut() {
             entry.content = entry_content;
 
@@ -114,6 +122,8 @@ where
         ui_components: &mut UIComponents<'a>,
         entry_id: u32,
     ) -> anyhow::Result<()> {
+        log::trace!("Deleting entry with id: {entry_id}");
+
         self.data_provide.remove_entry(entry_id).await?;
         let removed_entry = self
             .entries

@@ -32,7 +32,7 @@ pub fn setup_logging(level: u8, path: Option<PathBuf>) -> anyhow::Result<()> {
     let log_level = u8_to_level(level);
     WriteLogger::init(log_level, Config::default(), file)?;
 
-    log::debug!("Log initialized with level: {log_level}");
+    log::trace!("Log initialized with level: {log_level}");
 
     Ok(())
 }
