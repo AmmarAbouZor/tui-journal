@@ -11,6 +11,7 @@ use crate::{
 pub struct Cli {
     /// Sets the entries Json file path
     #[arg(short, long, value_name = "FILE PATH")]
+    #[cfg(feature = "json")]
     json_file_path: Option<PathBuf>,
 
     /// Increases logging verbosity each use for up to 3 times
@@ -28,6 +29,7 @@ pub struct Cli {
 pub enum Commands {
     /// Gets the current entries Json file path
     #[clap(visible_alias = "gj")]
+    #[cfg(feature = "json")]
     GetJsonPath,
 }
 
@@ -66,7 +68,7 @@ async fn exec_get_json_path() -> anyhow::Result<()> {
     let settings = Settings::new().await?;
     println!(
         "{}",
-        tokio::fs::canonicalize(settings.json_file_path)
+        tokio::fs::canonicalize(settings.json_backend.file_path)
             .await?
             .to_string_lossy()
     );
@@ -85,7 +87,7 @@ async fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
         fs::File::create(path.clone())?;
     }
 
-    settings.json_file_path = fs::canonicalize(path)?;
+    settings.json_backend.file_path = fs::canonicalize(path)?;
 
     settings.write_current_settings().await?;
 

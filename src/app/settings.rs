@@ -6,7 +6,22 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
-    pub json_file_path: PathBuf,
+    #[cfg(feature = "json")]
+    pub json_backend: JsonBackend,
+}
+
+#[cfg(feature = "json")]
+#[derive(Debug, Deserialize, Serialize)]
+pub struct JsonBackend {
+    pub file_path: PathBuf,
+}
+
+impl JsonBackend {
+    fn get_default() -> anyhow::Result<Self> {
+        Ok(JsonBackend {
+            file_path: get_default_json_path()?,
+        })
+    }
 }
 
 impl Settings {
@@ -25,8 +40,8 @@ impl Settings {
             defaults
         };
 
-        if settings.json_file_path.to_str().unwrap().is_empty() {
-            settings.json_file_path = get_default_json_path()?;
+        if settings.json_backend.file_path.to_str().unwrap().is_empty() {
+            settings.json_backend.file_path = get_default_json_path()?;
             settings.write_current_settings().await?;
         }
 
@@ -35,7 +50,7 @@ impl Settings {
 
     fn get_default() -> anyhow::Result<Self> {
         Ok(Settings {
-            json_file_path: get_default_json_path()?,
+            json_backend: JsonBackend::get_default()?,
         })
     }
 

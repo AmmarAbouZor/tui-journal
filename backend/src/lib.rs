@@ -4,8 +4,8 @@ use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
 
+#[cfg(feature = "json")]
 mod json_data_provider;
-
 pub use json_data_provider::JsonDataProvide;
 
 #[derive(Debug, thiserror::Error)]
