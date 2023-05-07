@@ -1,4 +1,4 @@
-use crate::data::{DataProvider, Entry, EntryDraft};
+use backend::{DataProvider, Entry, EntryDraft};
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};

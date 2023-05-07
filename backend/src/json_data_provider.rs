@@ -115,8 +115,6 @@ mod test {
 
     use chrono::{TimeZone, Utc};
 
-    use crate::data::EntryDraft;
-
     use super::*;
 
     struct TempFile {

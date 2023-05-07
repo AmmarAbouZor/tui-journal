@@ -7,7 +7,7 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, ListState};
 use tui::Frame;
 
-use crate::data::Entry;
+use backend::Entry;
 
 use super::ACTIVE_CONTROL_COLOR;
 use super::INACTIVE_CONTROL_COLOR;

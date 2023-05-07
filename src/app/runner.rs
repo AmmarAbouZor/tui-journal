@@ -3,10 +3,9 @@ use std::time::{Duration, Instant};
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
-use crate::{
-    app::{App, UIComponents},
-    data::{DataProvider, JsonDataProvide},
-};
+use crate::app::{App, UIComponents};
+
+use backend::{DataProvider, JsonDataProvide};
 
 use anyhow::Result;
 

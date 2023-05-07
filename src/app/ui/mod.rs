@@ -1,4 +1,4 @@
-use crate::data::DataProvider;
+use backend::DataProvider;
 
 use self::{
     editor::Editor,

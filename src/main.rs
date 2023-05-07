@@ -11,7 +11,6 @@ use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
 mod cli;
-mod data;
 mod logging;
 
 #[tokio::main]

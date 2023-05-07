@@ -10,10 +10,9 @@ use tui::{
 };
 use tui_textarea::TextArea;
 
-use crate::{
-    app::{keymap::Input, App},
-    data::{DataProvider, Entry},
-};
+use crate::app::{keymap::Input, App};
+
+use backend::{DataProvider, Entry};
 
 use super::{ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR};
 

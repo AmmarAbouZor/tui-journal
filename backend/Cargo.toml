@@ -1,0 +1,17 @@
+[package]
+name = "backend"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "The backends used tui-journal app to handle the data operations"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1.68"
+chrono = { version = "0.4.24", features = ["serde"] }
+thiserror = "1.0.40"
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tokio.workspace = true

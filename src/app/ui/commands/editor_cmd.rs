@@ -1,7 +1,6 @@
-use crate::{
-    app::{ui::*, App, HandleInputReturnType, UIComponents},
-    data::DataProvider,
-};
+use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
+
+use backend::DataProvider;
 
 use super::CmdResult;
 

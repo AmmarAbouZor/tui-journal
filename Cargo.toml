@@ -24,3 +24,20 @@ tokio = { version = "1.28.0", features = ["full"] }
 toml = "0.7.3"
 tui = "0.19.0"
 tui-textarea = "0.2.0"
+backend = {path = "./backend/"}
+
+[workspace]
+members = [
+  "backend"
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Ammar Abou Zor"]
+
+[workspace.dependencies]
+anyhow = "1.0.70"
+tokio = { version = "1.28.0", features = ["full"] }
+serde = { version = "1.0.158", features = ["derive"] }
+serde_json = "1.0.95"
