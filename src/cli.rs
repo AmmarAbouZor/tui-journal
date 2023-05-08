@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use clap::{Parser, Subcommand};
 use std::{fs, path::PathBuf};
 
@@ -91,7 +92,8 @@ async fn exec_get_json_path() -> anyhow::Result<()> {
     println!(
         "{}",
         tokio::fs::canonicalize(settings.json_backend.file_path)
-            .await?
+            .await
+            .map_err(|err| anyhow!("couldn't find json file.\nError details: {err}"))?
             .to_string_lossy()
     );
 
@@ -103,7 +105,8 @@ async fn exec_get_sqlite_path() -> anyhow::Result<()> {
     println!(
         "{}",
         tokio::fs::canonicalize(settings.sqlite_backend.file_path)
-            .await?
+            .await
+            .map_err(|err| anyhow!("couldn't find sqlite file.\nError details: {err}"))?
             .to_string_lossy()
     );
 
