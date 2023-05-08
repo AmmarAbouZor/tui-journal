@@ -7,7 +7,7 @@ use anyhow::anyhow;
 use log::LevelFilter;
 use simplelog::{Config, WriteLogger};
 
-const LOG_MAX_SIZE: u64 = 30_000;
+const LOG_MAX_SIZE: u64 = 1_000;
 
 pub fn setup_logging(level: u8, path: Option<PathBuf>) -> anyhow::Result<()> {
     let path = path.unwrap_or(get_default_path()?);
