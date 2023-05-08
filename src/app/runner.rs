@@ -1,14 +1,18 @@
 use std::time::{Duration, Instant};
 
+use anyhow::Result;
 use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
 use crate::app::{App, UIComponents};
 
-use backend::{DataProvider, JsonDataProvide};
+use backend::DataProvider;
+#[cfg(feature = "json")]
+use backend::JsonDataProvide;
+#[cfg(feature = "json")]
+use backend::SqliteDataProvide;
 
-use anyhow::Result;
-
+use super::settings::BackendType;
 use super::{keymap::Input, settings::Settings};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -19,14 +23,35 @@ pub enum HandleInputReturnType {
 }
 
 pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
-    let mut last_tick = Instant::now();
     let settings = Settings::new().await?;
-    #[cfg(feature = "json")]
-    let json_provider = JsonDataProvide::new(settings.json_backend.file_path);
 
+    match settings.backend_type {
+        #[cfg(feature = "json")]
+        BackendType::Json => {
+            let data_provider = JsonDataProvide::new(settings.json_backend.file_path);
+            run_intern(terminal, tick_rate, data_provider).await
+        }
+        #[cfg(feature = "sqlite")]
+        BackendType::Sqlite => {
+            let data_provider =
+                SqliteDataProvide::from_file(settings.sqlite_backend.file_path).await?;
+            run_intern(terminal, tick_rate, data_provider).await
+        }
+    }
+}
+
+async fn run_intern<B, D>(
+    terminal: &mut Terminal<B>,
+    tick_rate: Duration,
+    data_provider: D,
+) -> anyhow::Result<()>
+where
+    B: Backend,
+    D: DataProvider,
+{
+    let mut last_tick = Instant::now();
     let mut ui_components = UIComponents::new();
-
-    let mut app = App::new(json_provider);
+    let mut app = App::new(data_provider);
     if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
     }
