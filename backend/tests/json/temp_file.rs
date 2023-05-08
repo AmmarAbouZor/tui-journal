@@ -30,3 +30,4 @@ impl Drop for TempFile {
         self.clean_up();
     }
 }
+

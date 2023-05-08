@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use backend::*;
 use chrono::{TimeZone, Utc};
 
-use crate::common::TempFile;
+use crate::json::temp_file::TempFile;
+
+mod temp_file;
 
 async fn create_provide_with_two_entries(path_file: PathBuf) -> JsonDataProvide {
     let json_provide = JsonDataProvide::new(path_file);
