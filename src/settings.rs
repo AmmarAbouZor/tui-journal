@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Ok};
+use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,7 @@ pub struct Settings {
     pub sqlite_backend: SqliteBackend,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy)]
 pub enum BackendType {
     #[cfg(feature = "json")]
     Json,

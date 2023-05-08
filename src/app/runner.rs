@@ -5,6 +5,7 @@ use crossterm::event::Event;
 use tui::{backend::Backend, Terminal};
 
 use crate::app::{App, UIComponents};
+use crate::settings::{BackendType, Settings};
 
 use backend::DataProvider;
 #[cfg(feature = "json")]
@@ -12,8 +13,7 @@ use backend::JsonDataProvide;
 #[cfg(feature = "json")]
 use backend::SqliteDataProvide;
 
-use super::settings::BackendType;
-use super::{keymap::Input, settings::Settings};
+use super::keymap::Input;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {
