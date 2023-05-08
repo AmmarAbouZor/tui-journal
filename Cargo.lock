@@ -110,6 +110,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "log",
  "serde",
  "serde_json",
  "thiserror",

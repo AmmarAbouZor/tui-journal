@@ -1,8 +1,8 @@
 [package]
 name = "tui-journal"
-version = "0.1.0"
-edition = "2021"
-authors = ["Ammar Abou Zor"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "Journal Tui app. It saves the data in a simple json file with a configurable path"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,19 +10,19 @@ description = "Journal Tui app. It saves the data in a simple json file with a c
 [dependencies]
 backend = {path = "./backend/", default_features = false}
 
-anyhow = "1.0.70"
-async-trait = "0.1.68"
-chrono = { version = "0.4.24", features = ["serde"] }
+anyhow.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
 clap = { version = "4.2.4", features = ["derive"] }
 crossterm = "0.25"
 directories = "5.0.0"
-log = "0.4.17"
-serde = { version = "1.0.158", features = ["derive"] }
-serde_json = "1.0.95"
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.40"
-tokio = { version = "1.28.0", features = ["full"] }
+tokio.workspace = true
 toml = "0.7.3"
 tui = "0.19.0"
 tui-textarea = "0.2.0"
@@ -46,3 +46,6 @@ anyhow = "1.0.70"
 tokio = { version = "1.28.0", features = ["full"] }
 serde = { version = "1.0.158", features = ["derive"]}
 serde_json = "1.0.95"
+log = "0.4.17"
+chrono = { version = "0.4.24", features = ["serde"] }
+async-trait = "0.1.68"
