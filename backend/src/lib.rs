@@ -55,9 +55,9 @@ impl Entry {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EntryDraft {
-    date: DateTime<Utc>,
-    title: String,
-    content: String,
+    pub date: DateTime<Utc>,
+    pub title: String,
+    pub content: String,
 }
 
 impl EntryDraft {

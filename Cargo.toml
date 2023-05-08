@@ -22,7 +22,7 @@ serde_json.workspace = true
 simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.40"
-tokio.workspace = true
+tokio = {workspace = true}
 toml = "0.7.3"
 tui = "0.19.0"
 tui-textarea = "0.2.0"
@@ -49,3 +49,7 @@ serde_json = "1.0.95"
 log = "0.4.17"
 chrono = { version = "0.4.24", features = ["serde"] }
 async-trait = "0.1.68"
+
+[[test]]
+name = "backend"
+path = "backend/tests/backend.rs"
