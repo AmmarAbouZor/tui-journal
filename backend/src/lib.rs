@@ -5,8 +5,12 @@ use chrono::{DateTime, Utc};
 use async_trait::async_trait;
 
 #[cfg(feature = "json")]
-mod json_data_provider;
-pub use json_data_provider::JsonDataProvide;
+mod json;
+pub use json::JsonDataProvide;
+
+#[cfg(feature = "sqlite")]
+mod sqlite;
+pub use sqlite::SqliteDataProvide;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModifyEntryError {

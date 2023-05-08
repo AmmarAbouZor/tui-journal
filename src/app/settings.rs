@@ -6,8 +6,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
+    pub backend_type: BackendType,
     #[cfg(feature = "json")]
     pub json_backend: JsonBackend,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum BackendType {
+    #[cfg(feature = "json")]
+    Json,
+    #[cfg(feature = "sqlite")]
+    Sqlite,
 }
 
 #[cfg(feature = "json")]
@@ -48,9 +57,15 @@ impl Settings {
         Ok(settings)
     }
 
+    #[cfg(feature = "json")]
     fn get_default() -> anyhow::Result<Self> {
+        #[cfg(feature = "json")]
         Ok(Settings {
             json_backend: JsonBackend::get_default()?,
+            #[cfg(feature = "json")]
+            backend_type: BackendType::Json,
+            #[cfg(all(not(feature = "json"), feature = "sqlite"))]
+            backend_type: BackendType::Sqlite,
         })
     }
 
