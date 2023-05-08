@@ -10,7 +10,18 @@ pub struct SqliteDataProvide {
 
 impl SqliteDataProvide {
     pub async fn from_file(file_path: PathBuf) -> anyhow::Result<Self> {
-        let file_full_path = tokio::fs::canonicalize(file_path).await?;
+        let file_full_path = if file_path.exists() {
+            tokio::fs::canonicalize(file_path).await?
+        } else {
+            if let Some(parent) = file_path.parent() {
+                tokio::fs::create_dir_all(parent).await?;
+                let parent_full_path = tokio::fs::canonicalize(parent).await?;
+                parent_full_path.join(file_path.file_name().unwrap())
+            } else {
+                file_path
+            }
+        };
+
         let db_url = format!("sqlite://{}", file_full_path.to_string_lossy());
 
         SqliteDataProvide::create(db_url).await

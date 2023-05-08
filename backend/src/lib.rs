@@ -6,10 +6,12 @@ use async_trait::async_trait;
 
 #[cfg(feature = "json")]
 mod json;
+#[cfg(feature = "json")]
 pub use json::JsonDataProvide;
 
 #[cfg(feature = "sqlite")]
 mod sqlite;
+#[cfg(feature = "sqlite")]
 pub use sqlite::SqliteDataProvide;
 
 #[derive(Debug, thiserror::Error)]
