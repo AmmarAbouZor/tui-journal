@@ -5,7 +5,6 @@ use anyhow::anyhow;
 use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 
 pub struct SqliteDataProvide {
-    db_url: String,
     pool: SqlitePool,
 }
 
@@ -25,12 +24,12 @@ impl SqliteDataProvide {
 
         let db_url = format!("sqlite://{}", file_full_path.to_string_lossy());
 
-        SqliteDataProvide::create(db_url).await
+        SqliteDataProvide::create(&db_url).await
     }
 
-    pub async fn create(db_url: String) -> anyhow::Result<Self> {
+    pub async fn create(db_url: &str) -> anyhow::Result<Self> {
         if !Sqlite::database_exists(&db_url).await? {
-            log::trace!("Creating Database with the URL '{}'", db_url.as_str());
+            log::trace!("Creating Database with the URL '{}'", db_url);
             Sqlite::create_database(&db_url).await?;
         }
 
@@ -38,20 +37,31 @@ impl SqliteDataProvide {
 
         sqlx::migrate!("src/sqlite/migrations").run(&pool).await?;
 
-        Ok(Self { db_url, pool })
+        Ok(Self { pool })
     }
 }
 
 #[async_trait]
 impl DataProvider for SqliteDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
-        todo!();
+        let entries = sqlx::query_as(
+            r"SELECT * FROM entries
+        ORDER BY date DESC",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|err| {
+            log::error!("Loading entires faild. Error Info {err}");
+            anyhow!(err)
+        })?;
+
+        Ok(entries)
     }
 
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         let entry = sqlx::query_as::<_, Entry>(
-            "INSERT INTO entries (title, date, content) 
-            VALUES({}, {}, {}) 
+            r"INSERT INTO entries (title, date, content) 
+            VALUES($1, $2, $3) 
             RETURNING *",
         )
         .bind(entry.title)
@@ -68,10 +78,38 @@ impl DataProvider for SqliteDataProvide {
     }
 
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
-        todo!();
+        sqlx::query(r"DELETE FROM entries WHERE id=$1")
+            .bind(entry_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|err| {
+                log::error!("Delete entry faild. Error info: {err}");
+                anyhow!(err)
+            })?;
+
+        Ok(())
     }
 
     async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
-        todo!();
+        let entry = sqlx::query_as::<_, Entry>(
+            r"UPDATE entries
+            Set title = $1,
+                date = $2,
+                content = $3
+            WHERE id = $4
+            RETURNING *",
+        )
+        .bind(entry.title)
+        .bind(entry.date)
+        .bind(entry.content)
+        .bind(entry.id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            log::error!("Update entry failed. Error info {err}");
+            anyhow!(err)
+        })?;
+
+        Ok(entry)
     }
 }

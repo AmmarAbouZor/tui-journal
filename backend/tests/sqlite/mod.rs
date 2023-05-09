@@ -2,9 +2,7 @@ use backend::*;
 use chrono::{TimeZone, Utc};
 
 async fn create_provider_with_two_entries() -> SqliteDataProvide {
-    let provider = SqliteDataProvide::create("sqlite::memory:".into())
-        .await
-        .unwrap();
+    let provider = SqliteDataProvide::create("sqlite::memory:").await.unwrap();
 
     let mut entry_draft_1 = EntryDraft::new(Utc::now(), String::from("Title 1"));
     entry_draft_1.content.push_str("Content entry 1");
@@ -27,8 +25,8 @@ async fn create_provider_with_default_entries() {
     let entries = provider.load_all_entries().await.unwrap();
 
     assert_eq!(entries.len(), 2);
-    assert_eq!(entries[0].id, 0);
-    assert_eq!(entries[1].id, 1);
+    assert_eq!(entries[0].id, 1);
+    assert_eq!(entries[1].id, 2);
     assert_eq!(entries[0].title, String::from("Title 1"));
     assert_eq!(entries[1].title, String::from("Title 2"));
 }
@@ -48,7 +46,7 @@ async fn add_entry() {
     let entries = provider.load_all_entries().await.unwrap();
 
     assert_eq!(entries.len(), 3);
-    assert_eq!(entries[2].id, 2);
+    assert_eq!(entries[2].id, 3);
     assert_eq!(entries[2].title, String::from("Title added"));
     assert_eq!(entries[2].content, String::from("Content entry added"));
 }
@@ -61,7 +59,7 @@ async fn remove_entry() {
 
     let entries = provider.load_all_entries().await.unwrap();
     assert_eq!(entries.len(), 1);
-    assert_eq!(entries[0].id, 0);
+    assert_eq!(entries[0].id, 2);
 }
 
 #[tokio::test]
