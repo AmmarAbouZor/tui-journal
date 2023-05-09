@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use super::*;
+use anyhow::anyhow;
 use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 
 pub struct SqliteDataProvide {
@@ -48,7 +49,22 @@ impl DataProvider for SqliteDataProvide {
     }
 
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
-        todo!();
+        let entry = sqlx::query_as::<_, Entry>(
+            "INSERT INTO entries (title, date, content) 
+            VALUES({}, {}, {}) 
+            RETURNING *",
+        )
+        .bind(entry.title)
+        .bind(entry.date)
+        .bind(entry.content)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            log::error!("Add entry field err: {}", err);
+            anyhow!(err)
+        })?;
+
+        Ok(entry)
     }
 
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {

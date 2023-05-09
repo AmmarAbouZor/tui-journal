@@ -4,6 +4,9 @@ use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
 
+#[cfg(feature = "sqlite")]
+use sqlx::FromRow;
+
 #[cfg(feature = "json")]
 mod json;
 #[cfg(feature = "json")]
@@ -31,6 +34,8 @@ pub trait DataProvider {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg(feature = "sqlite")]
+#[derive(FromRow)]
 pub struct Entry {
     pub id: u32,
     pub date: DateTime<Utc>,
