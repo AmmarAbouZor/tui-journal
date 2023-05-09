@@ -1,6 +1,9 @@
 use anyhow::anyhow;
 use clap::{Parser, Subcommand};
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use crate::{
     logging::{get_default_path, setup_logging},
@@ -125,12 +128,12 @@ async fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn ensure_path_exists(path: &PathBuf) -> anyhow::Result<()> {
+async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
 
-    fs::File::create(path.clone())?;
+    fs::File::create(path)?;
     Ok(())
 }
 

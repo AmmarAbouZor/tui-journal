@@ -12,14 +12,12 @@ impl SqliteDataProvide {
     pub async fn from_file(file_path: PathBuf) -> anyhow::Result<Self> {
         let file_full_path = if file_path.exists() {
             tokio::fs::canonicalize(file_path).await?
+        } else if let Some(parent) = file_path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+            let parent_full_path = tokio::fs::canonicalize(parent).await?;
+            parent_full_path.join(file_path.file_name().unwrap())
         } else {
-            if let Some(parent) = file_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-                let parent_full_path = tokio::fs::canonicalize(parent).await?;
-                parent_full_path.join(file_path.file_name().unwrap())
-            } else {
-                file_path
-            }
+            file_path
         };
 
         let db_url = format!("sqlite://{}", file_full_path.to_string_lossy());
@@ -28,12 +26,12 @@ impl SqliteDataProvide {
     }
 
     pub async fn create(db_url: &str) -> anyhow::Result<Self> {
-        if !Sqlite::database_exists(&db_url).await? {
+        if !Sqlite::database_exists(db_url).await? {
             log::trace!("Creating Database with the URL '{}'", db_url);
-            Sqlite::create_database(&db_url).await?;
+            Sqlite::create_database(db_url).await?;
         }
 
-        let pool = SqlitePool::connect(&db_url).await?;
+        let pool = SqlitePool::connect(db_url).await?;
 
         sqlx::migrate!("src/sqlite/migrations").run(&pool).await?;
 
