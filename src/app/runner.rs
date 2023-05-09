@@ -31,11 +31,23 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) ->
             let data_provider = JsonDataProvide::new(settings.json_backend.file_path);
             run_intern(terminal, tick_rate, data_provider).await
         }
+        #[cfg(not(feature = "json"))]
+        BackendType::Json => {
+            anyhow::bail!(
+                "Feature 'json' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the progam with 'json' feature"
+            )
+        }
         #[cfg(feature = "sqlite")]
         BackendType::Sqlite => {
             let data_provider =
                 SqliteDataProvide::from_file(settings.sqlite_backend.file_path).await?;
             run_intern(terminal, tick_rate, data_provider).await
+        }
+        #[cfg(not(feature = "sqlite"))]
+        BackendType::Sqlite => {
+            anyhow::bail!(
+                "Feature 'sqlite' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the progam with 'sqlite' feature"
+            )
         }
     }
 }

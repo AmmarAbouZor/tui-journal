@@ -16,9 +16,7 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy)]
 pub enum BackendType {
-    #[cfg(feature = "json")]
     Json,
-    #[cfg(feature = "sqlite")]
     Sqlite,
 }
 
