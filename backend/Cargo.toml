@@ -16,7 +16,7 @@ serde_json.workspace = true
 anyhow.workspace = true
 tokio.workspace = true
 log.workspace = true
-sqlx = {vesion = "0.6.3", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
+sqlx = {version = "0.6.3", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 
 [features]
 default = ["json", "sqlite"]

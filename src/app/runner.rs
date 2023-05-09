@@ -10,7 +10,7 @@ use crate::settings::{BackendType, Settings};
 use backend::DataProvider;
 #[cfg(feature = "json")]
 use backend::JsonDataProvide;
-#[cfg(feature = "json")]
+#[cfg(feature = "sqlite")]
 use backend::SqliteDataProvide;
 
 use super::keymap::Input;

@@ -59,7 +59,9 @@ pub enum CliResult {
 impl Commands {
     pub async fn exec(self) -> anyhow::Result<()> {
         match self {
+            #[cfg(feature = "json")]
             Commands::GetJsonPath => exec_get_json_path().await,
+            #[cfg(feature = "sqlite")]
             Commands::GetSqlitePath => exec_get_sqlite_path().await,
         }
     }
@@ -67,10 +69,12 @@ impl Commands {
 
 impl Cli {
     pub async fn handle_cli(mut self) -> anyhow::Result<CliResult> {
+        #[cfg(feature = "json")]
         if let Some(json_path) = self.json_file_path.take() {
             set_json_path(json_path).await?;
         }
 
+        #[cfg(feature = "sqlite")]
         if let Some(sql_path) = self.sqlite_file_path.take() {
             set_sqlite_path(sql_path).await?;
         }
@@ -90,6 +94,7 @@ impl Cli {
     }
 }
 
+#[cfg(feature = "json")]
 async fn exec_get_json_path() -> anyhow::Result<()> {
     let settings = Settings::new().await?;
     println!(
@@ -103,6 +108,7 @@ async fn exec_get_json_path() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "sqlite")]
 async fn exec_get_sqlite_path() -> anyhow::Result<()> {
     let settings = Settings::new().await?;
     println!(
@@ -137,6 +143,7 @@ async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "sqlite")]
 async fn set_sqlite_path(path: PathBuf) -> anyhow::Result<()> {
     let mut settings = Settings::new().await?;
 
