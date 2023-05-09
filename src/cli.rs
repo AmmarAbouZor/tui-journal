@@ -122,6 +122,7 @@ async fn exec_get_sqlite_path() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "json")]
 async fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
     let mut settings = Settings::new().await?;
 

@@ -1,8 +1,9 @@
-use serde::{Deserialize, Serialize};
-
 use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
+
+#[cfg(feature = "json")]
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "sqlite")]
 use sqlx::FromRow;
