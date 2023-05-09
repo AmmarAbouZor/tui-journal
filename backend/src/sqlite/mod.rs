@@ -35,7 +35,7 @@ impl SqliteDataProvide {
 
         let pool = SqlitePool::connect(&db_url).await?;
 
-        //TODO: add migrations
+        sqlx::migrate!("src/sqlite/migrations").run(&pool).await?;
 
         Ok(Self { db_url, pool })
     }
