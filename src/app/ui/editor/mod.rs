@@ -115,6 +115,14 @@ impl<'a> Editor<'a> {
         B: Backend,
     {
         let mut title = "Journal Content".to_owned();
+        if self.is_active {
+            let mode_caption = if is_insert_mode {
+                " - INSERT"
+            } else {
+                " - NORMAL"
+            };
+            title.push_str(mode_caption);
+        }
         if self.has_unsaved {
             title.push_str(" *");
         }
