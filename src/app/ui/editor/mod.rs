@@ -7,10 +7,9 @@ use tui::{
     Frame,
 };
 
-use crate::{
-    app::{keymap::Input, runner::HandleInputReturnType, App},
-    data::DataProvider,
-};
+use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
+
+use backend::DataProvider;
 use tui_textarea::TextArea;
 
 use super::ACTIVE_CONTROL_COLOR;

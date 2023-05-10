@@ -1,12 +1,22 @@
-use serde::{Deserialize, Serialize};
-
 use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
 
-mod json_data_provider;
+#[cfg(feature = "json")]
+use serde::{Deserialize, Serialize};
 
-pub use json_data_provider::JsonDataProvide;
+#[cfg(feature = "sqlite")]
+use sqlx::FromRow;
+
+#[cfg(feature = "json")]
+mod json;
+#[cfg(feature = "json")]
+pub use json::JsonDataProvide;
+
+#[cfg(feature = "sqlite")]
+mod sqlite;
+#[cfg(feature = "sqlite")]
+pub use sqlite::SqliteDataProvide;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModifyEntryError {
@@ -24,7 +34,9 @@ pub trait DataProvider {
     async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "sqlite", derive(FromRow))]
+#[cfg_attr(feature = "json", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub id: u32,
     pub date: DateTime<Utc>,
@@ -55,9 +67,9 @@ impl Entry {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EntryDraft {
-    date: DateTime<Utc>,
-    title: String,
-    content: String,
+    pub date: DateTime<Utc>,
+    pub title: String,
+    pub content: String,
 }
 
 impl EntryDraft {

@@ -1,4 +1,4 @@
-use crate::data::{DataProvider, Entry, EntryDraft};
+use backend::{DataProvider, Entry, EntryDraft};
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
@@ -7,11 +7,9 @@ pub use ui::UIComponents;
 
 mod keymap;
 mod runner;
-mod settings;
 mod ui;
 
 pub use runner::HandleInputReturnType;
-pub use settings::Settings;
 
 pub struct App<D>
 where

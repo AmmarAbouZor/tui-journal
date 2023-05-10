@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::data::DataProvider;
+use backend::DataProvider;
 
 use super::{App, HandleInputReturnType, MsgBoxResult, UIComponents};
 

@@ -11,8 +11,8 @@ use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
 mod cli;
-mod data;
 mod logging;
+mod settings;
 
 #[tokio::main]
 async fn main() -> Result<()> {

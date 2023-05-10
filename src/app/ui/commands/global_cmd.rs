@@ -1,7 +1,6 @@
-use crate::{
-    app::{ui::*, App, HandleInputReturnType, UIComponents},
-    data::DataProvider,
-};
+use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
+
+use backend::DataProvider;
 
 use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
