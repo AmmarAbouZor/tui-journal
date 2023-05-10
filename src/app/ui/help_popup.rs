@@ -32,7 +32,7 @@ pub fn render_help_popup<B: Backend>(
             mut description,
         } = keymap.command.get_info();
 
-        // Text wraping
+        // Text wrapping
         let name_width = (area.width - KEY_WIDTH) * NAME_PERC / 100;
         let description_width = (area.width - KEY_WIDTH - MARGINE) * DESCRIPTION_PERC / 100;
 

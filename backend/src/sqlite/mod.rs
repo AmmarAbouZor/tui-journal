@@ -49,7 +49,7 @@ impl DataProvider for SqliteDataProvide {
         .fetch_all(&self.pool)
         .await
         .map_err(|err| {
-            log::error!("Loading entires faild. Error Info {err}");
+            log::error!("Loading entries failed. Error Info {err}");
             anyhow!(err)
         })?;
 
@@ -81,7 +81,7 @@ impl DataProvider for SqliteDataProvide {
             .execute(&self.pool)
             .await
             .map_err(|err| {
-                log::error!("Delete entry faild. Error info: {err}");
+                log::error!("Delete entry failed. Error info: {err}");
                 anyhow!(err)
             })?;
 

@@ -34,7 +34,7 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) ->
         #[cfg(not(feature = "json"))]
         BackendType::Json => {
             anyhow::bail!(
-                "Feature 'json' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the progam with 'json' feature"
+                "Feature 'json' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the program with 'json' feature"
             )
         }
         #[cfg(feature = "sqlite")]
@@ -46,7 +46,7 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) ->
         #[cfg(not(feature = "sqlite"))]
         BackendType::Sqlite => {
             anyhow::bail!(
-                "Feature 'sqlite' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the progam with 'sqlite' feature"
+                "Feature 'sqlite' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the program with 'sqlite' feature"
             )
         }
     }

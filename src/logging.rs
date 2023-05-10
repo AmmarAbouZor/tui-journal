@@ -45,7 +45,7 @@ pub fn get_default_path() -> anyhow::Result<PathBuf> {
                 .join("tui-journal")
                 .join("tui-journal.log")
         })
-        .ok_or_else(|| anyhow!("Log file path couldn't be retieved"))
+        .ok_or_else(|| anyhow!("Log file path couldn't be retrieved"))
 }
 
 fn u8_to_level(num: u8) -> LevelFilter {
