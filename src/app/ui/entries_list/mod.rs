@@ -12,6 +12,8 @@ use backend::Entry;
 use super::ACTIVE_CONTROL_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
 
+const LIST_INNER_MARGINE: usize = 5;
+
 #[derive(Debug)]
 pub struct EntriesList {
     pub state: ListState,
@@ -26,7 +28,7 @@ impl<'a> EntriesList {
         }
     }
 
-    pub fn get_widget(&self, entries: &'a [Entry]) -> List<'a> {
+    pub fn get_widget(&self, entries: &'a [Entry], area: &Rect) -> List<'a> {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
@@ -36,25 +38,35 @@ impl<'a> EntriesList {
         let items: Vec<ListItem> = entries
             .iter()
             .map(|entry| {
-                let spans = vec![
-                    Spans::from(Span::styled(
-                        entry.title.as_str(),
-                        Style::default()
-                            .fg(foreground_color)
-                            .add_modifier(Modifier::BOLD),
-                    )),
-                    Spans::from(Span::styled(
-                        format!(
-                            "{},{},{}",
-                            entry.date.day(),
-                            entry.date.month(),
-                            entry.date.year()
-                        ),
-                        Style::default()
-                            .fg(foreground_color)
-                            .add_modifier(Modifier::DIM),
-                    )),
-                ];
+                // Text wrapping
+                let title_lines = textwrap::wrap(
+                    entry.title.as_str(),
+                    area.width as usize - LIST_INNER_MARGINE,
+                );
+
+                let mut spans: Vec<Spans> = title_lines
+                    .iter()
+                    .map(|line| {
+                        Spans::from(Span::styled(
+                            line.to_string(),
+                            Style::default()
+                                .fg(foreground_color)
+                                .add_modifier(Modifier::BOLD),
+                        ))
+                    })
+                    .collect();
+
+                spans.push(Spans::from(Span::styled(
+                    format!(
+                        "{},{},{}",
+                        entry.date.day(),
+                        entry.date.month(),
+                        entry.date.year()
+                    ),
+                    Style::default()
+                        .fg(foreground_color)
+                        .add_modifier(Modifier::DIM),
+                )));
 
                 ListItem::new(spans)
             })
@@ -87,7 +99,7 @@ impl<'a> EntriesList {
         area: Rect,
         entries: &'a [Entry],
     ) {
-        let entries_widget = self.get_widget(entries);
+        let entries_widget = self.get_widget(entries, &area);
 
         frame.render_stateful_widget(entries_widget, area, &mut self.state);
     }
