@@ -10,7 +10,7 @@ use tui::{
 use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
 
 use backend::DataProvider;
-use tui_textarea::TextArea;
+use tui_textarea::{CursorMove, Scrolling, TextArea};
 
 use super::ACTIVE_CONTROL_COLOR;
 use super::EDITOR_MODE_COLOR;
@@ -71,43 +71,127 @@ impl<'a> Editor<'a> {
     pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
-        is_edit_mode: bool,
+        is_insert_mode: &mut bool,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
-        if is_edit_mode {
+        if *is_insert_mode {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
                 self.is_dirty = true;
                 self.refresh_has_unsaved(app);
             }
+        } else if is_default_navigation(input) {
+            let key_event = KeyEvent::from(input);
+            self.text_area.input(key_event);
         } else {
-            let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
-            let has_alt = input.modifiers.contains(KeyModifiers::ALT);
-            let is_navigation = match input.key_code {
-                KeyCode::Left
-                | KeyCode::Right
-                | KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::Home
-                | KeyCode::End
-                | KeyCode::PageUp
-                | KeyCode::PageDown => true,
-                KeyCode::Char('p') if has_control || has_alt => true,
-                KeyCode::Char('n') if has_control || has_alt => true,
-                KeyCode::Char('f') if has_control || has_alt => true,
-                KeyCode::Char('b') if has_control || has_alt => true,
-                KeyCode::Char('e') if has_control || has_alt => true,
-                KeyCode::Char('a') if has_control || has_alt => true,
-                KeyCode::Char('v') if has_control || has_alt => true,
-                _ => false,
-            };
-            if is_navigation {
-                let key_event = KeyEvent::from(input);
-                self.text_area.input(key_event);
-            }
+            *is_insert_mode = self.handle_vim_motions(input);
         }
         Ok(HandleInputReturnType::Handled)
+    }
+
+    fn handle_vim_motions(&mut self, input: &Input) -> bool {
+        let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
+
+        match (input.key_code, has_control) {
+            (KeyCode::Char('h'), false) => {
+                self.text_area.move_cursor(CursorMove::Back);
+                false
+            }
+            (KeyCode::Char('j'), false) => {
+                self.text_area.move_cursor(CursorMove::Down);
+                false
+            }
+            (KeyCode::Char('k'), false) => {
+                self.text_area.move_cursor(CursorMove::Up);
+                false
+            }
+            (KeyCode::Char('l'), false) => {
+                self.text_area.move_cursor(CursorMove::Forward);
+                false
+            }
+            (KeyCode::Char('w'), false) | (KeyCode::Char('e'), false) => {
+                self.text_area.move_cursor(CursorMove::WordForward);
+                false
+            }
+            (KeyCode::Char('b'), false) => {
+                self.text_area.move_cursor(CursorMove::WordBack);
+                false
+            }
+            (KeyCode::Char('^'), false) => {
+                self.text_area.move_cursor(CursorMove::Head);
+                false
+            }
+            (KeyCode::Char('$'), false) => {
+                self.text_area.move_cursor(CursorMove::End);
+                false
+            }
+            (KeyCode::Char('D'), false) => {
+                self.text_area.delete_line_by_end();
+                false
+            }
+            (KeyCode::Char('C'), false) => {
+                self.text_area.delete_line_by_end();
+                true
+            }
+            (KeyCode::Char('p'), false) => {
+                self.text_area.paste();
+                false
+            }
+            (KeyCode::Char('u'), false) => {
+                self.text_area.undo();
+                false
+            }
+            (KeyCode::Char('r'), true) => {
+                self.text_area.redo();
+                false
+            }
+            (KeyCode::Char('x'), false) => {
+                self.text_area.delete_next_char();
+                false
+            }
+            (KeyCode::Char('i'), false) => true,
+            (KeyCode::Char('a'), false) => {
+                self.text_area.move_cursor(CursorMove::Forward);
+                true
+            }
+            (KeyCode::Char('A'), false) => {
+                self.text_area.move_cursor(CursorMove::End);
+                true
+            }
+            (KeyCode::Char('o'), false) => {
+                self.text_area.move_cursor(CursorMove::End);
+                self.text_area.insert_newline();
+                true
+            }
+            (KeyCode::Char('O'), false) => {
+                self.text_area.move_cursor(CursorMove::Head);
+                self.text_area.insert_newline();
+                self.text_area.move_cursor(CursorMove::Up);
+                true
+            }
+            (KeyCode::Char('I'), false) => {
+                self.text_area.move_cursor(CursorMove::Head);
+                true
+            }
+            (KeyCode::Char('d'), true) => {
+                self.text_area.scroll(Scrolling::HalfPageDown);
+                false
+            }
+            (KeyCode::Char('u'), true) => {
+                self.text_area.scroll(Scrolling::HalfPageUp);
+                false
+            }
+            (KeyCode::Char('f'), true) => {
+                self.text_area.scroll(Scrolling::PageDown);
+                false
+            }
+            (KeyCode::Char('b'), true) => {
+                self.text_area.scroll(Scrolling::PageUp);
+                false
+            }
+            _ => false,
+        }
     }
 
     pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_insert_mode: bool)
@@ -179,5 +263,29 @@ impl<'a> Editor<'a> {
             }
             false => false,
         }
+    }
+}
+
+#[inline]
+fn is_default_navigation(input: &Input) -> bool {
+    let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
+    let has_alt = input.modifiers.contains(KeyModifiers::ALT);
+    match input.key_code {
+        KeyCode::Left
+        | KeyCode::Right
+        | KeyCode::Up
+        | KeyCode::Down
+        | KeyCode::Home
+        | KeyCode::End
+        | KeyCode::PageUp
+        | KeyCode::PageDown => true,
+        KeyCode::Char('p') if has_control || has_alt => true,
+        KeyCode::Char('n') if has_control || has_alt => true,
+        KeyCode::Char('f') if !has_control && has_alt => true,
+        KeyCode::Char('b') if !has_control && has_alt => true,
+        KeyCode::Char('e') if has_control || has_alt => true,
+        KeyCode::Char('a') if has_control || has_alt => true,
+        KeyCode::Char('v') if has_control || has_alt => true,
+        _ => false,
     }
 }

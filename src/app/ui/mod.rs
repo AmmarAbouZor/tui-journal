@@ -154,7 +154,9 @@ impl<'a, 'b> UIComponents<'a> {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 return key.command.clone().execute(self, app).await;
             }
-            return self.editor.handle_input(input, true, app);
+            return self
+                .editor
+                .handle_input(input, &mut self.is_insert_mode, app);
         }
 
         if let Some(cmd) = self
@@ -177,7 +179,8 @@ impl<'a, 'b> UIComponents<'a> {
                     if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                         key.command.clone().execute(self, app).await
                     } else {
-                        self.editor.handle_input(input, self.is_insert_mode, app)
+                        self.editor
+                            .handle_input(input, &mut self.is_insert_mode, app)
                     }
                 }
             }
