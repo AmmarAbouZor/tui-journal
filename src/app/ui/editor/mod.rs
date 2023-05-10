@@ -110,7 +110,7 @@ impl<'a> Editor<'a> {
         Ok(HandleInputReturnType::Handled)
     }
 
-    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_editor_mode: bool)
+    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_insert_mode: bool)
     where
         B: Backend,
     {
@@ -122,7 +122,7 @@ impl<'a> Editor<'a> {
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(match (self.is_active, is_editor_mode) {
+                .style(match (self.is_active, is_insert_mode) {
                     (_, true) => Style::default()
                         .fg(EDITOR_MODE_COLOR)
                         .add_modifier(Modifier::BOLD),
@@ -135,7 +135,7 @@ impl<'a> Editor<'a> {
         );
 
         self.text_area
-            .set_cursor_style(match (is_editor_mode, self.is_active) {
+            .set_cursor_style(match (is_insert_mode, self.is_active) {
                 (_, false) => Style::default(),
                 (true, true) => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
                 (false, true) => Style::default().bg(Color::White).fg(Color::Black),

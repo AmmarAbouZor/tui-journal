@@ -61,7 +61,7 @@ pub struct UIComponents<'a> {
     editor: Editor<'a>,
     popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
-    is_editor_mode: bool,
+    is_insert_mode: bool,
     pending_command: Option<UICommand>,
 }
 
@@ -84,7 +84,7 @@ impl<'a, 'b> UIComponents<'a> {
             editor,
             popup_stack: Vec::new(),
             active_control,
-            is_editor_mode: false,
+            is_insert_mode: false,
             pending_command: None,
         }
     }
@@ -123,7 +123,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.entries_list
             .render_widget(f, entries_chunks[0], &app.entries);
         self.editor
-            .render_widget(f, entries_chunks[1], self.is_editor_mode);
+            .render_widget(f, entries_chunks[1], self.is_insert_mode);
 
         self.render_popup(f);
     }
@@ -150,7 +150,7 @@ impl<'a, 'b> UIComponents<'a> {
             return self.handle_popup_input(input, app).await;
         }
 
-        if self.is_editor_mode {
+        if self.is_insert_mode {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 return key.command.clone().execute(self, app).await;
             }
@@ -177,7 +177,7 @@ impl<'a, 'b> UIComponents<'a> {
                     if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                         key.command.clone().execute(self, app).await
                     } else {
-                        self.editor.handle_input(input, self.is_editor_mode, app)
+                        self.editor.handle_input(input, self.is_insert_mode, app)
                     }
                 }
             }
@@ -254,8 +254,8 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.change_active_control(ControlType::EntryContentTxt);
 
-        assert!(!self.is_editor_mode);
-        self.is_editor_mode = true;
+        assert!(!self.is_insert_mode);
+        self.is_insert_mode = true;
         Ok(HandleInputReturnType::Handled)
     }
 

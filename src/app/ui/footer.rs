@@ -12,12 +12,12 @@ use crate::app::keymap::Keymap;
 use super::{UICommand, UIComponents};
 
 pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components: &UIComponents) {
-    let spans = if ui_components.is_editor_mode {
+    let spans = if ui_components.is_insert_mode {
         let exit_editor_mode_keymap = ui_components
             .editor_keymaps
             .iter()
             .find(|keymap| keymap.command == UICommand::FinishEditEntryContent)
-            .expect("Exit editor mode command must be in content editor commands");
+            .expect("Exit insert mode command must be in content editor commands");
 
         Spans::from(vec![get_keymap_spans(exit_editor_mode_keymap)])
     } else {
@@ -37,7 +37,7 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
             .global_keymaps
             .iter()
             .find(|keymap| keymap.command == UICommand::StartEditEntryContent)
-            .expect("Start editor mode command must be in global commands");
+            .expect("Start insert mode command must be in global commands");
 
         Spans::from(vec![
             get_keymap_spans(close_keymap),
