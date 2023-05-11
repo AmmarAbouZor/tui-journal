@@ -16,8 +16,15 @@ use super::ACTIVE_CONTROL_COLOR;
 use super::EDITOR_MODE_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EditorMode {
+    Normal,
+    Insert,
+}
+
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
+    pub mode: EditorMode,
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,
@@ -40,10 +47,16 @@ impl<'a> Editor<'a> {
 
         Editor {
             text_area,
+            mode: EditorMode::Normal,
             is_active: false,
             is_dirty: false,
             has_unsaved: false,
         }
+    }
+
+    #[inline]
+    pub fn is_insert_mode(&self) -> bool {
+        self.mode == EditorMode::Insert
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
@@ -71,10 +84,9 @@ impl<'a> Editor<'a> {
     pub fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
-        is_insert_mode: &mut bool,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
-        if *is_insert_mode {
+        if self.mode == EditorMode::Insert {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
@@ -85,122 +97,105 @@ impl<'a> Editor<'a> {
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
         } else {
-            *is_insert_mode = self.handle_vim_motions(input);
+            self.handle_vim_motions(input);
         }
         Ok(HandleInputReturnType::Handled)
     }
 
-    fn handle_vim_motions(&mut self, input: &Input) -> bool {
+    fn handle_vim_motions(&mut self, input: &Input) {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
         match (input.key_code, has_control) {
             (KeyCode::Char('h'), false) => {
                 self.text_area.move_cursor(CursorMove::Back);
-                false
             }
             (KeyCode::Char('j'), false) => {
                 self.text_area.move_cursor(CursorMove::Down);
-                false
             }
             (KeyCode::Char('k'), false) => {
                 self.text_area.move_cursor(CursorMove::Up);
-                false
             }
             (KeyCode::Char('l'), false) => {
                 self.text_area.move_cursor(CursorMove::Forward);
-                false
             }
             (KeyCode::Char('w'), false) | (KeyCode::Char('e'), false) => {
                 self.text_area.move_cursor(CursorMove::WordForward);
-                false
             }
             (KeyCode::Char('b'), false) => {
                 self.text_area.move_cursor(CursorMove::WordBack);
-                false
             }
             (KeyCode::Char('^'), false) => {
                 self.text_area.move_cursor(CursorMove::Head);
-                false
             }
             (KeyCode::Char('$'), false) => {
                 self.text_area.move_cursor(CursorMove::End);
-                false
             }
             (KeyCode::Char('D'), false) => {
                 self.text_area.delete_line_by_end();
-                false
             }
             (KeyCode::Char('C'), false) => {
                 self.text_area.delete_line_by_end();
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('p'), false) => {
                 self.text_area.paste();
-                false
             }
             (KeyCode::Char('u'), false) => {
                 self.text_area.undo();
-                false
             }
             (KeyCode::Char('r'), true) => {
                 self.text_area.redo();
-                false
             }
             (KeyCode::Char('x'), false) => {
                 self.text_area.delete_next_char();
-                false
             }
-            (KeyCode::Char('i'), false) => true,
+            (KeyCode::Char('i'), false) => self.mode = EditorMode::Insert,
             (KeyCode::Char('a'), false) => {
                 self.text_area.move_cursor(CursorMove::Forward);
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('A'), false) => {
                 self.text_area.move_cursor(CursorMove::End);
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('o'), false) => {
                 self.text_area.move_cursor(CursorMove::End);
                 self.text_area.insert_newline();
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('O'), false) => {
                 self.text_area.move_cursor(CursorMove::Head);
                 self.text_area.insert_newline();
                 self.text_area.move_cursor(CursorMove::Up);
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('I'), false) => {
                 self.text_area.move_cursor(CursorMove::Head);
-                true
+                self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('d'), true) => {
                 self.text_area.scroll(Scrolling::HalfPageDown);
-                false
             }
             (KeyCode::Char('u'), true) => {
                 self.text_area.scroll(Scrolling::HalfPageUp);
-                false
             }
             (KeyCode::Char('f'), true) => {
                 self.text_area.scroll(Scrolling::PageDown);
-                false
             }
             (KeyCode::Char('b'), true) => {
                 self.text_area.scroll(Scrolling::PageUp);
-                false
             }
-            _ => false,
+            _ => {}
         }
     }
 
-    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect, is_insert_mode: bool)
+    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect)
     where
         B: Backend,
     {
         let mut title = "Journal Content".to_owned();
         if self.is_active {
-            let mode_caption = if is_insert_mode {
+            let mode_caption = if self.is_insert_mode() {
                 " - INSERT"
             } else {
                 " - NORMAL"
@@ -214,7 +209,7 @@ impl<'a> Editor<'a> {
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(match (self.is_active, is_insert_mode) {
+                .style(match (self.is_active, self.is_insert_mode()) {
                     (_, true) => Style::default()
                         .fg(EDITOR_MODE_COLOR)
                         .add_modifier(Modifier::BOLD),
@@ -227,7 +222,7 @@ impl<'a> Editor<'a> {
         );
 
         self.text_area
-            .set_cursor_style(match (is_insert_mode, self.is_active) {
+            .set_cursor_style(match (self.is_insert_mode(), self.is_active) {
                 (_, false) => Style::default(),
                 (true, true) => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
                 (false, true) => Style::default().bg(Color::White).fg(Color::Black),

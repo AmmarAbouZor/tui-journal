@@ -5,9 +5,10 @@ use backend::DataProvider;
 use super::CmdResult;
 
 pub fn exec_finish_editing(ui_components: &mut UIComponents) -> CmdResult {
-    if ui_components.active_control == ControlType::EntryContentTxt && ui_components.is_insert_mode
+    if ui_components.active_control == ControlType::EntryContentTxt
+        && ui_components.editor.is_insert_mode()
     {
-        ui_components.is_insert_mode = false;
+        ui_components.editor.mode = EditorMode::Normal;
     }
 
     Ok(HandleInputReturnType::Handled)

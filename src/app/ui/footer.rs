@@ -12,7 +12,7 @@ use crate::app::keymap::Keymap;
 use super::{UICommand, UIComponents};
 
 pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components: &UIComponents) {
-    let spans = if ui_components.is_insert_mode {
+    let spans = if ui_components.editor.is_insert_mode() {
         let exit_editor_mode_keymap = ui_components
             .editor_keymaps
             .iter()

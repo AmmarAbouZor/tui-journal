@@ -1,7 +1,7 @@
 use backend::DataProvider;
 
 use self::{
-    editor::Editor,
+    editor::{Editor, EditorMode},
     entries_list::EntriesList,
     entry_popup::{EntryPopup, EntryPopupInputReturn},
     footer::render_footer,
@@ -61,7 +61,6 @@ pub struct UIComponents<'a> {
     editor: Editor<'a>,
     popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
-    is_insert_mode: bool,
     pending_command: Option<UICommand>,
 }
 
@@ -84,7 +83,6 @@ impl<'a, 'b> UIComponents<'a> {
             editor,
             popup_stack: Vec::new(),
             active_control,
-            is_insert_mode: false,
             pending_command: None,
         }
     }
@@ -122,8 +120,7 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.entries_list
             .render_widget(f, entries_chunks[0], &app.entries);
-        self.editor
-            .render_widget(f, entries_chunks[1], self.is_insert_mode);
+        self.editor.render_widget(f, entries_chunks[1]);
 
         self.render_popup(f);
     }
@@ -150,13 +147,11 @@ impl<'a, 'b> UIComponents<'a> {
             return self.handle_popup_input(input, app).await;
         }
 
-        if self.is_insert_mode {
+        if self.editor.is_insert_mode() {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 return key.command.clone().execute(self, app).await;
             }
-            return self
-                .editor
-                .handle_input(input, &mut self.is_insert_mode, app);
+            return self.editor.handle_input(input, app);
         }
 
         if let Some(cmd) = self
@@ -179,8 +174,7 @@ impl<'a, 'b> UIComponents<'a> {
                     if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                         key.command.clone().execute(self, app).await
                     } else {
-                        self.editor
-                            .handle_input(input, &mut self.is_insert_mode, app)
+                        self.editor.handle_input(input, app)
                     }
                 }
             }
@@ -257,8 +251,8 @@ impl<'a, 'b> UIComponents<'a> {
 
         self.change_active_control(ControlType::EntryContentTxt);
 
-        assert!(!self.is_insert_mode);
-        self.is_insert_mode = true;
+        assert!(!self.editor.is_insert_mode());
+        self.editor.mode = EditorMode::Insert;
         Ok(HandleInputReturnType::Handled)
     }
 
