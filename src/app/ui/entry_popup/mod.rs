@@ -65,9 +65,6 @@ impl<'a> EntryPopup<'a> {
             date_err_msg: String::default(),
         };
 
-        entry_pupop.validate_title();
-        entry_pupop.validat_date();
-
         entry_pupop
     }
 
@@ -250,9 +247,13 @@ impl<'a> EntryPopup<'a> {
         &mut self,
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
+        // Validation
+        self.validate_title();
+        self.validat_date();
         if !self.is_input_valid() {
             return Ok(EntryPopupInputReturn::KeepPupup);
         }
+
         let title = self.title_txt.lines()[0].to_owned();
         let date = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y")
             .expect("Date must be valid here");
