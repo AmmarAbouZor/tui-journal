@@ -8,7 +8,7 @@ use tui::{
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Frame,
 };
-use tui_textarea::TextArea;
+use tui_textarea::{CursorMove, TextArea};
 
 use crate::app::{keymap::Input, App};
 
@@ -67,7 +67,8 @@ impl<'a> EntryPopup<'a> {
     }
 
     pub fn from_entry(entry: &Entry) -> Self {
-        let title_txt = TextArea::new(vec![entry.title.to_owned()]);
+        let mut title_txt = TextArea::new(vec![entry.title.to_owned()]);
+        title_txt.move_cursor(CursorMove::End);
 
         let date_txt = TextArea::new(vec![format!(
             "{:02}-{:02}-{}",
