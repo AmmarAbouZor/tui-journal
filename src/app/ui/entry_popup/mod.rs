@@ -56,16 +56,14 @@ impl<'a> EntryPopup<'a> {
             date.year()
         )]);
 
-        let mut entry_pupop = Self {
+        Self {
             title_txt,
             date_txt,
             is_edit_entry: false,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
-        };
-
-        entry_pupop
+        }
     }
 
     pub fn from_entry(entry: &Entry) -> Self {
