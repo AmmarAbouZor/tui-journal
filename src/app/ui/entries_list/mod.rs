@@ -66,8 +66,8 @@ impl<'a> EntriesList {
                         entry.date.year()
                     ),
                     Style::default()
-                        .fg(foreground_color)
-                        .add_modifier(Modifier::DIM),
+                        .fg(Color::LightBlue)
+                        .remove_modifier(Modifier::BOLD),
                 )));
 
                 ListItem::new(spans)
