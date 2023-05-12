@@ -3,7 +3,7 @@ name = "tui-journal"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-description = "Journal Tui app. It saves the data in a simple json file with a configurable path"
+description = "Journal Tui app. It has to back-ends to saves the data: plain text in json format, and database using sqlite"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -50,6 +50,10 @@ serde_json = "1.0.95"
 log = "0.4.17"
 chrono = { version = "0.4.24", features = ["serde"] }
 async-trait = "0.1.68"
+
+[[bin]]
+name = "tjournal"
+path = "src/main.rs"
 
 [[test]]
 name = "backend"
