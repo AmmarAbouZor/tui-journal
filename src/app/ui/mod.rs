@@ -118,8 +118,12 @@ impl<'a, 'b> UIComponents<'a> {
             .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
             .split(chunks[0]);
 
-        self.entries_list
-            .render_widget(f, entries_chunks[0], &app.entries);
+        self.entries_list.render_widget(
+            f,
+            entries_chunks[0],
+            &app.entries,
+            &self.entries_list_keymaps,
+        );
         self.editor.render_widget(f, entries_chunks[1]);
 
         self.render_popup(f);

@@ -1,16 +1,18 @@
 use chrono::Datelike;
 
 use tui::backend::Backend;
-use tui::layout::Rect;
+use tui::layout::{Alignment, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, ListState};
+use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
 use tui::Frame;
 
 use backend::Entry;
 
-use super::ACTIVE_CONTROL_COLOR;
+use crate::app::keymap::Keymap;
+
 use super::INACTIVE_CONTROL_COLOR;
+use super::{UICommand, ACTIVE_CONTROL_COLOR};
 
 const LIST_INNER_MARGINE: usize = 5;
 
@@ -28,7 +30,7 @@ impl<'a> EntriesList {
         }
     }
 
-    pub fn get_widget(&self, entries: &'a [Entry], area: &Rect) -> List<'a> {
+    fn render_list<B: Backend>(&mut self, frame: &mut Frame<B>, entries: &'a [Entry], area: Rect) {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
@@ -72,25 +74,52 @@ impl<'a> EntriesList {
             })
             .collect();
 
-        List::new(items)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Journals")
-                    .border_style(match self.is_active {
-                        true => Style::default()
-                            .fg(ACTIVE_CONTROL_COLOR)
-                            .add_modifier(Modifier::BOLD),
-                        false => Style::default().fg(INACTIVE_CONTROL_COLOR),
-                    }),
-            )
+        let list = List::new(items)
+            .block(self.get_list_block())
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
                     .bg(highlight_bg)
                     .add_modifier(Modifier::BOLD),
             )
-            .highlight_symbol(">> ")
+            .highlight_symbol(">> ");
+
+        frame.render_stateful_widget(list, area, &mut self.state);
+    }
+
+    fn render_place_holder<B: Backend>(
+        &mut self,
+        frame: &mut Frame<B>,
+        area: Rect,
+        list_keymaps: &[Keymap],
+    ) {
+        let keys_text: Vec<String> = list_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::CreateEntry)
+            .map(|keymap| format!("'{}'", keymap.key))
+            .collect();
+
+        let place_holder_text = format!("\n Use {} to create new entry ", keys_text.join(","));
+
+        let place_holder = Paragraph::new(place_holder_text)
+            .wrap(Wrap { trim: false })
+            .alignment(Alignment::Center)
+            .block(self.get_list_block());
+
+        frame.render_widget(place_holder, area);
+    }
+
+    #[inline]
+    fn get_list_block(&self) -> Block<'a> {
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Journals")
+            .border_style(match self.is_active {
+                true => Style::default()
+                    .fg(ACTIVE_CONTROL_COLOR)
+                    .add_modifier(Modifier::BOLD),
+                false => Style::default().fg(INACTIVE_CONTROL_COLOR),
+            })
     }
 
     pub fn render_widget<B: Backend>(
@@ -98,10 +127,13 @@ impl<'a> EntriesList {
         frame: &mut Frame<B>,
         area: Rect,
         entries: &'a [Entry],
+        list_keymaps: &[Keymap],
     ) {
-        let entries_widget = self.get_widget(entries, &area);
-
-        frame.render_stateful_widget(entries_widget, area, &mut self.state);
+        if entries.is_empty() {
+            self.render_place_holder(frame, area, list_keymaps);
+        } else {
+            self.render_list(frame, entries, area);
+        }
     }
 
     pub fn set_active(&mut self, active: bool) {
