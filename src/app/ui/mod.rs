@@ -96,9 +96,9 @@ impl<'a, 'b> UIComponents<'a> {
         if let Some(id) = entry_id {
             let entry_index = app.entries.iter().position(|entry| entry.id == id);
             self.entries_list.state.select(entry_index);
-
-            self.editor.set_current_entry(entry_id, app);
         }
+
+        self.editor.set_current_entry(entry_id, app);
     }
 
     pub fn render_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'b App<D>)
