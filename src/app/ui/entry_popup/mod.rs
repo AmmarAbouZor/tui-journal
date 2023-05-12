@@ -5,7 +5,7 @@ use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{Block, Borders, Clear, Paragraph},
+    widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Frame,
 };
 use tui_textarea::TextArea;
@@ -15,6 +15,11 @@ use crate::app::{keymap::Input, App};
 use backend::{DataProvider, Entry};
 
 use super::{ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR};
+
+const FOOTER_TEXT: &str =
+    "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel";
+
+const FOOTER_MARGINE: u16 = 8;
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
@@ -92,7 +97,11 @@ impl<'a> EntryPopup<'a> {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect_exact_height(70, 11, area);
+        let mut area = centered_rect_exact_height(70, 11, area);
+
+        if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
+            area.height += 1;
+        }
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -169,15 +178,15 @@ impl<'a> EntryPopup<'a> {
         frame.render_widget(self.title_txt.widget(), chunks[0]);
         frame.render_widget(self.date_txt.widget(), chunks[1]);
 
-        let footer = Paragraph::new(
-            "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel",
-        )
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::NONE)
-                .style(Style::default()),
-        );
+        let footer = Paragraph::new(FOOTER_TEXT)
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: false })
+            .block(
+                Block::default()
+                    .borders(Borders::NONE)
+                    .style(Style::default()),
+            );
+
         frame.render_widget(footer, chunks[2]);
     }
 
