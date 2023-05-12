@@ -200,7 +200,7 @@ impl<'a> Editor<'a> {
         let mut title = "Journal Content".to_owned();
         if self.is_active {
             let mode_caption = if self.is_insert_mode() {
-                " - INSERT"
+                " - EDIT"
             } else {
                 " - NORMAL"
             };
@@ -233,6 +233,12 @@ impl<'a> Editor<'a> {
             });
 
         self.text_area.set_cursor_line_style(Style::default());
+
+        self.text_area.set_style(
+            Style::default()
+                .fg(Color::Reset)
+                .remove_modifier(Modifier::BOLD),
+        );
 
         frame.render_widget(self.text_area.widget(), area);
     }

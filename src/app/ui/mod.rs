@@ -39,7 +39,7 @@ pub use msg_box::MsgBoxResult;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
-pub const EDITOR_MODE_COLOR: Color = Color::LightYellow;
+pub const EDITOR_MODE_COLOR: Color = Color::LightGreen;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {

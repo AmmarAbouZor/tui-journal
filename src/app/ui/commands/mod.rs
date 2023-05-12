@@ -81,7 +81,7 @@ impl UICommand {
                 "Start editing current journal entry content in editor",
             ),
             UICommand::FinishEditEntryContent => {
-                CommandInfo::new("End insert mode", "Exit insert mode in editor")
+                CommandInfo::new("End edit mode", "Exit edit mode in editor")
             }
             UICommand::SaveEntryContent => {
                 CommandInfo::new("Save", "Save changes on journal content")

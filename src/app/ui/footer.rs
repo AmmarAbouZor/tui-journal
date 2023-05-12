@@ -19,7 +19,10 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
             .filter(|keymap| keymap.command == UICommand::FinishEditEntryContent)
             .collect();
 
-        Spans::from(vec![get_keymap_spans(exit_editor_mode_keymap)])
+        Spans::from(vec![
+            get_keymap_spans(exit_editor_mode_keymap),
+            Span::raw(" | Edit using Emacs motions"),
+        ])
     } else {
         let close_keymap: Vec<_> = ui_components
             .global_keymaps
