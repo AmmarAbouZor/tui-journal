@@ -13,31 +13,31 @@ use super::{UICommand, UIComponents};
 
 pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components: &UIComponents) {
     let spans = if ui_components.editor.is_insert_mode() {
-        let exit_editor_mode_keymap = ui_components
+        let exit_editor_mode_keymap: Vec<_> = ui_components
             .editor_keymaps
             .iter()
-            .find(|keymap| keymap.command == UICommand::FinishEditEntryContent)
-            .expect("Exit insert mode command must be in content editor commands");
+            .filter(|keymap| keymap.command == UICommand::FinishEditEntryContent)
+            .collect();
 
         Spans::from(vec![get_keymap_spans(exit_editor_mode_keymap)])
     } else {
-        let close_keymap = ui_components
+        let close_keymap: Vec<_> = ui_components
             .global_keymaps
             .iter()
-            .find(|keymap| keymap.command == UICommand::Quit)
-            .expect("Quit command must be in global commands");
+            .filter(|keymap| keymap.command == UICommand::Quit)
+            .collect();
 
-        let help_keymap = ui_components
+        let help_keymap: Vec<_> = ui_components
             .global_keymaps
             .iter()
-            .find(|keymap| keymap.command == UICommand::ShowHelp)
-            .expect("ShowHelp command must be in global commands");
+            .filter(|keymap| keymap.command == UICommand::ShowHelp)
+            .collect();
 
-        let enter_editor_keymap = ui_components
+        let enter_editor_keymap: Vec<_> = ui_components
             .global_keymaps
             .iter()
-            .find(|keymap| keymap.command == UICommand::StartEditEntryContent)
-            .expect("Start insert mode command must be in global commands");
+            .filter(|keymap| keymap.command == UICommand::StartEditEntryContent)
+            .collect();
 
         Spans::from(vec![
             get_keymap_spans(close_keymap),
@@ -56,9 +56,19 @@ pub fn render_footer<B: Backend>(frame: &mut Frame<B>, area: Rect, ui_components
     frame.render_widget(footer, area);
 }
 
-fn get_keymap_spans(keymap: &Keymap) -> Span {
+fn get_keymap_spans(keymaps: Vec<&Keymap>) -> Span {
+    let cmd_text = keymaps
+        .first()
+        .map(|keymap| keymap.command.get_info().name)
+        .expect("Keymaps shouldn't be empty");
+
+    let keys: Vec<String> = keymaps
+        .iter()
+        .map(|keymap| format!("'{}'", keymap.key))
+        .collect();
+
     Span::styled(
-        format!("{}: '{}'", keymap.command.get_info().name, keymap.key),
+        format!("{}: {}", cmd_text, keys.join(",")),
         Style::default(),
     )
 }
