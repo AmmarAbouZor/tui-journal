@@ -3,7 +3,7 @@ name = "tui-journal"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-description = "Journal Tui app. It has to back-ends to saves the data: plain text in json format, and database using sqlite"
+description = "Journal Tui app. It has to back-ends to saves the data: plain text in json format and database using sqlite"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
