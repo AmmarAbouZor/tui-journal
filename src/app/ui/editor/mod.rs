@@ -86,6 +86,10 @@ impl<'a> Editor<'a> {
         input: &Input,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
+        if app.entries.is_empty() {
+            return Ok(HandleInputReturnType::Handled);
+        }
+
         if self.mode == EditorMode::Insert {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
