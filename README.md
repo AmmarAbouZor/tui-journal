@@ -3,11 +3,9 @@
 
 TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite. 
 
-
 ## Demo
 
-TODO
-
+![](assets/demo.gif)
 
 ## Features
 
@@ -18,7 +16,6 @@ TODO
 - Keybindigs is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode)
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux).
-
 
 ## Roadmap
 
@@ -90,8 +87,6 @@ Options:
   -V, --version                       Print version
 ```
 
-
-
 ## Configuration
 
 The configuration for TUI-Journal can be found in the `config.toml` file located in the configuration folder within the TUI-Journal directory.
@@ -107,7 +102,6 @@ file_path = "<Documents-folder>/tui-journal/entries.json"
 [sqlite_backend]
 file_path = "<Documents-folder>/tui-journal/entries.db"
 ```
-
 
 ## Acknowledgments
 
