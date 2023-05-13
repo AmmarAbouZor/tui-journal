@@ -54,7 +54,7 @@ pub fn render_help_popup<B: Backend>(
         .header(header)
         .block(
             Block::default()
-                .title("Test Control help")
+                .title("Help - Keybindigs")
                 .borders(Borders::ALL),
         )
         .widths(&[

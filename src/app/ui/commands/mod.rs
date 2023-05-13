@@ -58,26 +58,27 @@ impl UICommand {
             UICommand::CycleFocusedControlBack => {
                 CommandInfo::new("Cycle focus backward", "Move focus to the previous control")
             }
-            UICommand::SelectedNextEntry => {
-                CommandInfo::new("Select next entry", "Select next entry in the entry list")
-            }
+            UICommand::SelectedNextEntry => CommandInfo::new(
+                "Select next journal",
+                "Select next entry in the journals list",
+            ),
             UICommand::SelectedPrevEntry => CommandInfo::new(
-                "Select previous entry",
-                "Select previous entry in the entry list",
+                "Select previous journal",
+                "Select previous entry in the journal list",
             ),
             UICommand::CreateEntry => CommandInfo::new(
-                "Create new entry",
+                "Create new journal",
                 "Opens dialog to add a new journal entry",
             ),
             UICommand::EditCurrentEntry => CommandInfo::new(
-                "Edit current entry",
+                "Edit current journal",
                 "Open entry dialog to edit current journal entry if any",
             ),
             UICommand::DeleteCurrentEntry => {
-                CommandInfo::new("Delete entry", "Delete current journal entry if any")
+                CommandInfo::new("Delete journal", "Delete current journal entry if any")
             }
             UICommand::StartEditEntryContent => CommandInfo::new(
-                "Edit entry content",
+                "Edit journal content",
                 "Start editing current journal entry content in editor",
             ),
             UICommand::FinishEditEntryContent => {
