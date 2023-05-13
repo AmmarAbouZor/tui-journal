@@ -54,12 +54,17 @@ impl Settings {
     pub async fn new() -> anyhow::Result<Self> {
         let settings_path = get_settings_path()?;
         let mut settings = if settings_path.exists() {
-            let file_content = tokio::fs::read_to_string(settings_path).await?;
-            toml::from_str(file_content.as_str())?
+            let file_content = tokio::fs::read_to_string(settings_path)
+                .await
+                .map_err(|err| anyhow!("Failed to load settings file. Error infos: {err}"))?;
+            toml::from_str(file_content.as_str())
+                .map_err(|err| anyhow!("Failed to read settings file. Error infos: {err}"))?
         } else {
             let defaults = Settings::get_default()?;
             if let Some(parent) = settings_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
+                tokio::fs::create_dir_all(parent).await.map_err(|err| {
+                    anyhow!("Failed to create configs directory. Error Info: {err}")
+                })?;
             }
             defaults.write_current_settings().await?;
 
