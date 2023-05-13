@@ -96,9 +96,9 @@ impl Settings {
             json_backend: JsonBackend::get_default()?,
             #[cfg(feature = "sqlite")]
             sqlite_backend: SqliteBackend::get_default()?,
-            #[cfg(feature = "json")]
+            #[cfg(all(feature = "json", not(feature = "sqlite")))]
             backend_type: BackendType::Json,
-            #[cfg(all(not(feature = "json"), feature = "sqlite"))]
+            #[cfg(feature = "sqlite")]
             backend_type: BackendType::Sqlite,
         })
     }
