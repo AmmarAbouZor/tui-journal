@@ -197,7 +197,7 @@ impl<'a> Editor<'a> {
     where
         B: Backend,
     {
-        let mut title = "Journal Content".to_owned();
+        let mut title = "Content".to_owned();
         if self.is_active {
             let mode_caption = if self.is_insert_mode() {
                 " - EDIT"
