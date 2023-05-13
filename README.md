@@ -13,13 +13,13 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Store your entries in either a plain text file using the JSON format or a SQLite database.
 - Intuitive, responsive and user-friendly text-based user interface (TUI).
 - Create, edit, and delete entries easily.
-- Keybindigs is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode)
+- Keybindigs is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux).
 
 ## Roadmap
 
-#### Back-ends
+#### Back-ends:
 - [x]  Plain text JSON back-end.
 - [x]  Database back-end using SQLite.
 - [ ]  RESTful back-end server with a client in the app.
@@ -31,7 +31,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
 
-#### Install with default features
+#### Install with default features:
 
 To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from the GitHub repository:
 
@@ -41,7 +41,7 @@ cargo install --git https://github.com/ammarabouzor/tui-journal
 
 This will clone the repository and build the TUI-Journal executable, which can be accessed globally.
 
-#### Install with Specific Features
+#### Install with Specific Features:
 
 You can choose to install TUI-Journal with specific features enabled or disabled by customizing the cargo installation command. To install TUI-Journal with only the JSON back-end feature, use the following command:
 
