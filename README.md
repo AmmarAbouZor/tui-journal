@@ -15,7 +15,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Create, edit, and delete entries easily.
 - Keybindigs is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - See the keybindings from inside the app
-- Cross-platform compatibility (Windows, macOS, Linux).
+- Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
 
 ## Roadmap
 
@@ -55,6 +55,13 @@ To install TUI-Journal with only the SQLite back-end feature, use the following 
 cargo install --git https://github.com/ammarabouzor/tui-journal --no-default-features --features sqlite
 ```
 
+### NetBSD
+
+On NetBSD a pre-compiled binary built with default features is available from the official repositories. To install it, simply run:
+
+```bash
+pkgin install tui-journal
+```
     
 ## Usage
 
