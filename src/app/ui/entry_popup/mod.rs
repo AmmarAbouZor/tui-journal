@@ -1,5 +1,5 @@
 use anyhow::Ok;
-use chrono::{Datelike, NaiveDate, TimeZone, Utc};
+use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::{
     backend::Backend,
@@ -47,7 +47,7 @@ impl<'a> EntryPopup<'a> {
     pub fn new_entry() -> Self {
         let title_txt = TextArea::default();
 
-        let date = Utc::now();
+        let date = Local::now();
 
         let date_txt = TextArea::new(vec![format!(
             "{:02}-{:02}-{}",
