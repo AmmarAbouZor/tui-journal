@@ -1,6 +1,6 @@
 [package]
 name = "tui-journal"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Ammar Abou Zor"]
 license = "MIT"
@@ -8,7 +8,7 @@ description = "Tui app allows writing and managing journals/notes from within th
 repository = "https://github.com/ammarabouzor/tui-journal"
 readme = "README.md"
 categories = ["command-line-utilities"]
-keywords = ["tui", "terminal-app", "journal"]
+keywords = ["tui", "terminal-app", "journal", "cli", "ui"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
