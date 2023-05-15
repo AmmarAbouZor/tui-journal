@@ -1,9 +1,9 @@
 [package]
 name = "tui-journal"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+authors = ["Ammar Abou Zor"]
+license = "MIT"
 description = "Tui app allows writing and managing journals/notes from within the terminal With different local back-ends"
 repository = "https://github.com/ammarabouzor/tui-journal"
 readme = "README.md"
@@ -12,22 +12,21 @@ keywords = ["tui", "terminal-app", "journal"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-backend = {path = "./backend/", version = "0.1", default_features = false}
-
-anyhow.workspace = true
-async-trait.workspace = true
-chrono.workspace = true
+anyhow = "1.0.70"
+tokio = { version = "1.28.0", features = ["full"] }
+serde = { version = "1.0.158", features = ["derive"]}
+serde_json = "1.0.95"
+log = "0.4.17"
+chrono = { version = "0.4.24", features = ["serde"] }
+async-trait = "0.1.68"
 clap = { version = "4.2.4", features = ["derive"] }
 crossterm = "0.25"
 directories = "5.0.0"
-log.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.40"
-tokio = {workspace = true}
 toml = "0.7.3"
+sqlx = {version = "0.6.3", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 
 # TODO: follow issue link: https://github.com/rhysd/tui-textarea/issues/19 and reapplay the migration
 tui = "0.19"
@@ -39,32 +38,16 @@ tui-textarea = "0.2"
 
 [features]
 default = ["json", "sqlite"]
-json =["backend/json"]
-sqlite = ["backend/sqlite"]
-
-[workspace]
-members = [
-  "backend"
-]
-
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-authors = ["Ammar Abou Zor"]
-license = "MIT"
-
-[workspace.dependencies]
-anyhow = "1.0.70"
-tokio = { version = "1.28.0", features = ["full"] }
-serde = { version = "1.0.158", features = ["derive"]}
-serde_json = "1.0.95"
-log = "0.4.17"
-chrono = { version = "0.4.24", features = ["serde"] }
-async-trait = "0.1.68"
+json =[]
+sqlite = ["dep:sqlx"]
 
 [[bin]]
 name = "tjournal"
 path = "src/main.rs"
+
+[lib]
+name = "backend"
+path = "backend/src/lib.rs"
 
 [[test]]
 name = "backend"
