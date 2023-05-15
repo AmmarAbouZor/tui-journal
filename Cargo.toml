@@ -14,7 +14,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 chrono.workspace = true
 clap = { version = "4.2.4", features = ["derive"] }
-crossterm = "0.25"
+crossterm = "0.26"
 directories = "5.0.0"
 log.workspace = true
 serde.workspace = true
@@ -24,8 +24,10 @@ textwrap = "0.16.0"
 thiserror = "1.0.40"
 tokio = {workspace = true}
 toml = "0.7.3"
-tui = "0.19.0"
-tui-textarea = "0.2.0"
+tui = { version = "0.20", package = "ratatui" }
+# Textarea crate supports ratatui but it doesn't provide a new version on crates.io to support it
+# TODO: follow issue issue link: https://github.com/rhysd/tui-textarea/issues/18 and reuse the version from crates.io
+tui-textarea = { git = "https://github.com/rhysd/tui-textarea", features = ["ratatui-crossterm"], default-features=false}
 
 [features]
 default = ["json", "sqlite"]
