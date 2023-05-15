@@ -89,7 +89,7 @@ Options:
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
   -v, --verbose...                    Increases logging verbosity each use for up to 3 times
   -l, --log <FILE PATH>               Specifies a file to use for logging
-                                      (default file: /home/ammar/.cache/tui-journal/tui-journal.log)
+                                      (default file: <cache_dir>/tui-journal/tui-journal.log)
   -h, --help                          Print help
   -V, --version                       Print version
 ```
@@ -114,7 +114,7 @@ file_path = "<Documents-folder>/tui-journal/entries.db"
 
 TUI-Journal would not have been possible without the following open-source crates:
 
-- [tui-rs](https://crates.io/crates/tui-rs): TUI-Journal utilizes the `tui-rs` crate, which provides a framework for building terminal user interfaces in Rust. It offers a wide range of components and utilities to create interactive and responsive TUI applications.
+- [tui-rs](https://crates.io/crates/tui-rs) and its revival [ratatui](https://github.com/tui-rs-revival/ratatui): TUI-Journal utilizes the `tui-rs` and `ratatui` crates, which provide a framework for building terminal user interfaces in Rust. They offer a wide range of components and utilities to create interactive and responsive TUI applications.
 
 - [tui-texteditor](https://crates.io/crates/tui-texteditor): TUI-Journal leverages the `tui-texteditor` crate, which offers a text editor widget specifically designed for terminal-based applications. It provides functionalities such as text manipulation, cursor movement, and scrolling within the TUI environment.
 
