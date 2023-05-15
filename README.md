@@ -33,26 +33,25 @@ Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on you
 
 #### Install with default features:
 
-To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from the GitHub repository:
+To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from [crates.io](https://crates.io/crates/tui-journal):
 
 ```bash
-cargo install --git https://github.com/ammarabouzor/tui-journal
+cargo install tui-journal
 ```
 
-This will clone the repository and build the TUI-Journal executable, which can be accessed globally.
 
 #### Install with Specific Features:
 
 You can choose to install TUI-Journal with specific features enabled or disabled by customizing the cargo installation command. To install TUI-Journal with only the JSON back-end feature, use the following command:
 
 ```bash
-cargo install --git https://github.com/ammarabouzor/tui-journal --no-default-features --features json
+cargo install tui-journal --no-default-features --features json
 ```
 
 To install TUI-Journal with only the SQLite back-end feature, use the following command:
 
 ```bash
-cargo install --git https://github.com/ammarabouzor/tui-journal --no-default-features --features sqlite
+cargo install tui-journal --no-default-features --features sqlite
 ```
 
 ### NetBSD
