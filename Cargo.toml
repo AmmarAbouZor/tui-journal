@@ -12,7 +12,7 @@ keywords = ["tui", "terminal-app", "journal"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-backend = {path = "./backend/", default_features = false}
+backend = {path = "./backend/", version = "0.1", default_features = false}
 
 anyhow.workspace = true
 async-trait.workspace = true
@@ -31,7 +31,7 @@ toml = "0.7.3"
 tui = { version = "0.20", package = "ratatui" }
 # Textarea crate supports ratatui but it doesn't provide a new version on crates.io to support it
 # TODO: follow issue issue link: https://github.com/rhysd/tui-textarea/issues/18 and reuse the version from crates.io
-tui-textarea = { git = "https://github.com/rhysd/tui-textarea", features = ["ratatui-crossterm"], default-features=false}
+tui-textarea = { git = "https://github.com/rhysd/tui-textarea", version = "0.2", features = ["ratatui-crossterm"], default-features=false}
 
 [features]
 default = ["json", "sqlite"]
