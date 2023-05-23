@@ -16,10 +16,13 @@ pub mod json_backend;
 #[cfg(feature = "sqlite")]
 pub mod sqlite_backend;
 
+mod export;
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Settings {
     #[serde(default)]
     pub export: ExportSettings,
+    #[serde(default)]
     pub backend_type: BackendType,
     #[cfg(feature = "json")]
     #[serde(default)]
@@ -35,6 +38,15 @@ pub enum BackendType {
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
+}
+
+impl Default for BackendType {
+    fn default() -> Self {
+        #[cfg(all(feature = "json", not(feature = "sqlite")))]
+        return BackendType::Json;
+        #[cfg(feature = "sqlite")]
+        BackendType::Sqlite
+    }
 }
 
 impl Settings {
