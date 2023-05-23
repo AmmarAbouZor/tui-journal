@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use super::get_default_data_dir;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct SqliteBackend {
+    #[serde(default)]
     pub file_path: PathBuf,
 }
 
