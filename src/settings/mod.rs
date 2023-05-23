@@ -5,6 +5,18 @@ use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "json")]
+use self::json_backend::{get_default_json_path, JsonBackend};
+
+#[cfg(feature = "sqlite")]
+use self::sqlite_backend::{get_default_sqlite_path, SqliteBackend};
+
+#[cfg(feature = "json")]
+mod json_backend;
+
+#[cfg(feature = "sqlite")]
+mod sqlite_backend;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
     pub backend_type: BackendType,
@@ -18,36 +30,6 @@ pub struct Settings {
 pub enum BackendType {
     Json,
     Sqlite,
-}
-
-#[cfg(feature = "json")]
-#[derive(Debug, Deserialize, Serialize)]
-pub struct JsonBackend {
-    pub file_path: PathBuf,
-}
-
-#[cfg(feature = "json")]
-impl JsonBackend {
-    fn get_default() -> anyhow::Result<Self> {
-        Ok(JsonBackend {
-            file_path: get_default_json_path()?,
-        })
-    }
-}
-
-#[cfg(feature = "sqlite")]
-#[derive(Debug, Deserialize, Serialize)]
-pub struct SqliteBackend {
-    pub file_path: PathBuf,
-}
-
-#[cfg(feature = "sqlite")]
-impl SqliteBackend {
-    fn get_default() -> anyhow::Result<Self> {
-        Ok(SqliteBackend {
-            file_path: get_default_sqlite_path()?,
-        })
-    }
 }
 
 impl Settings {
@@ -142,14 +124,4 @@ fn get_default_data_dir() -> anyhow::Result<PathBuf> {
                 .join("tui-journal")
         })
         .context("Default entries directory path couldn't be retrieved")
-}
-
-#[cfg(feature = "json")]
-fn get_default_json_path() -> anyhow::Result<PathBuf> {
-    Ok(get_default_data_dir()?.join("entries.json"))
-}
-
-#[cfg(feature = "sqlite")]
-fn get_default_sqlite_path() -> anyhow::Result<PathBuf> {
-    Ok(get_default_data_dir()?.join("entries.db"))
 }
