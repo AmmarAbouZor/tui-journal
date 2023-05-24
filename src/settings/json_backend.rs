@@ -7,15 +7,7 @@ use super::get_default_data_dir;
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct JsonBackend {
     #[serde(default)]
-    pub file_path: PathBuf,
-}
-
-impl JsonBackend {
-    pub fn get_default() -> anyhow::Result<Self> {
-        Ok(JsonBackend {
-            file_path: get_default_json_path()?,
-        })
-    }
+    pub file_path: Option<PathBuf>,
 }
 
 pub fn get_default_json_path() -> anyhow::Result<PathBuf> {

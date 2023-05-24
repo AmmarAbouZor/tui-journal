@@ -6,21 +6,20 @@ use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "json")]
-use self::json_backend::{get_default_json_path, JsonBackend};
-
+use self::json_backend::JsonBackend;
 #[cfg(feature = "sqlite")]
-use self::sqlite_backend::{get_default_sqlite_path, SqliteBackend};
+use self::sqlite_backend::SqliteBackend;
+use self::{json_backend::get_default_json_path, sqlite_backend::get_default_sqlite_path};
 
 #[cfg(feature = "json")]
-mod json_backend;
-
+pub mod json_backend;
 #[cfg(feature = "sqlite")]
-mod sqlite_backend;
+pub mod sqlite_backend;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Settings {
     #[serde(default)]
-    pub backend_type: BackendType,
+    pub backend_type: Option<BackendType>,
     #[cfg(feature = "json")]
     #[serde(default)]
     pub json_backend: JsonBackend,
@@ -29,85 +28,63 @@ pub struct Settings {
     pub sqlite_backend: SqliteBackend,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
 pub enum BackendType {
+    #[cfg_attr(all(feature = "json", not(feature = "sqlite")), default)]
     Json,
+    #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
-}
-
-impl Default for BackendType {
-    fn default() -> Self {
-        #[cfg(all(feature = "json", not(feature = "sqlite")))]
-        return BackendType::Json;
-        #[cfg(feature = "sqlite")]
-        BackendType::Sqlite
-    }
 }
 
 impl Settings {
     pub async fn new() -> anyhow::Result<Self> {
         let settings_path = get_settings_path()?;
-        let mut settings = if settings_path.exists() {
+        let settings = if settings_path.exists() {
             let file_content = tokio::fs::read_to_string(settings_path)
                 .await
                 .map_err(|err| anyhow!("Failed to load settings file. Error infos: {err}"))?;
             toml::from_str(file_content.as_str())
                 .map_err(|err| anyhow!("Failed to read settings file. Error infos: {err}"))?
         } else {
-            let defaults = Settings::get_default()?;
-            if let Some(parent) = settings_path.parent() {
-                tokio::fs::create_dir_all(parent).await.map_err(|err| {
-                    anyhow!("Failed to create configs directory. Error Info: {err}")
-                })?;
-            }
-            defaults.write_current_settings().await?;
-
-            defaults
+            Settings::default()
         };
-
-        #[cfg(feature = "json")]
-        if settings.backend_type == BackendType::Json
-            && settings.json_backend.file_path.to_str().unwrap().is_empty()
-        {
-            settings.json_backend.file_path = get_default_json_path()?;
-            settings.write_current_settings().await?;
-        }
-
-        #[cfg(feature = "sqlite")]
-        if settings.backend_type == BackendType::Sqlite
-            && settings
-                .sqlite_backend
-                .file_path
-                .to_str()
-                .unwrap()
-                .is_empty()
-        {
-            settings.sqlite_backend.file_path = get_default_sqlite_path()?;
-            settings.write_current_settings().await?;
-        }
 
         Ok(settings)
     }
 
-    fn get_default() -> anyhow::Result<Self> {
-        Ok(Settings {
-            #[cfg(feature = "json")]
-            json_backend: JsonBackend::get_default()?,
-            #[cfg(feature = "sqlite")]
-            sqlite_backend: SqliteBackend::get_default()?,
-            backend_type: BackendType::default(),
-        })
-    }
-
-    pub async fn write_current_settings(&self) -> anyhow::Result<()> {
-        let toml = toml::to_string(&self)
-            .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))?;
+    pub async fn write_current_settings(&mut self) -> anyhow::Result<()> {
+        let toml = self.get_as_text()?;
 
         let settings_path = get_settings_path()?;
 
         tokio::fs::write(settings_path, toml)
             .await
             .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
+
+        Ok(())
+    }
+
+    pub fn get_as_text(&mut self) -> anyhow::Result<String> {
+        self.complete_missing_options()?;
+
+        toml::to_string(&self)
+            .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))
+    }
+
+    pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
+        //TODO: this method would make errors in the features since there are compiler-checks when
+        // new fields are added to the settings
+        if self.backend_type.is_none() {
+            self.backend_type = Some(BackendType::default());
+        }
+
+        if self.json_backend.file_path.is_none() {
+            self.json_backend.file_path = Some(get_default_json_path()?)
+        }
+
+        if self.sqlite_backend.file_path.is_none() {
+            self.sqlite_backend.file_path = Some(get_default_sqlite_path()?)
+        }
 
         Ok(())
     }
