@@ -22,13 +22,20 @@ pub enum HandleInputReturnType {
     ExitApp,
 }
 
-pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> Result<()> {
-    let settings = Settings::new().await?;
-
-    match settings.backend_type {
+pub async fn run<B: Backend>(
+    terminal: &mut Terminal<B>,
+    settings: Settings,
+    tick_rate: Duration,
+) -> Result<()> {
+    match settings.backend_type.unwrap_or_default() {
         #[cfg(feature = "json")]
         BackendType::Json => {
-            let data_provider = JsonDataProvide::new(settings.json_backend.file_path);
+            let path = if let Some(path) = settings.json_backend.file_path {
+                path
+            } else {
+                crate::settings::json_backend::get_default_json_path()?
+            };
+            let data_provider = JsonDataProvide::new(path);
             run_intern(terminal, tick_rate, data_provider).await
         }
         #[cfg(not(feature = "json"))]
@@ -39,8 +46,12 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) ->
         }
         #[cfg(feature = "sqlite")]
         BackendType::Sqlite => {
-            let data_provider =
-                SqliteDataProvide::from_file(settings.sqlite_backend.file_path).await?;
+            let path = if let Some(path) = settings.sqlite_backend.file_path {
+                path
+            } else {
+                crate::settings::sqlite_backend::get_default_sqlite_path()?
+            };
+            let data_provider = SqliteDataProvide::from_file(path).await?;
             run_intern(terminal, tick_rate, data_provider).await
         }
         #[cfg(not(feature = "sqlite"))]

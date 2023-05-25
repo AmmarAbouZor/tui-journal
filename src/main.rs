@@ -7,6 +7,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use settings::Settings;
 use tui::{backend::CrosstermBackend, Terminal};
 
 mod app;
@@ -16,9 +17,11 @@ mod settings;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let mut settings = Settings::new().await?;
+
     let cli = cli::Cli::parse();
 
-    match cli.handle_cli().await? {
+    match cli.handle_cli(&mut settings).await? {
         cli::CliResult::Return => return Ok(()),
         cli::CliResult::Continue => {}
     }
@@ -32,10 +35,12 @@ async fn main() -> Result<()> {
     chain_panic_hook();
 
     let tick_rate = Duration::from_millis(250);
-    app::run(&mut terminal, tick_rate).await.map_err(|err| {
-        log::error!("[PANIC] {}", err.to_string());
-        err
-    })?;
+    app::run(&mut terminal, settings, tick_rate)
+        .await
+        .map_err(|err| {
+            log::error!("[PANIC] {}", err.to_string());
+            err
+        })?;
 
     // restore terminal
     disable_raw_mode()?;

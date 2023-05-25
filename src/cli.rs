@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use clap::{Parser, Subcommand};
 use std::{
     fs,
@@ -27,6 +26,10 @@ pub struct Cli {
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
 
+    /// write the current settings to config file (this will rewrite the whole config file)
+    #[arg(short, long)]
+    write_config: bool,
+
     /// Increases logging verbosity each use for up to 3 times.
     #[arg(short = 'v', long, action = clap::ArgAction::Count)]
     verbose: u8,
@@ -40,14 +43,9 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Gets the current entries Json file path.
-    #[cfg(feature = "json")]
-    #[clap(visible_alias = "gj")]
-    GetJsonPath,
-    /// Gets the current entries sqlite file path.
-    #[cfg(feature = "sqlite")]
-    #[clap(visible_alias = "gs")]
-    GetSqlitePath,
+    /// Print the current settings including the paths for the backend files
+    #[clap(visible_alias = "pc")]
+    PrintConfig,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -57,36 +55,37 @@ pub enum CliResult {
 }
 
 impl Commands {
-    pub async fn exec(self) -> anyhow::Result<()> {
+    pub async fn exec(self, settings: &mut Settings) -> anyhow::Result<()> {
         match self {
-            #[cfg(feature = "json")]
-            Commands::GetJsonPath => exec_get_json_path().await,
-            #[cfg(feature = "sqlite")]
-            Commands::GetSqlitePath => exec_get_sqlite_path().await,
+            Commands::PrintConfig => exec_print_config(settings).await,
         }
     }
 }
 
 impl Cli {
-    pub async fn handle_cli(mut self) -> anyhow::Result<CliResult> {
+    pub async fn handle_cli(mut self, settings: &mut Settings) -> anyhow::Result<CliResult> {
         #[cfg(feature = "json")]
         if let Some(json_path) = self.json_file_path.take() {
-            set_json_path(json_path).await?;
+            set_json_path(json_path, settings).await?;
         }
 
         #[cfg(feature = "sqlite")]
         if let Some(sql_path) = self.sqlite_file_path.take() {
-            set_sqlite_path(sql_path).await?;
+            set_sqlite_path(sql_path, settings).await?;
         }
 
         if let Some(backend) = self.backend_type.take() {
-            set_backend_type(backend).await?;
+            set_backend_type(backend, settings).await?;
+        }
+
+        if self.write_config {
+            settings.write_current_settings().await?;
         }
 
         setup_logging(self.verbose, self.log_file)?;
 
         if let Some(cmd) = self.command.take() {
-            cmd.exec().await?;
+            cmd.exec(settings).await?;
             Ok(CliResult::Return)
         } else {
             Ok(CliResult::Continue)
@@ -95,42 +94,10 @@ impl Cli {
 }
 
 #[cfg(feature = "json")]
-async fn exec_get_json_path() -> anyhow::Result<()> {
-    let settings = Settings::new().await?;
-    println!(
-        "{}",
-        tokio::fs::canonicalize(settings.json_backend.file_path)
-            .await
-            .map_err(|err| anyhow!("couldn't find json file.\nError details: {err}"))?
-            .to_string_lossy()
-    );
-
-    Ok(())
-}
-
-#[cfg(feature = "sqlite")]
-async fn exec_get_sqlite_path() -> anyhow::Result<()> {
-    let settings = Settings::new().await?;
-    println!(
-        "{}",
-        tokio::fs::canonicalize(settings.sqlite_backend.file_path)
-            .await
-            .map_err(|err| anyhow!("couldn't find sqlite file.\nError details: {err}"))?
-            .to_string_lossy()
-    );
-
-    Ok(())
-}
-
-#[cfg(feature = "json")]
-async fn set_json_path(path: PathBuf) -> anyhow::Result<()> {
-    let mut settings = Settings::new().await?;
-
+async fn set_json_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
     ensure_path_exists(&path).await?;
 
-    settings.json_backend.file_path = fs::canonicalize(path)?;
-
-    settings.write_current_settings().await?;
+    settings.json_backend.file_path = Some(fs::canonicalize(path)?);
 
     Ok(())
 }
@@ -145,24 +112,24 @@ async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
 }
 
 #[cfg(feature = "sqlite")]
-async fn set_sqlite_path(path: PathBuf) -> anyhow::Result<()> {
-    let mut settings = Settings::new().await?;
-
+async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
     ensure_path_exists(&path).await?;
 
-    settings.sqlite_backend.file_path = fs::canonicalize(path)?;
-
-    settings.write_current_settings().await?;
+    settings.sqlite_backend.file_path = Some(fs::canonicalize(path)?);
 
     Ok(())
 }
 
-async fn set_backend_type(backend: BackendType) -> anyhow::Result<()> {
-    let mut settings = Settings::new().await?;
+async fn set_backend_type(backend: BackendType, settings: &mut Settings) -> anyhow::Result<()> {
+    settings.backend_type = Some(backend);
 
-    settings.backend_type = backend;
+    Ok(())
+}
 
-    settings.write_current_settings().await?;
+async fn exec_print_config(settings: &mut Settings) -> anyhow::Result<()> {
+    let settings_text = settings.get_as_text()?;
+
+    println!("{settings_text}");
 
     Ok(())
 }
