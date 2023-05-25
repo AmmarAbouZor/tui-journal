@@ -72,12 +72,14 @@ impl Settings {
     }
 
     pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
-        // This check is to ensure that all added fields to settings are conisdered here
-        #[cfg(all(feature = "sqlite", feature = "json"))]
-        static_assertions::assert_eq_size!(
-            Settings,
-            (Option<BackendType>, JsonBackend, SqliteBackend)
-        );
+        // This check is to ensure that all added fields to settings struct are conisdered here
+        if cfg!(all(debug_assertions, feature = "sqlite", feature = "json")) {
+            let Settings {
+                backend_type: _,
+                json_backend: __,
+                sqlite_backend: ___,
+            } = self;
+        }
 
         if self.backend_type.is_none() {
             self.backend_type = Some(BackendType::default());
