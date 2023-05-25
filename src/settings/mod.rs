@@ -6,10 +6,9 @@ use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "json")]
-use self::json_backend::JsonBackend;
+use self::json_backend::{get_default_json_path, JsonBackend};
 #[cfg(feature = "sqlite")]
-use self::sqlite_backend::SqliteBackend;
-use self::{json_backend::get_default_json_path, sqlite_backend::get_default_sqlite_path};
+use self::sqlite_backend::{get_default_sqlite_path, SqliteBackend};
 
 #[cfg(feature = "json")]
 pub mod json_backend;
@@ -73,22 +72,23 @@ impl Settings {
 
     pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
         // This check is to ensure that all added fields to settings struct are conisdered here
-        if cfg!(all(debug_assertions, feature = "sqlite", feature = "json")) {
-            let Settings {
-                backend_type: _,
-                json_backend: __,
-                sqlite_backend: ___,
-            } = self;
-        }
+        #[cfg(all(debug_assertions, feature = "sqlite", feature = "json"))]
+        let Settings {
+            backend_type: _,
+            json_backend: _,
+            sqlite_backend: _,
+        } = self;
 
         if self.backend_type.is_none() {
             self.backend_type = Some(BackendType::default());
         }
 
+        #[cfg(feature = "json")]
         if self.json_backend.file_path.is_none() {
             self.json_backend.file_path = Some(get_default_json_path()?)
         }
 
+        #[cfg(feature = "sqlite")]
         if self.sqlite_backend.file_path.is_none() {
             self.sqlite_backend.file_path = Some(get_default_sqlite_path()?)
         }
