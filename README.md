@@ -92,14 +92,14 @@ $ tjournal --help
 Usage: tjournal [OPTIONS] [COMMAND]
 
 Commands:
-  get-json-path    Gets the current entries Json file path [aliases: gj]
-  get-sqlite-path  Gets the current entries sqlite file path [aliases: gs]
-  help             Print this message or the help of the given subcommand(s)
+  print-config  Print the current settings including the paths for the backend files [aliases: pc]
+  help          Print this message or the help of the given subcommand(s)
 
 Options:
   -j, --json-file-path <FILE PATH>    Sets the entries Json file path and starts using it
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
+  -w, --write-config                  write the current settings to config file (this will rewrite the whole config file)
   -v, --verbose...                    Increases logging verbosity each use for up to 3 times
   -l, --log <FILE PATH>               Specifies a file to use for logging
                                       (default file: <cache_dir>/tui-journal/tui-journal.log)
