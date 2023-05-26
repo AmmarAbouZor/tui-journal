@@ -1,7 +1,7 @@
 <!----------------------------------------------------------------------------->
 
-[ci]:  https://github.com/AmmarAbouZor/tui-journal/workflows/Rust/badge.svg
-[ci-url]:  https://github.com/AmmarAbouZor/tui-journal/workflows/Rust
+[ci]:  https://github.com/AmmarAbouZor/tui-journal/workflows/CI/badge.svg
+[ci-url]:  https://github.com/AmmarAbouZor/tui-journal/workflows/CI
 [crates-io]:  https://img.shields.io/crates/v/tui-journal
 [crates-io-url]:  https://crates.io/crates/tui-journal
 [docs-rs]:  https://docs.rs/tui-journal/badge.svg
