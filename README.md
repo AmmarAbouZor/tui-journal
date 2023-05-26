@@ -1,5 +1,26 @@
+<!----------------------------------------------------------------------------->
+
+[ci]:  https://github.com/AmmarAbouZor/tui-journal/workflows/Rust/badge.svg
+[ci-url]:  https://github.com/AmmarAbouZor/tui-journal/workflows/Rust
+[crates-io]:  https://img.shields.io/crates/v/tui-journal
+[crates-io-url]:  https://crates.io/crates/tui-journal
+[docs-rs]:  https://docs.rs/tui-journal/badge.svg
+[docs-rs-url]:  https://docs.rs/tui-journal
+[downloads]:  https://img.shields.io/crates/d/tui-journal
+[lcns]:  https://img.shields.io/github/license/AmmarAbouZor/tui-journal
+[lst]:  https://img.shields.io/github/last-commit/AmmarAbouZor/tui-journal
+[repository]:  https://github.com/AmmarAbouZor/tui-journal
+
+<!----------------------------------------------------------------------------->
 
 # TUI-Journal
+
+[![][ci]][ci-url]
+[![][crates-io]][crates-io-url]
+[![][docs-rs]][docs-rs-url]
+[![][downloads]][crates-io-url]
+[![][lst]][repository]
+[![][lcns]][repository]
 
 TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite. 
 
