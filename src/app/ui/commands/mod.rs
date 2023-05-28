@@ -14,7 +14,7 @@ mod global_cmd;
 
 type CmdResult = anyhow::Result<HandleInputReturnType>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UICommand {
     Quit,
     ShowHelp,
