@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use tui::{
     backend::Backend,
-    layout::{Constraint, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Cell, Clear, Row, Table},
+    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, Wrap},
     Frame,
 };
 
@@ -17,6 +17,10 @@ const NAME_PERC: u16 = 27;
 const DESCRIPTION_PERC: u16 = 100 - NAME_PERC - KEY_PERC;
 const MARGINE: u16 = 8;
 
+const EDITOR_HINT_TEXT: &str = r"The Editor has two modes:
+ - Normal-Mode: In this mode VIM keybindings are used to navigate the text and to enter edit mode via (i, I, a , A, o, O).
+ - Edit-Mode: In this mode Emacs keybindings are used to edit and navigate the text.";
+
 pub fn render_help_popup<B: Backend>(
     frame: &mut Frame<B>,
     area: Rect,
@@ -24,6 +28,26 @@ pub fn render_help_popup<B: Backend>(
 ) {
     let area = centered_rect(90, 80, area);
 
+    let block = Block::default().title("Help").borders(Borders::ALL);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .horizontal_margin(2)
+        .vertical_margin(1)
+        .constraints([Constraint::Min(10), Constraint::Length(6)].as_ref())
+        .split(area);
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(block, area);
+    render_keymaps_table(frame, chunks[0], ui_components);
+    render_editor_hint(frame, chunks[1]);
+}
+
+fn render_keymaps_table<B: Backend>(
+    frame: &mut Frame<B>,
+    area: Rect,
+    ui_components: &UIComponents,
+) {
     let header_cells = ["Key", "Command", "Description"]
         .into_iter()
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
@@ -75,7 +99,7 @@ pub fn render_help_popup<B: Backend>(
         .header(header)
         .block(
             Block::default()
-                .title("Help - Keybindigs")
+                .title("General Keybindings")
                 .borders(Borders::ALL),
         )
         .widths(&[
@@ -84,6 +108,17 @@ pub fn render_help_popup<B: Backend>(
             Constraint::Percentage(DESCRIPTION_PERC),
         ]);
 
-    frame.render_widget(Clear, area);
     frame.render_widget(keymaps_table, area);
+}
+
+pub fn render_editor_hint<B: Backend>(frame: &mut Frame<B>, area: Rect) {
+    let paragraph = Paragraph::new(EDITOR_HINT_TEXT)
+        .block(
+            Block::default()
+                .title("Editor Keybindings")
+                .borders(Borders::ALL),
+        )
+        .wrap(Wrap { trim: false });
+
+    frame.render_widget(paragraph, area);
 }
