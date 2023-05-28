@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::ui::UICommand;
 
-#[derive(Debug, Clone, Hash, PartialEq, PartialOrd, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, PartialOrd, Eq)]
 pub struct Input {
     pub key_code: KeyCode,
     pub modifiers: KeyModifiers,
