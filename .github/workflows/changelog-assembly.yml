@@ -1,0 +1,41 @@
+name: changelog-assembly
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scriv:
+    name: scriv
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - uses: actions/setup-python@v4.5.0
+        with:
+          python-version: 3.11
+
+      - uses: fregante/setup-git-user@v2.0.1
+
+      - run: echo scriv >> requirements.txt
+
+      - uses: py-actions/py-dependency-install@v4.0.0
+
+      - run: |
+          rm requirements.txt
+          scriv collect
+          git add .
+          git commit -m '[Scriv] Assemble CHANGELOG'
+
+      - uses: peter-evans/create-pull-request@v5.0.1
+        with:
+          assignees: |
+            AmmarAbouZor
+          branch: documentation/scriv-assemble-changelog
+          branch-suffix: timestamp
+          labels: |
+            documentation
+          title: '[Scriv] Assemble CHANGELOG'
