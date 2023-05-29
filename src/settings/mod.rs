@@ -23,7 +23,7 @@ pub struct Settings {
     #[serde(default)]
     pub export: ExportSettings,
     #[serde(default)]
-    pub backend_type: BackendType,
+    pub backend_type: Option<BackendType>,
     #[cfg(feature = "json")]
     #[serde(default)]
     pub json_backend: JsonBackend,
@@ -38,15 +38,6 @@ pub enum BackendType {
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
-}
-
-impl Default for BackendType {
-    fn default() -> Self {
-        #[cfg(all(feature = "json", not(feature = "sqlite")))]
-        return BackendType::Json;
-        #[cfg(feature = "sqlite")]
-        BackendType::Sqlite
-    }
 }
 
 impl Settings {
@@ -91,6 +82,7 @@ impl Settings {
             backend_type: _,
             json_backend: _,
             sqlite_backend: _,
+            export: _,
         } = self;
 
         if self.backend_type.is_none() {
