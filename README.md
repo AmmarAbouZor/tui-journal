@@ -37,7 +37,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
-- Export the current journal content to a predefined export order or the current directory 
+- Export the current journal's content to a predefined export path or the current directory 
 
 ## Roadmap
 
@@ -136,11 +136,11 @@ The configuration for TUI-Journal can be found in the `config.toml` file located
 Here is a sample of the default settings in the `config.toml` file:
 
 ```toml
-backend_type = "Sqlite"   # available options Json, Sqlite
+backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqlite.
 
 [export]
-default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export journal content. Falls back to the current directory if not specified
-show_confirmation = true   # Show confirmation after successful export
+default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export journal content. Falls back to the current directory if not specified.
+show_confirmation = true   # Show confirmation after successful export.
 
 [json_backend]
 file_path = "<Documents-folder>/tui-journal/entries.json"
