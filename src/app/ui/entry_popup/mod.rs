@@ -14,7 +14,9 @@ use crate::app::{keymap::Input, App};
 
 use backend::{DataProvider, Entry};
 
-use super::{ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR};
+use super::{
+    ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
+};
 
 const FOOTER_TEXT: &str =
     "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel";
@@ -148,7 +150,7 @@ impl<'a> EntryPopup<'a> {
                 .set_block(Block::default().borders(Borders::ALL).title("Title"));
         } else {
             self.title_txt
-                .set_style(Style::default().fg(Color::LightRed));
+                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
             self.title_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
@@ -163,7 +165,7 @@ impl<'a> EntryPopup<'a> {
                 .set_block(Block::default().borders(Borders::ALL).title("Date"));
         } else {
             self.date_txt
-                .set_style(Style::default().fg(Color::LightRed));
+                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
             self.date_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
