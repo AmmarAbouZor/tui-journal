@@ -177,3 +177,51 @@ pub async fn continue_delete_current_entry<'a, D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_export_entry_content<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::CreateEntry));
+    } else {
+        export_entry_content(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+pub fn export_entry_content<D: DataProvider>(ui_components: &mut UIComponents, app: &App<D>) {
+    if let Some(entry) = app
+        .current_entry_id
+        .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
+    {
+        match ExportPopup::create(entry, app) {
+            Ok(popup) => ui_components
+                .popup_stack
+                .push(Popup::Export(Box::new(popup))),
+            Err(err) => ui_components.show_err_msg(format!(
+                "Error while creating export dialog.\n Err: {}",
+                err
+            )),
+        }
+    }
+}
+
+pub async fn continue_export_entry_content<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            export_entry_content(ui_components, app);
+        }
+        MsgBoxResult::No => export_entry_content(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}

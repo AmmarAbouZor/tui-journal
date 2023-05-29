@@ -30,13 +30,13 @@ pub async fn run<B: Backend>(
     match settings.backend_type.unwrap_or_default() {
         #[cfg(feature = "json")]
         BackendType::Json => {
-            let path = if let Some(path) = settings.json_backend.file_path {
-                path
+            let path = if let Some(path) = &settings.json_backend.file_path {
+                path.clone()
             } else {
                 crate::settings::json_backend::get_default_json_path()?
             };
             let data_provider = JsonDataProvide::new(path);
-            run_intern(terminal, tick_rate, data_provider).await
+            run_intern(terminal, tick_rate, data_provider, settings).await
         }
         #[cfg(not(feature = "json"))]
         BackendType::Json => {
@@ -46,13 +46,13 @@ pub async fn run<B: Backend>(
         }
         #[cfg(feature = "sqlite")]
         BackendType::Sqlite => {
-            let path = if let Some(path) = settings.sqlite_backend.file_path {
-                path
+            let path = if let Some(path) = &settings.sqlite_backend.file_path {
+                path.clone()
             } else {
                 crate::settings::sqlite_backend::get_default_sqlite_path()?
             };
             let data_provider = SqliteDataProvide::from_file(path).await?;
-            run_intern(terminal, tick_rate, data_provider).await
+            run_intern(terminal, tick_rate, data_provider, settings).await
         }
         #[cfg(not(feature = "sqlite"))]
         BackendType::Sqlite => {
@@ -67,6 +67,7 @@ async fn run_intern<B, D>(
     terminal: &mut Terminal<B>,
     tick_rate: Duration,
     data_provider: D,
+    settings: Settings,
 ) -> anyhow::Result<()>
 where
     B: Backend,
@@ -74,7 +75,7 @@ where
 {
     let mut last_tick = Instant::now();
     let mut ui_components = UIComponents::new();
-    let mut app = App::new(data_provider);
+    let mut app = App::new(data_provider, settings);
     if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
     }

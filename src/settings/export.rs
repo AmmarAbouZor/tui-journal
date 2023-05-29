@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ExportSettings {
     #[serde(default)]
-    default_path: Option<PathBuf>,
+    pub default_path: Option<PathBuf>,
     #[serde(default)]
-    show_confirmation: bool,
+    pub show_confirmation: bool,
 }
 
 impl Default for ExportSettings {

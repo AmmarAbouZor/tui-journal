@@ -4,6 +4,7 @@ use self::{
     editor::{Editor, EditorMode},
     entries_list::EntriesList,
     entry_popup::{EntryPopup, EntryPopupInputReturn},
+    export_popup::ExportPopup,
     footer::render_footer,
     help_popup::render_help_popup,
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
@@ -29,6 +30,7 @@ mod commands;
 mod editor;
 mod entries_list;
 mod entry_popup;
+mod export_popup;
 mod footer;
 mod help_popup;
 mod msg_box;
@@ -40,6 +42,7 @@ pub use msg_box::MsgBoxResult;
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
 pub const EDITOR_MODE_COLOR: Color = Color::LightGreen;
+pub const INVALID_CONTROL_COLOR: Color = Color::LightRed;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -51,6 +54,7 @@ pub enum Popup<'a> {
     Help,
     Entry(Box<EntryPopup<'a>>),
     MsgBox(Box<MsgBox>),
+    Export(Box<ExportPopup<'a>>),
 }
 
 pub struct UIComponents<'a> {
@@ -138,6 +142,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Help => render_help_popup(f, f.size(), self),
                 Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.size()),
                 Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
+                Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
             }
         }
     }
@@ -223,6 +228,37 @@ impl<'a, 'b> UIComponents<'a> {
                         }
                     }
                 },
+                Popup::Export(export_popup) => {
+                    match export_popup.handle_input(input) {
+                        export_popup::ExportPopupInputReturn::KeepPopup => {}
+                        export_popup::ExportPopupInputReturn::Cancel => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                        }
+                        export_popup::ExportPopupInputReturn::Export(entry_id, path) => {
+                            match app.export_journal_content(entry_id, path.clone()).await {
+                                Ok(_) => {
+                                    self.popup_stack.pop().expect("popup stack isn't empty");
+
+                                    if app.settings.export.show_confirmation {
+                                        self.show_msg_box(
+                                            MsgBoxType::Info(format!(
+                                                "Journal content exported to file {}",
+                                                path.display()
+                                            )),
+                                            MsgBoxActions::Ok,
+                                            None,
+                                        );
+                                    }
+                                }
+                                Err(err) => {
+                                    self.show_err_msg(format!(
+                                        "Error while exporting journal content. Err: {err}",
+                                    ));
+                                }
+                            };
+                        }
+                    };
+                }
             }
             Ok(HandleInputReturnType::Handled)
         } else {
