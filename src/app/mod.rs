@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use backend::{DataProvider, Entry, EntryDraft};
 
 use anyhow::Context;
@@ -11,6 +13,8 @@ mod ui;
 
 pub use runner::HandleInputReturnType;
 
+use crate::settings::Settings;
+
 pub struct App<D>
 where
     D: DataProvider,
@@ -18,18 +22,20 @@ where
     pub data_provide: D,
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
+    pub settings: Settings,
 }
 
 impl<D> App<D>
 where
     D: DataProvider,
 {
-    pub fn new(data_provide: D) -> Self {
+    pub fn new(data_provide: D, settings: Settings) -> Self {
         let entries = Vec::new();
         Self {
             data_provide,
             entries,
             current_entry_id: None,
+            settings,
         }
     }
 
@@ -134,6 +140,18 @@ where
             let first_id = self.entries.first().map(|entry| entry.id);
             ui_components.set_current_entry(first_id, self);
         }
+        Ok(())
+    }
+
+    async fn export_journal_content(&self, entry_id: u32, path: PathBuf) -> anyhow::Result<()> {
+        if let Some(parent) = path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+
+        let entry = self.get_entry(entry_id).expect("Entry should exist");
+
+        tokio::fs::write(path, entry.content.to_owned()).await?;
+
         Ok(())
     }
 }

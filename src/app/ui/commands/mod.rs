@@ -30,6 +30,7 @@ pub enum UICommand {
     SaveEntryContent,
     DiscardChangesEntryContent,
     ReloadAll,
+    ExportEntryContent,
 }
 
 #[derive(Debug, Clone)]
@@ -91,6 +92,9 @@ impl UICommand {
                 CommandInfo::new("Discard changes", "Discard changes on journal content")
             }
             UICommand::ReloadAll => CommandInfo::new("Reload all", "Reload all entries"),
+            UICommand::ExportEntryContent => {
+                CommandInfo::new("Export journal content", "Export current journal content")
+            }
         }
     }
 
@@ -114,6 +118,7 @@ impl UICommand {
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app).await,
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
             UICommand::ReloadAll => exec_reload_all(ui_components, app).await,
+            UICommand::ExportEntryContent => exec_export_entry_content(ui_components, app),
         }
     }
 
@@ -149,6 +154,9 @@ impl UICommand {
                 continue_discard_content(ui_components, app, msg_box_result)
             }
             UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result).await,
+            UICommand::ExportEntryContent => {
+                continue_export_entry_content(ui_components, app, msg_box_result).await
+            }
         }
     }
 }

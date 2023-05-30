@@ -5,6 +5,7 @@ use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 
+use self::export::ExportSettings;
 #[cfg(feature = "json")]
 use self::json_backend::{get_default_json_path, JsonBackend};
 #[cfg(feature = "sqlite")]
@@ -15,8 +16,12 @@ pub mod json_backend;
 #[cfg(feature = "sqlite")]
 pub mod sqlite_backend;
 
+mod export;
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Settings {
+    #[serde(default)]
+    pub export: ExportSettings,
     #[serde(default)]
     pub backend_type: Option<BackendType>,
     #[cfg(feature = "json")]
@@ -77,6 +82,7 @@ impl Settings {
             backend_type: _,
             json_backend: _,
             sqlite_backend: _,
+            export: _,
         } = self;
 
         if self.backend_type.is_none() {
