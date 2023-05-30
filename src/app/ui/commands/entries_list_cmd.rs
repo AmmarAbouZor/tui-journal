@@ -183,7 +183,7 @@ pub fn exec_export_entry_content<D: DataProvider>(
     app: &App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
-        ui_components.show_unsaved_msg_box(Some(UICommand::CreateEntry));
+        ui_components.show_unsaved_msg_box(Some(UICommand::ExportEntryContent));
     } else {
         export_entry_content(ui_components, app);
     }
