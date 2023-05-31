@@ -103,6 +103,10 @@ async fn set_json_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result
 }
 
 async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
+    if path.exists() {
+        return Ok(());
+    }
+
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
