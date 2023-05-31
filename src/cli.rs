@@ -67,15 +67,17 @@ impl Cli {
         #[cfg(feature = "json")]
         if let Some(json_path) = self.json_file_path.take() {
             set_json_path(json_path, settings).await?;
+            set_backend_type(BackendType::Json, settings);
         }
 
         #[cfg(feature = "sqlite")]
         if let Some(sql_path) = self.sqlite_file_path.take() {
             set_sqlite_path(sql_path, settings).await?;
+            set_backend_type(BackendType::Sqlite, settings);
         }
 
         if let Some(backend) = self.backend_type.take() {
-            set_backend_type(backend, settings).await?;
+            set_backend_type(backend, settings);
         }
 
         if self.write_config {
@@ -103,6 +105,10 @@ async fn set_json_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result
 }
 
 async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
+    if path.exists() {
+        return Ok(());
+    }
+
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
@@ -120,10 +126,9 @@ async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Resu
     Ok(())
 }
 
-async fn set_backend_type(backend: BackendType, settings: &mut Settings) -> anyhow::Result<()> {
+#[inline]
+fn set_backend_type(backend: BackendType, settings: &mut Settings) {
     settings.backend_type = Some(backend);
-
-    Ok(())
 }
 
 async fn exec_print_config(settings: &mut Settings) -> anyhow::Result<()> {
