@@ -43,8 +43,7 @@ impl<'a> ExportPopup<'a> {
 
         // Add filename if it's not already defined
         if default_path.extension().is_none() {
-            default_path.push(entry.title.as_str());
-            default_path.set_extension("txt");
+            default_path.push(format!("{}.txt", entry.title.as_str()));
         }
 
         let mut path_txt = TextArea::new(vec![default_path.to_string_lossy().to_string()]);
