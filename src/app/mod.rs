@@ -23,6 +23,7 @@ where
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
     pub settings: Settings,
+    pub redraw_after_minimize: bool,
 }
 
 impl<D> App<D>
@@ -36,6 +37,7 @@ where
             entries,
             current_entry_id: None,
             settings,
+            redraw_after_minimize: false,
         }
     }
 

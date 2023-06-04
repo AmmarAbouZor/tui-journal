@@ -75,7 +75,7 @@ where
 
     ui_components.set_current_entry(app.entries.first().map(|entry| entry.id), &mut app);
 
-    terminal.draw(|f| ui_components.render_ui(f, &app))?;
+    draw_ui(terminal, &mut app, &mut ui_components)?;
 
     let mut intput_stream = EventStream::new();
     loop {
@@ -86,9 +86,11 @@ where
                 match input {
                     Some(event) => {
                         let event = event.context("Error gettig input stream")?;
-                       let result = handle_input(event, &mut app, &mut ui_components).await?;
+                        let result = handle_input(event, &mut app, &mut ui_components).await?;
                         match result {
-                            HandleInputReturnType::Handled | HandleInputReturnType::NotFound => terminal.draw(|f| ui_components.render_ui(f, &app))?,
+                            HandleInputReturnType::Handled | HandleInputReturnType::NotFound =>{
+                                draw_ui(terminal, &mut app, &mut ui_components)?;
+                            },
                             HandleInputReturnType::ExitApp => return Ok(()),
                         };
                     },
@@ -97,6 +99,24 @@ where
             },
         }
     }
+}
+
+fn draw_ui<'a, B: Backend, D: DataProvider>(
+    terminal: &mut Terminal<B>,
+    app: &mut App<D>,
+    ui_components: &mut UIComponents<'a>,
+) -> anyhow::Result<()> {
+    if app.redraw_after_minimize {
+        app.redraw_after_minimize = false;
+        // Apply hide cursor again after closing the external editor
+        terminal.hide_cursor()?;
+        // Resize forces the terminal to redraw everything
+        terminal.resize(terminal.size()?)?;
+    }
+
+    terminal.draw(|f| ui_components.render_ui(f, &app))?;
+
+    Ok(())
 }
 
 async fn handle_input<'a, D: DataProvider>(

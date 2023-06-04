@@ -1,5 +1,15 @@
+use std::io;
+
 use crate::app::{ui::*, App, UIComponents};
 use backend::DataProvider;
+use crossterm::{
+    event::EnableMouseCapture,
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
+};
+use scopeguard::defer;
+use tui::backend::CrosstermBackend;
 
 use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
@@ -221,6 +231,62 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
             export_entry_content(ui_components, app);
         }
         MsgBoxResult::No => export_entry_content(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_edit_in_external_editor<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ExportEntryContent));
+    } else {
+        edit_in_external_editor(ui_components, app)?;
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+pub fn edit_in_external_editor<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> anyhow::Result<()> {
+    if let Some(entry) = app
+        .current_entry_id
+        .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
+    {
+        use std::process::Command;
+
+        io::stdout().execute(LeaveAlternateScreen)?;
+        defer! {
+            io::stdout().execute(EnterAlternateScreen).unwrap();
+        }
+
+        app.redraw_after_minimize = true;
+
+        let sss = Command::new("vim").status().expect("aaa");
+
+        log::info!("edit started with output {:?}", sss);
+    }
+
+    Ok(())
+}
+
+pub async fn continue_edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            edit_in_external_editor(ui_components, app)?;
+        }
+        MsgBoxResult::No => edit_in_external_editor(ui_components, app)?,
     }
 
     Ok(HandleInputReturnType::Handled)

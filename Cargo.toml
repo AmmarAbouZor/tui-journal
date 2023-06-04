@@ -32,6 +32,7 @@ futures-util = { version = "0.3", default-features = false }
 # TODO: follow issue link: https://github.com/rhysd/tui-textarea/issues/19 and reapplay the migration
 tui = "0.19"
 tui-textarea = "0.2"
+scopeguard = "1.1.0"
 # Textarea crate supports ratatui but it doesn't provide a new version on crates.io to support it
 # crossterm = "0.26"
 # tui = { version = "0.20", package = "ratatui" }

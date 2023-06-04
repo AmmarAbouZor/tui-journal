@@ -31,6 +31,7 @@ pub enum UICommand {
     DiscardChangesEntryContent,
     ReloadAll,
     ExportEntryContent,
+    EditInExternalEditor,
 }
 
 #[derive(Debug, Clone)]
@@ -95,6 +96,10 @@ impl UICommand {
             UICommand::ExportEntryContent => {
                 CommandInfo::new("Export journal content", "Export current journal content")
             }
+            UICommand::EditInExternalEditor => CommandInfo::new(
+                "Edit in external editor",
+                "Edit current journal content in external editor",
+            ),
         }
     }
 
@@ -119,6 +124,7 @@ impl UICommand {
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
             UICommand::ReloadAll => exec_reload_all(ui_components, app).await,
             UICommand::ExportEntryContent => exec_export_entry_content(ui_components, app),
+            UICommand::EditInExternalEditor => exec_edit_in_external_editor(ui_components, app),
         }
     }
 
@@ -156,6 +162,9 @@ impl UICommand {
             UICommand::ReloadAll => continue_reload_all(ui_components, app, msg_box_result).await,
             UICommand::ExportEntryContent => {
                 continue_export_entry_content(ui_components, app, msg_box_result).await
+            }
+            UICommand::EditInExternalEditor => {
+                continue_edit_in_external_editor(ui_components, app, msg_box_result).await
             }
         }
     }

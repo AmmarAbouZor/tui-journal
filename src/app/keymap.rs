@@ -167,6 +167,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('>'), KeyModifiers::NONE),
             UICommand::ExportEntryContent,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::CONTROL),
+            UICommand::EditInExternalEditor,
+        ),
     ]
 }
 
