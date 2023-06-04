@@ -20,13 +20,14 @@ log = "0.4.17"
 chrono = { version = "0.4.24", features = ["serde"] }
 async-trait = "0.1.68"
 clap = { version = "4.2.4", features = ["derive"] }
-crossterm = "0.25"
+crossterm = {version =  "0.25", features = ["event-stream"]}
 directories = "5.0.0"
 simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.40"
 toml = "0.7.3"
 sqlx = {version = "0.6.3", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
+futures-util = { version = "0.3", default-features = false }
 
 # TODO: follow issue link: https://github.com/rhysd/tui-textarea/issues/19 and reapplay the migration
 tui = "0.19"

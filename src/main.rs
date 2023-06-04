@@ -1,4 +1,4 @@
-use std::{io, time::Duration};
+use std::io;
 
 use anyhow::Result;
 use clap::Parser;
@@ -34,13 +34,10 @@ async fn main() -> Result<()> {
 
     chain_panic_hook();
 
-    let tick_rate = Duration::from_millis(250);
-    app::run(&mut terminal, settings, tick_rate)
-        .await
-        .map_err(|err| {
-            log::error!("[PANIC] {}", err.to_string());
-            err
-        })?;
+    app::run(&mut terminal, settings).await.map_err(|err| {
+        log::error!("[PANIC] {}", err.to_string());
+        err
+    })?;
 
     // restore terminal
     disable_raw_mode()?;
