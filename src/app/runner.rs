@@ -101,10 +101,10 @@ where
     }
 }
 
-fn draw_ui<'a, B: Backend, D: DataProvider>(
+fn draw_ui<B: Backend, D: DataProvider>(
     terminal: &mut Terminal<B>,
     app: &mut App<D>,
-    ui_components: &mut UIComponents<'a>,
+    ui_components: &mut UIComponents,
 ) -> anyhow::Result<()> {
     if app.redraw_after_restore {
         app.redraw_after_restore = false;
@@ -114,7 +114,7 @@ fn draw_ui<'a, B: Backend, D: DataProvider>(
         terminal.resize(terminal.size()?)?;
     }
 
-    terminal.draw(|f| ui_components.render_ui(f, &app))?;
+    terminal.draw(|f| ui_components.render_ui(f, app))?;
 
     Ok(())
 }
