@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 pub use runner::run;
 pub use ui::UIComponents;
 
+mod external_editor;
 mod keymap;
 mod runner;
 mod ui;
@@ -23,7 +24,7 @@ where
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
     pub settings: Settings,
-    pub redraw_after_minimize: bool,
+    pub redraw_after_restore: bool,
 }
 
 impl<D> App<D>
@@ -37,7 +38,7 @@ where
             entries,
             current_entry_id: None,
             settings,
-            redraw_after_minimize: false,
+            redraw_after_restore: false,
         }
     }
 

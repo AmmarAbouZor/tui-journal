@@ -106,8 +106,8 @@ fn draw_ui<'a, B: Backend, D: DataProvider>(
     app: &mut App<D>,
     ui_components: &mut UIComponents<'a>,
 ) -> anyhow::Result<()> {
-    if app.redraw_after_minimize {
-        app.redraw_after_minimize = false;
+    if app.redraw_after_restore {
+        app.redraw_after_restore = false;
         // Apply hide cursor again after closing the external editor
         terminal.hide_cursor()?;
         // Resize forces the terminal to redraw everything

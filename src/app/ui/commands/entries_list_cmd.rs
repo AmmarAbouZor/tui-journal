@@ -1,15 +1,10 @@
-use std::io;
+use std::env;
 
-use crate::app::{ui::*, App, UIComponents};
+use crate::app::{external_editor, ui::*, App, UIComponents};
+
 use backend::DataProvider;
-use crossterm::{
-    event::EnableMouseCapture,
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
+
 use scopeguard::defer;
-use tui::backend::CrosstermBackend;
 
 use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
@@ -236,40 +231,54 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_edit_in_external_editor<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn exec_edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::ExportEntryContent));
     } else {
-        edit_in_external_editor(ui_components, app)?;
+        edit_in_external_editor(ui_components, app).await?;
     }
 
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
-pub fn edit_in_external_editor<D: DataProvider>(
-    ui_components: &mut UIComponents,
+pub async fn edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
 ) -> anyhow::Result<()> {
+    use tokio::fs;
+
     if let Some(entry) = app
         .current_entry_id
-        .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
+        .and_then(|id| app.entries.iter_mut().find(|entry| entry.id == id))
     {
-        use std::process::Command;
+        const FILE_NAME: &str = "tui_journal.txt";
 
-        io::stdout().execute(LeaveAlternateScreen)?;
-        defer! {
-            io::stdout().execute(EnterAlternateScreen).unwrap();
+        let file_path = env::temp_dir().join(FILE_NAME);
+
+        if file_path.exists() {
+            fs::remove_file(&file_path).await?;
         }
 
-        app.redraw_after_minimize = true;
+        fs::write(&file_path, entry.content.as_str()).await?;
 
-        let sss = Command::new("vim").status().expect("aaa");
+        defer! {
+        std::fs::remove_file(&file_path).expect("Temp File couldn't be deleted");
+        }
 
-        log::info!("edit started with output {:?}", sss);
+        external_editor::open_editor(&file_path, &app.settings).await?;
+
+        app.redraw_after_restore = true;
+
+        if file_path.exists() {
+            let new_content = fs::read_to_string(&file_path).await?;
+            let entry_id = entry.id;
+            app.update_current_entry_content(new_content).await?;
+
+            ui_components.editor.set_current_entry(Some(entry_id), app);
+        }
     }
 
     Ok(())
@@ -284,9 +293,9 @@ pub async fn continue_edit_in_external_editor<'a, D: DataProvider>(
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
             exec_save_entry_content(ui_components, app).await?;
-            edit_in_external_editor(ui_components, app)?;
+            edit_in_external_editor(ui_components, app).await?;
         }
-        MsgBoxResult::No => edit_in_external_editor(ui_components, app)?,
+        MsgBoxResult::No => edit_in_external_editor(ui_components, app).await?,
     }
 
     Ok(HandleInputReturnType::Handled)

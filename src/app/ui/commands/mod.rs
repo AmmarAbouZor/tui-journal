@@ -124,7 +124,9 @@ impl UICommand {
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
             UICommand::ReloadAll => exec_reload_all(ui_components, app).await,
             UICommand::ExportEntryContent => exec_export_entry_content(ui_components, app),
-            UICommand::EditInExternalEditor => exec_edit_in_external_editor(ui_components, app),
+            UICommand::EditInExternalEditor => {
+                exec_edit_in_external_editor(ui_components, app).await
+            }
         }
     }
 
