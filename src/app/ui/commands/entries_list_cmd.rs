@@ -268,9 +268,9 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
         std::fs::remove_file(&file_path).expect("Temp File couldn't be deleted");
         }
 
-        external_editor::open_editor(&file_path, &app.settings).await?;
-
         app.redraw_after_restore = true;
+
+        external_editor::open_editor(&file_path, &app.settings).await?;
 
         if file_path.exists() {
             let new_content = fs::read_to_string(&file_path).await?;

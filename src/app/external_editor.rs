@@ -1,6 +1,6 @@
 use std::{env, ffi::OsStr, io, path::Path};
 
-use anyhow::{bail, Context};
+use anyhow::{anyhow, bail};
 
 use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
@@ -61,11 +61,17 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
         io::stdout().execute(EnterAlternateScreen).unwrap();
     }
 
-    Command::new(editor_cmd)
+    Command::new(editor_cmd.clone())
         .args(args)
         .status()
         .await
-        .context("Error while openning the editor")?;
+        .map_err(|err| {
+            anyhow!(
+                "Error while openning the editor. Editor command: '{}'. Error: {}",
+                editor_cmd,
+                err
+            )
+        })?;
 
     Ok(())
 }
