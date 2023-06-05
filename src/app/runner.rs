@@ -86,13 +86,20 @@ where
                 match input {
                     Some(event) => {
                         let event = event.context("Error gettig input stream")?;
-                        let result = handle_input(event, &mut app, &mut ui_components).await?;
-                        match result {
-                            HandleInputReturnType::Handled | HandleInputReturnType::NotFound =>{
-                                draw_ui(terminal, &mut app, &mut ui_components)?;
+                        match handle_input(event, &mut app, &mut ui_components).await{
+                            Ok(result) => {
+                                match result {
+                                    HandleInputReturnType::Handled | HandleInputReturnType::NotFound =>{
+                                        draw_ui(terminal, &mut app, &mut ui_components)?;
+                                    },
+                                    HandleInputReturnType::ExitApp => return Ok(()),
+                                };
                             },
-                            HandleInputReturnType::ExitApp => return Ok(()),
-                        };
+                            Err(err) => {
+                                ui_components.show_err_msg(err.to_string());
+                                draw_ui(terminal, &mut app, &mut ui_components)?;
+                            }
+                        }
                     },
                     None => return Ok(()),
                 }
