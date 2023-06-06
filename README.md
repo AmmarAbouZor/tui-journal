@@ -34,10 +34,11 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Store your entries in either a plain text file using the JSON format or a SQLite database.
 - Intuitive, responsive and user-friendly text-based user interface (TUI).
 - Create, edit, and delete entries easily.
-- Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
+- Edit journal content with the built-in editor or use your favourite terminal text editor from withing the app.
 - See the keybindings from inside the app
-- Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
+- Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - Export the current journal's content to a predefined export path or the current directory 
+- Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
 
 ## Roadmap
 
@@ -46,8 +47,9 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [x]  Database back-end using SQLite.
 - [ ]  RESTful back-end server with a client in the app.
 #### Application:
+- [x]  Edit journals content with external text editor from withing the app.
+- [ ]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
-- [ ]  Search functionality.
 - [ ]  Load entries as chunks for better performance.
 ## Installation
 
@@ -75,6 +77,12 @@ To install TUI-Journal with default features (SQLite and JSON), you can use `car
 cargo install tui-journal
 ```
 
+#### Install nightly version:
+To use the current nightly version, you can install it directly from the GitHub repository
+
+```bash
+cargo install --git https://github.com/ammarabouzor/tui-journal
+```
 
 #### Install with Specific Features:
 
@@ -133,10 +141,12 @@ Options:
 
 The configuration for TUI-Journal can be found in the `config.toml` file located in the configuration folder within the TUI-Journal directory.
 
-Here is a sample of the default settings in the `config.toml` file:
+Here is a sample of the settings in the `config.toml` file:
 
 ```toml
 backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqlite.
+# Set the external terminal editor to use from withing the app. If the value isn't set the app will use the environment varialbes VISUAL, EDITOR then it'll try with vi.  
+external_editor = "nvim"
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export journal content. Falls back to the current directory if not specified.

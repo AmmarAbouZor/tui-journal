@@ -1580,6 +1580,7 @@ dependencies = [
  "directories",
  "futures-util",
  "log",
+ "scopeguard",
  "serde",
  "serde_json",
  "simplelog",

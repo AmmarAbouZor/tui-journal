@@ -24,6 +24,8 @@ pub struct Settings {
     pub export: ExportSettings,
     #[serde(default)]
     pub backend_type: Option<BackendType>,
+    #[serde(default)]
+    pub external_editor: Option<String>,
     #[cfg(feature = "json")]
     #[serde(default)]
     pub json_backend: JsonBackend,
@@ -83,6 +85,7 @@ impl Settings {
             json_backend: _,
             sqlite_backend: _,
             export: _,
+            external_editor: _,
         } = self;
 
         if self.backend_type.is_none() {

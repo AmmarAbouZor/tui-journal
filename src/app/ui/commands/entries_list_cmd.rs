@@ -1,5 +1,10 @@
-use crate::app::{ui::*, App, UIComponents};
+use std::env;
+
+use crate::app::{external_editor, ui::*, App, UIComponents};
+
 use backend::DataProvider;
+
+use scopeguard::defer;
 
 use super::{editor_cmd::exec_save_entry_content, CmdResult};
 
@@ -221,6 +226,74 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
             export_entry_content(ui_components, app);
         }
         MsgBoxResult::No => export_entry_content(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn exec_edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::EditInExternalEditor));
+    } else {
+        edit_in_external_editor(ui_components, app).await?;
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+) -> anyhow::Result<()> {
+    use tokio::fs;
+
+    if let Some(entry) = app
+        .current_entry_id
+        .and_then(|id| app.entries.iter_mut().find(|entry| entry.id == id))
+    {
+        const FILE_NAME: &str = "tui_journal.txt";
+
+        let file_path = env::temp_dir().join(FILE_NAME);
+
+        if file_path.exists() {
+            fs::remove_file(&file_path).await?;
+        }
+
+        fs::write(&file_path, entry.content.as_str()).await?;
+
+        defer! {
+        std::fs::remove_file(&file_path).expect("Temp File couldn't be deleted");
+        }
+
+        app.redraw_after_restore = true;
+
+        external_editor::open_editor(&file_path, &app.settings).await?;
+
+        if file_path.exists() {
+            let new_content = fs::read_to_string(&file_path).await?;
+            ui_components.editor.set_entry_content(&new_content, app);
+            ui_components.change_active_control(ControlType::EntryContentTxt);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn continue_edit_in_external_editor<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            edit_in_external_editor(ui_components, app).await?;
+        }
+        MsgBoxResult::No => edit_in_external_editor(ui_components, app).await?,
     }
 
     Ok(HandleInputReturnType::Handled)
