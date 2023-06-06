@@ -269,6 +269,18 @@ impl<'a> Editor<'a> {
             false => false,
         }
     }
+
+    pub fn set_entry_content<D: DataProvider>(&mut self, entry_content: &str, app: &App<D>) {
+        self.is_dirty = true;
+        let lines = entry_content.lines().map(|line| line.to_owned()).collect();
+        let mut text_area = TextArea::new(lines);
+        text_area.move_cursor(tui_textarea::CursorMove::Bottom);
+        text_area.move_cursor(tui_textarea::CursorMove::End);
+
+        self.text_area = text_area;
+
+        self.refresh_has_unsaved(app);
+    }
 }
 
 #[inline]
