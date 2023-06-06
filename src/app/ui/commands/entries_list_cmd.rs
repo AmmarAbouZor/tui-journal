@@ -236,7 +236,7 @@ pub async fn exec_edit_in_external_editor<'a, D: DataProvider>(
     app: &mut App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
-        ui_components.show_unsaved_msg_box(Some(UICommand::ExportEntryContent));
+        ui_components.show_unsaved_msg_box(Some(UICommand::EditInExternalEditor));
     } else {
         edit_in_external_editor(ui_components, app).await?;
     }

@@ -98,7 +98,7 @@ impl UICommand {
             }
             UICommand::EditInExternalEditor => CommandInfo::new(
                 "Edit in external editor",
-                "Edit current journal content in external editor",
+                "Edit current journal content in external editor (The editor can be set in configurations file or via the environment variables VISUAL, EDITOR)",
             ),
         }
     }
