@@ -164,6 +164,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             UICommand::DeleteCurrentEntry,
         ),
         Keymap::new(
+            Input::new(KeyCode::Char('d'), KeyModifiers::NONE),
+            UICommand::DeleteCurrentEntry,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Char('d'), KeyModifiers::CONTROL),
             UICommand::DeleteCurrentEntry,
         ),
