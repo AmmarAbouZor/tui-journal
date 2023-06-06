@@ -67,7 +67,7 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
         .await
         .map_err(|err| {
             anyhow!(
-                "Error while openning the editor. Editor command: '{}'. Error: {}",
+                "Error while opening the editor. Editor command: '{}'. Error: {}",
                 editor_cmd,
                 err
             )

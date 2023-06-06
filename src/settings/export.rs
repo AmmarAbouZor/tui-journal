@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 pub struct ExportSettings {
     #[serde(default)]
     pub default_path: Option<PathBuf>,
-    #[serde(default = "reutrn_true")]
+    #[serde(default = "return_true")]
     pub show_confirmation: bool,
 }
 
-fn reutrn_true() -> bool {
+fn return_true() -> bool {
     true
 }
 

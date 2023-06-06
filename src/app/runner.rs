@@ -77,12 +77,12 @@ where
 
     draw_ui(terminal, &mut app, &mut ui_components)?;
 
-    let mut intput_stream = EventStream::new();
+    let mut input_stream = EventStream::new();
     loop {
         tokio::select! {
             biased;
 
-            input =  intput_stream.next().fuse() => {
+            input =  input_stream.next().fuse() => {
                 match input {
                     Some(event) => {
                         let event = event.context("Error gettig input stream")?;
