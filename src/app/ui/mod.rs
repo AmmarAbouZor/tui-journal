@@ -6,7 +6,7 @@ use self::{
     entry_popup::{EntryPopup, EntryPopupInputReturn},
     export_popup::ExportPopup,
     footer::render_footer,
-    help_popup::render_help_popup,
+    help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
 };
 
@@ -51,7 +51,7 @@ pub enum ControlType {
 }
 
 pub enum Popup<'a> {
-    Help,
+    Help(Box<HelpPopup>),
     Entry(Box<EntryPopup<'a>>),
     MsgBox(Box<MsgBox>),
     Export(Box<ExportPopup<'a>>),
@@ -139,7 +139,7 @@ impl<'a, 'b> UIComponents<'a> {
     {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup {
-                Popup::Help => render_help_popup(f, f.size(), self),
+                Popup::Help(help_popup) => help_popup.render_widget(f, f.size()),
                 Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.size()),
                 Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
@@ -197,9 +197,10 @@ impl<'a, 'b> UIComponents<'a> {
     ) -> Result<HandleInputReturnType> {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup {
-                Popup::Help => {
-                    // Close the help pop up on anykey
-                    self.popup_stack.pop().expect("popup stack isn't empty");
+                Popup::Help(help_popup) => {
+                    if help_popup.handle_input(input) == HelpInputInputReturn::Close {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
                 }
                 Popup::Entry(entry_popup) => {
                     let close_popup = match entry_popup.handle_input(input, app).await? {
@@ -294,14 +295,6 @@ impl<'a, 'b> UIComponents<'a> {
         assert!(!self.editor.is_insert_mode());
         self.editor.mode = EditorMode::Insert;
         Ok(HandleInputReturnType::Handled)
-    }
-
-    fn get_all_keymaps(&self) -> impl Iterator<Item = &Keymap> {
-        let global_maps = self.global_keymaps.iter();
-        let list_maps = self.entries_list_keymaps.iter();
-        let editor_maps = self.editor_keymaps.iter();
-
-        global_maps.chain(list_maps).chain(editor_maps)
     }
 
     pub fn show_msg_box(
