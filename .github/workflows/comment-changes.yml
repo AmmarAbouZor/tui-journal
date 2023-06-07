@@ -37,8 +37,6 @@ jobs:
             -k \
             -n 1 \
             -o changelog.d/
-          git add changelog.d/*.ron
-          git commit -m 'Create summary of recent changes'
 
       - uses: peter-evans/create-pull-request@v5.0.1
         with:
