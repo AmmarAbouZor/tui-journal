@@ -1,0 +1,49 @@
+name: comment-changes
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  aeruginous:
+    if: |
+      !contains(github.event.head_commit.message, '[Aeruginous]') && \
+      !contains(github.event.head_commit.message, 'Chore:') && \
+      !contains(github.event.head_commit.message, 'Docs:')
+    name: aeruginous
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.5.2
+        with:
+          fetch-depth: 0
+
+      - run: rustup update
+
+      - uses: baptiste0928/cargo-install@v2.0.0
+        with:
+          crate: aeruginous
+
+      - run: |
+          aeruginous comment-changes \
+            -b \
+            -C Changed \
+            -d : \
+            -f ron \
+            -k \
+            -n 1 \
+            -o changelog.d/
+
+      - uses: peter-evans/create-pull-request@v5.0.1
+        with:
+          assignees: |
+            AmmarAbouZor
+          branch: documentation/aeruginous-comment-changes
+          commit-message: '[Aeruginous] Create CHANGELOG Fragment'
+          labels: |
+            documentation
+          title: '[Aeruginous] Create CHANGELOG Fragment'

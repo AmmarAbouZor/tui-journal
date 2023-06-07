@@ -1,0 +1,7 @@
+(
+  references: {
+    "Keep a Changelog": "https://keepachangelog.com/en/1.0.0/",
+  },
+  introduction: Some("All notable changes to this project are documented in this file.\n\nThe format is based on `Keep a Changelog`_."),
+  sections: [],
+)
