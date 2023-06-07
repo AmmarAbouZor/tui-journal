@@ -11,6 +11,10 @@ permissions:
 
 jobs:
   aeruginous:
+    if: |
+      !contains(github.event.head_commit.message, '[Aeruginous]') && \
+      !contains(github.event.head_commit.message, 'Chore:') && \
+      !contains(github.event.head_commit.message, 'Docs:')
     name: aeruginous
     runs-on: ubuntu-latest
     steps:
@@ -18,10 +22,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - run: rustup update
+
+      - uses: baptiste0928/cargo-install@v2.0.0
+        with:
+          crate: aeruginous
+
       - run: |
-          rustup update
-          cargo install aeruginous
-          aeruginous comment-changes -d ::= -o changelog.d/ -k -n 1
+          aeruginous comment-changes \
+            -b \
+            -C Changed \
+            -d : \
+            -f ron \
+            -k \
+            -n 1 \
+            -o changelog.d/
+          git add changelog.d/*.ron
+          git commit -m 'Create summary of recent changes'
 
       - uses: peter-evans/create-pull-request@v5.0.1
         with:
