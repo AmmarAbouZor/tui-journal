@@ -14,24 +14,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3.5.2
 
-      - uses: actions/setup-python@v4.5.0
+      - run: rustup update
+
+      - uses: baptiste0928/cargo-install@v2.0.0
         with:
-          python-version: 3.11
-
-      - run: echo scriv >> requirements.txt
-
-      - uses: py-actions/py-dependency-install@v4.0.0
+          crate: aeruginous
 
       - run: |
-          rm requirements.txt
-          scriv collect
+          aeruginous ronlog release \
+            -i changelog.d/ \
+            -v `cargo r -- --version | cut -d\  -f2`
 
       - uses: peter-evans/create-pull-request@v5.0.1
         with:
           assignees: |
             AmmarAbouZor
           branch: documentation/scriv-assemble-changelog
-          commit-message: '[Scriv] Assemble CHANGELOG'
+          commit-message: '[Aeruginous] Assemble CHANGELOG'
           labels: |
             documentation
-          title: '[Scriv] Assemble CHANGELOG'
+          title: '[Aeruginous] Assemble CHANGELOG'
