@@ -127,7 +127,7 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::ReloadAll,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('v'), KeyModifiers::CONTROL),
+            Input::new(KeyCode::Char('y'), KeyModifiers::CONTROL),
             UICommand::EditInExternalEditor,
         ),
     ]
@@ -176,7 +176,7 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             UICommand::ExportEntryContent,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
+            Input::new(KeyCode::Char('y'), KeyModifiers::NONE),
             UICommand::EditInExternalEditor,
         ),
     ]
