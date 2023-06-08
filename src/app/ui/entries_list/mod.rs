@@ -119,7 +119,11 @@ impl<'a> EntriesList {
             .map(|keymap| format!("'{}'", keymap.key))
             .collect();
 
-        let place_holder_text = format!("\n Use {} to create new entry ", keys_text.join(","));
+        let place_holder_text = if self.multi_select_mode {
+            String::from("\nNo entries to select")
+        } else {
+            format!("\n Use {} to create new entry ", keys_text.join(","))
+        };
 
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
