@@ -42,15 +42,13 @@ impl KeybindingsTabs {
     }
 
     fn get_headers<'a>() -> Vec<Spans<'a>> {
+        let highlight_style = Style::default()
+            .fg(TAB_LETTER_HIGHLIGHT_COLOR)
+            .add_modifier(Modifier::BOLD);
+
         vec![
-            Spans::from(vec![
-                Span::styled("G", Style::default().fg(TAB_LETTER_HIGHLIGHT_COLOR)),
-                Span::raw("lobal"),
-            ]),
-            Spans::from(vec![
-                Span::styled("E", Style::default().fg(TAB_LETTER_HIGHLIGHT_COLOR)),
-                Span::raw("itor"),
-            ]),
+            Spans::from(vec![Span::styled("G", highlight_style), Span::raw("lobal")]),
+            Spans::from(vec![Span::styled("E", highlight_style), Span::raw("ditor")]),
         ]
     }
 
@@ -58,6 +56,20 @@ impl KeybindingsTabs {
         match self {
             KeybindingsTabs::Global => render_global_keybindings(frame, area),
             KeybindingsTabs::Editor => render_editor_hint(frame, area),
+        }
+    }
+
+    fn get_next(&self) -> KeybindingsTabs {
+        match self {
+            KeybindingsTabs::Global => KeybindingsTabs::Editor,
+            KeybindingsTabs::Editor => KeybindingsTabs::Global,
+        }
+    }
+
+    fn get_previous(&self) -> KeybindingsTabs {
+        match self {
+            KeybindingsTabs::Global => KeybindingsTabs::Editor,
+            KeybindingsTabs::Editor => KeybindingsTabs::Global,
         }
     }
 }
@@ -114,6 +126,14 @@ impl HelpPopup {
             }
             KeyCode::Char('e') => {
                 self.selected_tab = KeybindingsTabs::Editor;
+                HelpInputInputReturn::Keep
+            }
+            KeyCode::Tab | KeyCode::Right | KeyCode::Char('l') => {
+                self.selected_tab = self.selected_tab.get_next();
+                HelpInputInputReturn::Keep
+            }
+            KeyCode::BackTab | KeyCode::Left | KeyCode::Char('h') => {
+                self.selected_tab = self.selected_tab.get_previous();
                 HelpInputInputReturn::Keep
             }
             _ => HelpInputInputReturn::Keep,
