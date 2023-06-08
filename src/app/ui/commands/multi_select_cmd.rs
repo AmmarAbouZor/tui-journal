@@ -2,7 +2,10 @@ use backend::DataProvider;
 
 use crate::app::{ui::MsgBoxResult, App, HandleInputReturnType, UIComponents};
 
-use super::{editor_cmd::exec_save_entry_content, CmdResult, UICommand};
+use super::{
+    editor_cmd::{discard_current_content, exec_save_entry_content},
+    CmdResult, UICommand,
+};
 
 pub fn exec_enter_select_mode(ui_components: &mut UIComponents) -> CmdResult {
     if ui_components.entries_list.multi_select_mode {
@@ -34,7 +37,10 @@ pub async fn continue_enter_select_mode<'a, D: DataProvider>(
             exec_save_entry_content(ui_components, app).await?;
             enter_select_mode(ui_components);
         }
-        MsgBoxResult::No => enter_select_mode(ui_components),
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            enter_select_mode(ui_components);
+        }
     }
 
     Ok(HandleInputReturnType::Handled)

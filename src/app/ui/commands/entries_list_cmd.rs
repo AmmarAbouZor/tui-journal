@@ -6,7 +6,10 @@ use backend::DataProvider;
 
 use scopeguard::defer;
 
-use super::{editor_cmd::exec_save_entry_content, CmdResult};
+use super::{
+    editor_cmd::{discard_current_content, exec_save_entry_content},
+    CmdResult,
+};
 
 pub fn exec_select_prev_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
@@ -225,7 +228,10 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
             exec_save_entry_content(ui_components, app).await?;
             export_entry_content(ui_components, app);
         }
-        MsgBoxResult::No => export_entry_content(ui_components, app),
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            export_entry_content(ui_components, app);
+        }
     }
 
     Ok(HandleInputReturnType::Handled)
