@@ -214,6 +214,14 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
 pub fn get_multi_select_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
+            Input::new(KeyCode::Char('q'), KeyModifiers::NONE),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Esc, KeyModifiers::NONE),
             UICommand::LeaveMultiSelectMode,
         ),
@@ -224,6 +232,22 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('['), KeyModifiers::CONTROL),
             UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Up, KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('k'), KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Down, KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('j'), KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
         ),
         Keymap::new(
             Input::new(KeyCode::Char(' '), KeyModifiers::NONE),
@@ -248,6 +272,10 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('i'), KeyModifiers::NONE),
             UICommand::MulSelInverSelection,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
+            UICommand::ShowHelp,
         ),
     ]
 }

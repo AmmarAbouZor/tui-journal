@@ -16,6 +16,7 @@ use super::INACTIVE_CONTROL_COLOR;
 use super::{UICommand, ACTIVE_CONTROL_COLOR};
 
 const LIST_INNER_MARGINE: usize = 5;
+const SELECTED_FOREGROUND_COLOR: Color = Color::Yellow;
 
 #[derive(Debug)]
 pub struct EntriesList {
@@ -49,20 +50,30 @@ impl<'a> EntriesList {
             .entries
             .iter()
             .map(|entry| {
+                let highlight_selected =
+                    self.multi_select_mode && app.selected_entries.contains(&entry.id);
+
+                let mut title = entry.title.to_string();
+
+                if highlight_selected {
+                    title.insert_str(0, "* ");
+                }
+
                 // Text wrapping
-                let title_lines = textwrap::wrap(
-                    entry.title.as_str(),
-                    area.width as usize - LIST_INNER_MARGINE,
-                );
+                let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGINE);
+
+                let fg_color = if highlight_selected {
+                    SELECTED_FOREGROUND_COLOR
+                } else {
+                    foreground_color
+                };
 
                 let mut spans: Vec<Spans> = title_lines
                     .iter()
                     .map(|line| {
                         Spans::from(Span::styled(
                             line.to_string(),
-                            Style::default()
-                                .fg(foreground_color)
-                                .add_modifier(Modifier::BOLD),
+                            Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
                         ))
                     })
                     .collect();
@@ -91,7 +102,7 @@ impl<'a> EntriesList {
                     .bg(highlight_bg)
                     .add_modifier(Modifier::BOLD),
             )
-            .highlight_symbol(">> ");
+            .highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut self.state);
     }
@@ -120,15 +131,27 @@ impl<'a> EntriesList {
 
     #[inline]
     fn get_list_block(&self) -> Block<'a> {
+        let title = if self.multi_select_mode {
+            "Journals - Multi-Select"
+        } else {
+            "Journals"
+        };
+
+        let border_style = match (self.is_active, self.multi_select_mode) {
+            (_, true) => Style::default()
+                .fg(SELECTED_FOREGROUND_COLOR)
+                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::ITALIC),
+            (true, _) => Style::default()
+                .fg(ACTIVE_CONTROL_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (false, _) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+        };
+
         Block::default()
             .borders(Borders::ALL)
-            .title("Journals")
-            .border_style(match self.is_active {
-                true => Style::default()
-                    .fg(ACTIVE_CONTROL_COLOR)
-                    .add_modifier(Modifier::BOLD),
-                false => Style::default().fg(INACTIVE_CONTROL_COLOR),
-            })
+            .title(title)
+            .border_style(border_style)
     }
 
     pub fn render_widget<B: Backend, D: DataProvider>(

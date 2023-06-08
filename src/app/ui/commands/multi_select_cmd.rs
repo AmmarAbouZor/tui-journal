@@ -40,10 +40,14 @@ pub async fn continue_enter_select_mode<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_leave_select_mode(ui_components: &mut UIComponents) -> CmdResult {
+pub fn exec_leave_select_mode<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
     debug_assert!(ui_components.entries_list.multi_select_mode);
     debug_assert!(!ui_components.has_unsaved());
 
+    exec_select_none(app)?;
     ui_components.entries_list.multi_select_mode = false;
 
     Ok(HandleInputReturnType::Handled)
