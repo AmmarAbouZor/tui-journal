@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,8 +13,8 @@ permissions:
 jobs:
   aeruginous:
     if: |
-      !contains(github.event.head_commit.message, '[Aeruginous]') && \
-      !contains(github.event.head_commit.message, 'Chore:') && \
+      !contains(github.event.head_commit.message, '[Aeruginous]') &&
+      !contains(github.event.head_commit.message, 'Chore:') &&
       !contains(github.event.head_commit.message, 'Docs:')
     name: aeruginous
     runs-on: ubuntu-latest
