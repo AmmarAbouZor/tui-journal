@@ -47,7 +47,13 @@ impl Display for Input {
             KeyCode::Delete => "Delete",
             KeyCode::Insert => "Isnert",
             KeyCode::F(_) => "F",
-            KeyCode::Char(char) => char.encode_utf8(&mut char_convert_tmp),
+            KeyCode::Char(char) => {
+                if char.is_whitespace() {
+                    "<Space>"
+                } else {
+                    char.encode_utf8(&mut char_convert_tmp)
+                }
+            }
             KeyCode::Null => "Null",
             KeyCode::Esc => "Esc",
             _ => panic!("{:?} is not implemented", self.key_code),
