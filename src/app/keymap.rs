@@ -230,10 +230,6 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
             UICommand::LeaveMultiSelectMode,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('['), KeyModifiers::CONTROL),
-            UICommand::LeaveMultiSelectMode,
-        ),
-        Keymap::new(
             Input::new(KeyCode::Up, KeyModifiers::NONE),
             UICommand::SelectedPrevEntry,
         ),
