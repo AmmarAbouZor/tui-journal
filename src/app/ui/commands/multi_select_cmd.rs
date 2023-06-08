@@ -67,14 +67,14 @@ pub fn exec_leave_select_mode<D: DataProvider>(
 
 pub fn exec_toggle_selected<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     if let Some(id) = app.get_current_entry().map(|entry| entry.id) {
-        toggle_entrie_selection(id, app);
+        toggle_entry_selection(id, app);
     }
 
     Ok(HandleInputReturnType::Handled)
 }
 
 #[inline]
-fn toggle_entrie_selection<D: DataProvider>(entry_id: u32, app: &mut App<D>) {
+fn toggle_entry_selection<D: DataProvider>(entry_id: u32, app: &mut App<D>) {
     if !app.selected_entries.insert(entry_id) {
         // entry was selected, then remove it
         app.selected_entries.remove(&entry_id);
@@ -99,7 +99,7 @@ pub fn exec_invert_selection<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     let entries_ids: Vec<u32> = app.entries.iter().map(|entry| entry.id).collect();
 
     entries_ids.into_iter().for_each(|id| {
-        toggle_entrie_selection(id, app);
+        toggle_entry_selection(id, app);
     });
 
     Ok(HandleInputReturnType::Handled)
