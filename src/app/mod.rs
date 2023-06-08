@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 use backend::{DataProvider, Entry, EntryDraft};
 
@@ -23,6 +23,7 @@ where
     pub data_provide: D,
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
+    pub selected_entries: HashSet<u32>,
     pub settings: Settings,
     pub redraw_after_restore: bool,
 }
@@ -33,10 +34,12 @@ where
 {
     pub fn new(data_provide: D, settings: Settings) -> Self {
         let entries = Vec::new();
+        let selected_entries = HashSet::new();
         Self {
             data_provide,
             entries,
             current_entry_id: None,
+            selected_entries,
             settings,
             redraw_after_restore: false,
         }

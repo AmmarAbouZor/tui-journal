@@ -1,6 +1,5 @@
-use std::fmt::Debug;
-
 use backend::DataProvider;
+use std::fmt::Debug;
 
 use multi_select_cmd::*;
 
@@ -162,10 +161,10 @@ impl UICommand {
             }
             UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components),
             UICommand::LeaveMultiSelectMode => exec_leave_select_mode(ui_components),
-            UICommand::MulSelToggleSelected => exec_toggle_selected(ui_components, app),
-            UICommand::MulSelSelectAll => exec_select_all(ui_components, app),
-            UICommand::MulSelSelectNone => exec_select_none(ui_components, app),
-            UICommand::MulSelInverSelection => exec_invert_selection(ui_components, app),
+            UICommand::MulSelToggleSelected => exec_toggle_selected(app),
+            UICommand::MulSelSelectAll => exec_select_all(app),
+            UICommand::MulSelSelectNone => exec_select_none(app),
+            UICommand::MulSelInverSelection => exec_invert_selection(app),
         }
     }
 

@@ -49,30 +49,42 @@ pub fn exec_leave_select_mode(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_toggle_selected<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-) -> CmdResult {
-    todo!()
+pub fn exec_toggle_selected<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    if let Some(id) = app.get_current_entry().map(|entry| entry.id) {
+        toggle_entrie_selection(id, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_select_all<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-) -> CmdResult {
-    todo!()
+#[inline]
+fn toggle_entrie_selection<D: DataProvider>(entry_id: u32, app: &mut App<D>) {
+    if !app.selected_entries.insert(entry_id) {
+        // entry was selected, then remove it
+        app.selected_entries.remove(&entry_id);
+    }
 }
 
-pub fn exec_select_none<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-) -> CmdResult {
-    todo!()
+pub fn exec_select_all<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    app.entries.iter().map(|entry| entry.id).for_each(|id| {
+        app.selected_entries.insert(id);
+    });
+
+    Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_invert_selection<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-) -> CmdResult {
-    todo!()
+pub fn exec_select_none<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    app.selected_entries.clear();
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_invert_selection<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    let entries_ids: Vec<u32> = app.entries.iter().map(|entry| entry.id).collect();
+
+    entries_ids.into_iter().for_each(|id| {
+        toggle_entrie_selection(id, app);
+    });
+
+    Ok(HandleInputReturnType::Handled)
 }
