@@ -1,6 +1,12 @@
 use backend::DataProvider;
 
-use crate::app::{ui::MsgBoxResult, App, HandleInputReturnType, UIComponents};
+use crate::app::{
+    ui::{
+        msg_box::{MsgBoxActions, MsgBoxType},
+        MsgBoxResult,
+    },
+    App, HandleInputReturnType, UIComponents,
+};
 
 use super::{
     editor_cmd::{discard_current_content, exec_save_entry_content},
@@ -95,6 +101,50 @@ pub fn exec_invert_selection<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     entries_ids.into_iter().for_each(|id| {
         toggle_entrie_selection(id, app);
     });
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_delete_selected_entries<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    debug_assert!(ui_components.entries_list.multi_select_mode);
+    debug_assert!(!ui_components.has_unsaved());
+
+    if app.selected_entries.is_empty() {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
+    let msg = MsgBoxType::Question(format!(
+        "Do you want to delete the selected {} entries",
+        app.selected_entries.len()
+    ));
+    let msg_action = MsgBoxActions::YesNo;
+    ui_components.show_msg_box(msg, msg_action, Some(UICommand::MulSelDeleteEntries));
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn continue_delete_selected_entries<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Yes => {
+            let delete_ids: Vec<u32> = app.selected_entries.iter().cloned().collect();
+            for entry_id in delete_ids {
+                app.delete_entry(ui_components, entry_id).await?;
+            }
+            app.selected_entries.clear();
+        }
+        MsgBoxResult::No => {}
+        _ => unreachable!(
+            "{:?} not implemented for delete selected entries",
+            msg_box_result
+        ),
+    }
 
     Ok(HandleInputReturnType::Handled)
 }

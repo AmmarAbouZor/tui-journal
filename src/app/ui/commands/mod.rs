@@ -40,6 +40,7 @@ pub enum UICommand {
     MulSelSelectAll,
     MulSelSelectNone,
     MulSelInverSelection,
+    MulSelDeleteEntries,
 }
 
 #[derive(Debug, Clone)]
@@ -132,6 +133,10 @@ impl UICommand {
                 "Invert selection",
                 "Invert journals selection in multi selection mode",
             ),
+            UICommand::MulSelDeleteEntries => CommandInfo::new(
+                "Delete selection",
+                "Delete selected journals in multi selection mode",
+            ),
         }
     }
 
@@ -165,6 +170,7 @@ impl UICommand {
             UICommand::MulSelSelectAll => exec_select_all(app),
             UICommand::MulSelSelectNone => exec_select_none(app),
             UICommand::MulSelInverSelection => exec_invert_selection(app),
+            UICommand::MulSelDeleteEntries => exec_delete_selected_entries(ui_components, app),
         }
     }
 
@@ -189,7 +195,9 @@ impl UICommand {
             UICommand::CreateEntry => {
                 continue_create_entry(ui_components, app, msg_box_result).await
             }
-            UICommand::EditCurrentEntry => not_implemented(),
+            UICommand::EditCurrentEntry => {
+                continue_edit_current_entry(ui_components, app, msg_box_result).await
+            }
             UICommand::DeleteCurrentEntry => {
                 continue_delete_current_entry(ui_components, app, msg_box_result).await
             }
@@ -214,6 +222,9 @@ impl UICommand {
             UICommand::MulSelSelectAll => not_implemented(),
             UICommand::MulSelSelectNone => not_implemented(),
             UICommand::MulSelInverSelection => not_implemented(),
+            UICommand::MulSelDeleteEntries => {
+                continue_delete_selected_entries(ui_components, app, msg_box_result).await
+            }
         }
     }
 }
