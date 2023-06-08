@@ -1,0 +1,78 @@
+use backend::DataProvider;
+
+use crate::app::{ui::MsgBoxResult, App, HandleInputReturnType, UIComponents};
+
+use super::{editor_cmd::exec_save_entry_content, CmdResult, UICommand};
+
+pub fn exec_enter_select_mode(ui_components: &mut UIComponents) -> CmdResult {
+    if ui_components.entries_list.multi_select_mode {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::EnterMultiSelectMode));
+    } else {
+        enter_select_mode(ui_components);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn enter_select_mode(ui_components: &mut UIComponents) {
+    ui_components.entries_list.multi_select_mode = true;
+}
+
+pub async fn continue_enter_select_mode<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            enter_select_mode(ui_components);
+        }
+        MsgBoxResult::No => enter_select_mode(ui_components),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_leave_select_mode(ui_components: &mut UIComponents) -> CmdResult {
+    debug_assert!(ui_components.entries_list.multi_select_mode);
+    debug_assert!(!ui_components.has_unsaved());
+
+    ui_components.entries_list.multi_select_mode = false;
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_toggle_selected<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    todo!()
+}
+
+pub fn exec_select_all<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    todo!()
+}
+
+pub fn exec_select_none<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    todo!()
+}
+
+pub fn exec_invert_selection<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    todo!()
+}

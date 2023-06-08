@@ -7,9 +7,10 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
 use tui::Frame;
 
-use backend::Entry;
+use backend::DataProvider;
 
 use crate::app::keymap::Keymap;
+use crate::app::App;
 
 use super::INACTIVE_CONTROL_COLOR;
 use super::{UICommand, ACTIVE_CONTROL_COLOR};
@@ -20,6 +21,7 @@ const LIST_INNER_MARGINE: usize = 5;
 pub struct EntriesList {
     pub state: ListState,
     is_active: bool,
+    pub multi_select_mode: bool,
 }
 
 impl<'a> EntriesList {
@@ -27,17 +29,24 @@ impl<'a> EntriesList {
         Self {
             state: ListState::default(),
             is_active: false,
+            multi_select_mode: false,
         }
     }
 
-    fn render_list<B: Backend>(&mut self, frame: &mut Frame<B>, entries: &'a [Entry], area: Rect) {
+    fn render_list<B: Backend, D: DataProvider>(
+        &mut self,
+        frame: &mut Frame<B>,
+        app: &App<D>,
+        area: Rect,
+    ) {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
             (INACTIVE_CONTROL_COLOR, Color::LightBlue)
         };
 
-        let items: Vec<ListItem> = entries
+        let items: Vec<ListItem> = app
+            .entries
             .iter()
             .map(|entry| {
                 // Text wrapping
@@ -122,17 +131,17 @@ impl<'a> EntriesList {
             })
     }
 
-    pub fn render_widget<B: Backend>(
+    pub fn render_widget<B: Backend, D: DataProvider>(
         &mut self,
         frame: &mut Frame<B>,
         area: Rect,
-        entries: &'a [Entry],
+        app: &App<D>,
         list_keymaps: &[Keymap],
     ) {
-        if entries.is_empty() {
+        if app.entries.is_empty() {
             self.render_place_holder(frame, area, list_keymaps);
         } else {
-            self.render_list(frame, entries, area);
+            self.render_list(frame, app, area);
         }
     }
 
