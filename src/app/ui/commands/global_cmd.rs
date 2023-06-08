@@ -1,4 +1,7 @@
-use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
+use crate::app::{
+    ui::{help_popup::KeybindingsTabs, *},
+    App, HandleInputReturnType, UIComponents,
+};
 
 use backend::DataProvider;
 
@@ -29,7 +32,14 @@ pub async fn continue_quit<'a, D: DataProvider>(
 }
 
 pub fn exec_show_help(ui_components: &mut UIComponents) -> CmdResult {
-    ui_components.popup_stack.push(Popup::Help);
+    let start_tab = match ui_components.active_control {
+        ControlType::EntriesList => KeybindingsTabs::Global,
+        ControlType::EntryContentTxt => KeybindingsTabs::Editor,
+    };
+
+    ui_components
+        .popup_stack
+        .push(Popup::Help(Box::new(HelpPopup::new(start_tab))));
 
     Ok(HandleInputReturnType::Handled)
 }
