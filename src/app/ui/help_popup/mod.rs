@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use crossterm::event::{KeyCode, KeyModifiers};
 use tui::{
     backend::Backend,
@@ -10,11 +8,14 @@ use tui::{
     Frame,
 };
 
-use crate::app::keymap::{
-    get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap,
-};
+use crate::app::keymap::Input;
 
-use super::{commands::CommandInfo, ui_functions::centered_rect, UICommand};
+use self::{global_bindings::GlobalBindings, keybindings_table::KeybindingsTable};
+
+use super::{commands::CommandInfo, ui_functions::centered_rect};
+
+mod global_bindings;
+mod keybindings_table;
 
 const KEY_PERC: u16 = 18;
 const NAME_PERC: u16 = 27;
@@ -52,13 +53,6 @@ impl KeybindingsTabs {
         ]
     }
 
-    fn render_content<B: Backend>(&self, frame: &mut Frame<B>, area: Rect) {
-        match self {
-            KeybindingsTabs::Global => render_global_keybindings(frame, area),
-            KeybindingsTabs::Editor => render_editor_hint(frame, area),
-        }
-    }
-
     fn get_next(&self) -> KeybindingsTabs {
         match self {
             KeybindingsTabs::Global => KeybindingsTabs::Editor,
@@ -83,14 +77,19 @@ pub enum HelpInputInputReturn {
 #[derive(Debug)]
 pub struct HelpPopup {
     selected_tab: KeybindingsTabs,
+    global_bindings: GlobalBindings,
 }
 
 impl HelpPopup {
     pub fn new(selected_tab: KeybindingsTabs) -> Self {
-        Self { selected_tab }
+        let global_bindings = GlobalBindings::new();
+        Self {
+            selected_tab,
+            global_bindings,
+        }
     }
 
-    pub fn render_widget<B: Backend>(&self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
         let area = centered_rect(90, 80, area);
         let block = Block::default().title("Help").borders(Borders::ALL);
         frame.render_widget(Clear, area);
@@ -112,7 +111,12 @@ impl HelpPopup {
             .highlight_style(Style::default().add_modifier(Modifier::UNDERLINED));
 
         frame.render_widget(tabs, chunks[0]);
-        self.selected_tab.render_content(frame, chunks[1]);
+        match self.selected_tab {
+            KeybindingsTabs::Global => {
+                render_keybindings(frame, chunks[1], &mut self.global_bindings)
+            }
+            KeybindingsTabs::Editor => render_editor_hint(frame, chunks[1]),
+        }
     }
 
     pub fn handle_input(&mut self, input: &Input) -> HelpInputInputReturn {
@@ -136,28 +140,37 @@ impl HelpPopup {
                 self.selected_tab = self.selected_tab.get_previous();
                 HelpInputInputReturn::Keep
             }
+            KeyCode::Down | KeyCode::Char('j') => {
+                match self.selected_tab {
+                    KeybindingsTabs::Global => self.global_bindings.select_next(),
+                    KeybindingsTabs::Editor => {}
+                }
+                HelpInputInputReturn::Keep
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                match self.selected_tab {
+                    KeybindingsTabs::Global => self.global_bindings.select_previous(),
+                    KeybindingsTabs::Editor => {}
+                }
+                HelpInputInputReturn::Keep
+            }
             _ => HelpInputInputReturn::Keep,
         }
     }
 }
 
-fn render_global_keybindings<B: Backend>(frame: &mut Frame<B>, area: Rect) {
+fn render_keybindings<B: Backend, T: KeybindingsTable>(
+    frame: &mut Frame<B>,
+    area: Rect,
+    table: &mut T,
+) {
     let header_cells = ["Key", "Command", "Description"]
         .into_iter()
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
     let header = Row::new(header_cells).height(1).bottom_margin(1);
 
-    let mut unique_commands: BTreeMap<UICommand, Vec<Input>> = BTreeMap::new();
-
-    get_all_keymaps().for_each(|keymap| {
-        unique_commands
-            .entry(keymap.command)
-            .and_modify(|keys| keys.push(keymap.key))
-            .or_insert(vec![keymap.key]);
-    });
-
-    let rows = unique_commands.into_iter().map(|(command, keys)| {
-        let keys: Vec<_> = keys.into_iter().map(|input| input.to_string()).collect();
+    let rows = table.get_bindings_map().iter().map(|(command, keys)| {
+        let keys: Vec<_> = keys.iter().map(|input| input.to_string()).collect();
         let mut keys_text = keys.join(", ");
 
         let CommandInfo {
@@ -193,24 +206,17 @@ fn render_global_keybindings<B: Backend>(frame: &mut Frame<B>, area: Rect) {
         .header(header)
         .block(
             Block::default()
-                .title("General Keybindings")
+                .title(table.get_title().to_owned())
                 .borders(Borders::ALL),
         )
+        .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
         .widths(&[
             Constraint::Percentage(KEY_PERC),
             Constraint::Percentage(NAME_PERC),
             Constraint::Percentage(DESCRIPTION_PERC),
         ]);
 
-    frame.render_widget(keymaps_table, area);
-}
-
-fn get_all_keymaps() -> impl Iterator<Item = Keymap> {
-    let global_maps = get_global_keymaps().into_iter();
-    let list_maps = get_entries_list_keymaps().into_iter();
-    let editor_maps = get_editor_mode_keymaps().into_iter();
-
-    global_maps.chain(list_maps).chain(editor_maps)
+    frame.render_stateful_widget(keymaps_table, area, table.get_state_mut());
 }
 
 pub fn render_editor_hint<B: Backend>(frame: &mut Frame<B>, area: Rect) {
