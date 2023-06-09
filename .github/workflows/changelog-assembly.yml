@@ -23,7 +23,7 @@ jobs:
       - run: |
           aeruginous ronlog release \
             -i changelog.d/ \
-            -v `cargo r -- --version | cut -d\  -f2`
+            -v "$(cargo r -- --version | cut -d\  -f2)"
 
       - uses: peter-evans/create-pull-request@v5.0.1
         with:
