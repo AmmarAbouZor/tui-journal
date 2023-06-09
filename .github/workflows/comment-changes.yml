@@ -13,6 +13,7 @@ permissions:
 jobs:
   aeruginous:
     if: |
+      github.repository == 'AmmarAbouZor/tui-journal' &&
       !contains(github.event.head_commit.message, '[Aeruginous]') &&
       !contains(github.event.head_commit.message, 'Chore:') &&
       !contains(github.event.head_commit.message, 'Docs:')
