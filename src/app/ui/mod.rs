@@ -263,37 +263,31 @@ impl<'a, 'b> UIComponents<'a> {
         entry_id: Option<u32>,
         app: &mut App<D>,
     ) {
-        if self.entries_list.multi_select_mode {
-            todo!()
-        } else {
-            match app
-                .export_journal_content(
-                    entry_id.expect("entry id must have a value in normal mode"),
-                    path.clone(),
-                )
-                .await
-            {
-                Ok(_) => {
-                    self.popup_stack.pop().expect("popup stack isn't empty");
+        let (result, confirmation_msg) = if self.entries_list.multi_select_mode {
+            let result = app.export_entries(path.clone()).await;
+            let msg = format!("Journal(s)  exported to file {}", path.display());
 
-                    if app.settings.export.show_confirmation {
-                        self.show_msg_box(
-                            MsgBoxType::Info(format!(
-                                "Journal content exported to file {}",
-                                path.display()
-                            )),
-                            MsgBoxActions::Ok,
-                            None,
-                        );
-                    }
+            (result, msg)
+        } else {
+            let entry_id = entry_id.expect("entry id must have a value in normal mode");
+            let result = app.export_entry_content(entry_id, path.clone()).await;
+            let msg = format!("Journal content exported to file {}", path.display());
+
+            (result, msg)
+        };
+
+        match result {
+            Ok(_) => {
+                self.popup_stack.pop().expect("popup stack isn't empty");
+
+                if app.settings.export.show_confirmation {
+                    self.show_msg_box(MsgBoxType::Info(confirmation_msg), MsgBoxActions::Ok, None);
                 }
-                Err(err) => {
-                    self.show_err_msg(
-                        format!("Error while exporting journal content. Err: {err}",),
-                    );
-                }
-            };
-        }
+            }
+            Err(err) => {
+                self.show_err_msg(format!("Error while exporting journal(s). Err: {err}",));
+            }
+        };
     }
 
     fn set_control_is_active(&mut self, control: ControlType, is_active: bool) {

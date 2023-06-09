@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{collections::HashSet, fs::File, path::PathBuf};
 
 use backend::{DataProvider, Entry, EntryDraft};
 
@@ -149,7 +149,7 @@ where
         Ok(())
     }
 
-    async fn export_journal_content(&self, entry_id: u32, path: PathBuf) -> anyhow::Result<()> {
+    async fn export_entry_content(&self, entry_id: u32, path: PathBuf) -> anyhow::Result<()> {
         if let Some(parent) = path.parent() {
             tokio::fs::create_dir_all(parent).await?;
         }
@@ -157,6 +157,21 @@ where
         let entry = self.get_entry(entry_id).expect("Entry should exist");
 
         tokio::fs::write(path, entry.content.to_owned()).await?;
+
+        Ok(())
+    }
+
+    async fn export_entries(&self, path: PathBuf) -> anyhow::Result<()> {
+        if let Some(parent) = path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+
+        let selected_ids: Vec<u32> = self.selected_entries.iter().cloned().collect();
+
+        let entries_dto = self.data_provide.get_export_object(&selected_ids).await?;
+
+        let file = File::create(path)?;
+        serde_json::to_writer_pretty(&file, &entries_dto)?;
 
         Ok(())
     }
