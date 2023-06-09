@@ -41,6 +41,7 @@ pub enum UICommand {
     MulSelSelectNone,
     MulSelInverSelection,
     MulSelDeleteEntries,
+    MulSelExportEntries,
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +138,10 @@ impl UICommand {
                 "Delete selection",
                 "Delete selected journals in multi selection mode",
             ),
+            UICommand::MulSelExportEntries => CommandInfo::new(
+                "Export selection",
+                "Export selected journals to a transfer JSON file, which can be imported to other back-end files",
+            ),
         }
     }
 
@@ -171,6 +176,7 @@ impl UICommand {
             UICommand::MulSelSelectNone => exec_select_none(app),
             UICommand::MulSelInverSelection => exec_invert_selection(app),
             UICommand::MulSelDeleteEntries => exec_delete_selected_entries(ui_components, app),
+            UICommand::MulSelExportEntries => exec_export_selected_entries(ui_components, app),
         }
     }
 
@@ -225,6 +231,7 @@ impl UICommand {
             UICommand::MulSelDeleteEntries => {
                 continue_delete_selected_entries(ui_components, app, msg_box_result).await
             }
+            UICommand::MulSelExportEntries => not_implemented(),
         }
     }
 }

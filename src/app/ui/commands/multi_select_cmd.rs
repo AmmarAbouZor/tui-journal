@@ -2,8 +2,9 @@ use backend::DataProvider;
 
 use crate::app::{
     ui::{
+        export_popup::ExportPopup,
         msg_box::{MsgBoxActions, MsgBoxType},
-        MsgBoxResult,
+        MsgBoxResult, Popup,
     },
     App, HandleInputReturnType, UIComponents,
 };
@@ -144,6 +145,34 @@ pub async fn continue_delete_selected_entries<'a, D: DataProvider>(
             "{:?} not implemented for delete selected entries",
             msg_box_result
         ),
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_export_selected_entries<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    debug_assert!(ui_components.entries_list.multi_select_mode);
+    debug_assert!(!ui_components.has_unsaved());
+
+    if app.selected_entries.is_empty() {
+        let msg = MsgBoxType::Info("No items have been selected".into());
+        let msg_action = MsgBoxActions::Ok;
+        ui_components.show_msg_box(msg, msg_action, None);
+
+        return Ok(HandleInputReturnType::Handled);
+    }
+
+    match ExportPopup::create_muti_select(app) {
+        Ok(popup) => ui_components
+            .popup_stack
+            .push(Popup::Export(Box::new(popup))),
+        Err(err) => ui_components.show_err_msg(format!(
+            "Error while creating export dialog.\n Err: {}",
+            err
+        )),
     }
 
     Ok(HandleInputReturnType::Handled)

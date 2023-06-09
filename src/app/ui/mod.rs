@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use backend::DataProvider;
 
 use self::{
@@ -242,28 +244,8 @@ impl<'a, 'b> UIComponents<'a> {
                         export_popup::ExportPopupInputReturn::Cancel => {
                             self.popup_stack.pop().expect("popup stack isn't empty");
                         }
-                        export_popup::ExportPopupInputReturn::Export(entry_id, path) => {
-                            match app.export_journal_content(entry_id, path.clone()).await {
-                                Ok(_) => {
-                                    self.popup_stack.pop().expect("popup stack isn't empty");
-
-                                    if app.settings.export.show_confirmation {
-                                        self.show_msg_box(
-                                            MsgBoxType::Info(format!(
-                                                "Journal content exported to file {}",
-                                                path.display()
-                                            )),
-                                            MsgBoxActions::Ok,
-                                            None,
-                                        );
-                                    }
-                                }
-                                Err(err) => {
-                                    self.show_err_msg(format!(
-                                        "Error while exporting journal content. Err: {err}",
-                                    ));
-                                }
-                            };
+                        export_popup::ExportPopupInputReturn::Export(path, entry_id) => {
+                            self.handle_export_popup_return(path, entry_id, app).await;
                         }
                     };
                 }
@@ -271,6 +253,46 @@ impl<'a, 'b> UIComponents<'a> {
             Ok(HandleInputReturnType::Handled)
         } else {
             Ok(HandleInputReturnType::NotFound)
+        }
+    }
+
+    #[inline]
+    async fn handle_export_popup_return<D: DataProvider>(
+        &mut self,
+        path: PathBuf,
+        entry_id: Option<u32>,
+        app: &mut App<D>,
+    ) {
+        if self.entries_list.multi_select_mode {
+            todo!()
+        } else {
+            match app
+                .export_journal_content(
+                    entry_id.expect("entry id must have a value in normal mode"),
+                    path.clone(),
+                )
+                .await
+            {
+                Ok(_) => {
+                    self.popup_stack.pop().expect("popup stack isn't empty");
+
+                    if app.settings.export.show_confirmation {
+                        self.show_msg_box(
+                            MsgBoxType::Info(format!(
+                                "Journal content exported to file {}",
+                                path.display()
+                            )),
+                            MsgBoxActions::Ok,
+                            None,
+                        );
+                    }
+                }
+                Err(err) => {
+                    self.show_err_msg(
+                        format!("Error while exporting journal content. Err: {err}",),
+                    );
+                }
+            };
         }
     }
 
