@@ -8,15 +8,15 @@ permissions:
   pull-requests: write
 
 jobs:
-  scriv:
-    name: scriv
+  ronlog:
+    name: ronlog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.5.2
-
+      - uses: fregante/setup-git-user@v2.0.1
       - run: rustup update
 
-      - uses: baptiste0928/cargo-install@v2.0.0
+      - uses: baptiste0928/cargo-install@v2.1.0
         with:
           crate: aeruginous
 
@@ -29,7 +29,8 @@ jobs:
         with:
           assignees: |
             AmmarAbouZor
-          branch: documentation/scriv-assemble-changelog
+          branch: documentation/aeruginous-ronlog
+          branch-suffix: timestamp
           commit-message: '[Aeruginous] Assemble CHANGELOG'
           labels: |
             documentation

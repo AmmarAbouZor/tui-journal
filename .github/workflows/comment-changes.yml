@@ -13,6 +13,7 @@ permissions:
 jobs:
   aeruginous:
     if: |
+      github.repository == 'AmmarAbouZor/tui-journal' &&
       !contains(github.event.head_commit.message, '[Aeruginous]') &&
       !contains(github.event.head_commit.message, 'Chore:') &&
       !contains(github.event.head_commit.message, 'Docs:')
@@ -23,9 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: fregante/setup-git-user@v2.0.1
       - run: rustup update
 
-      - uses: baptiste0928/cargo-install@v2.0.0
+      - uses: baptiste0928/cargo-install@v2.1.0
         with:
           crate: aeruginous
 
@@ -44,6 +46,7 @@ jobs:
           assignees: |
             AmmarAbouZor
           branch: documentation/aeruginous-comment-changes
+          branch-suffix: timestamp
           commit-message: '[Aeruginous] Create CHANGELOG Fragment'
           labels: |
             documentation
