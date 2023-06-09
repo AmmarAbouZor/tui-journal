@@ -104,19 +104,6 @@ impl DataProvider for JsonDataProvide {
 
         Ok(EntriesDTO::new(entries))
     }
-
-    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
-        debug_assert_eq!(
-            TRANSFER_DATA_VERSION, entries_dto.version,
-            "Version mismatches check if there is a need to make some conversation"
-        );
-
-        for entry_darft in entries_dto.entries {
-            self.add_entry(entry_darft).await?;
-        }
-
-        Ok(())
-    }
 }
 
 impl JsonDataProvide {
