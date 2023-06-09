@@ -1,0 +1,12 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "bugs in fragment creation",
+    ],
+    "Added": [
+      "Multi-selection for journals",
+      "Tabs and scrolling to help popup",
+    ],
+  },
+)
