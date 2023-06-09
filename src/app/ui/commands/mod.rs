@@ -1,6 +1,7 @@
+use backend::DataProvider;
 use std::fmt::Debug;
 
-use backend::DataProvider;
+use multi_select_cmd::*;
 
 use super::{App, HandleInputReturnType, MsgBoxResult, UIComponents};
 
@@ -11,6 +12,7 @@ use global_cmd::*;
 mod editor_cmd;
 mod entries_list_cmd;
 mod global_cmd;
+mod multi_select_cmd;
 
 type CmdResult = anyhow::Result<HandleInputReturnType>;
 
@@ -32,6 +34,13 @@ pub enum UICommand {
     ReloadAll,
     ExportEntryContent,
     EditInExternalEditor,
+    EnterMultiSelectMode,
+    LeaveMultiSelectMode,
+    MulSelToggleSelected,
+    MulSelSelectAll,
+    MulSelSelectNone,
+    MulSelInverSelection,
+    MulSelDeleteEntries,
 }
 
 #[derive(Debug, Clone)]
@@ -100,6 +109,34 @@ impl UICommand {
                 "Edit in external editor",
                 "Edit current journal content in external editor (The editor can be set in configurations file or via the environment variables VISUAL, EDITOR)",
             ),
+            UICommand::EnterMultiSelectMode => CommandInfo::new(
+                "Enter journals multi selection mode",
+                "Enter multi selection mode for journals to work with multi journals at once",
+            ),
+            UICommand::LeaveMultiSelectMode => CommandInfo::new(
+                "Leave journals multi selection mode",
+                "Leave multi selection mode for journals and return to normal mode",
+            ),
+            UICommand::MulSelToggleSelected => CommandInfo::new(
+                "Toggle selected",
+                "Toggle if the current journal is selected in multi selection mode",
+            ),
+            UICommand::MulSelSelectAll => CommandInfo::new(
+                "Select all journals",
+                "Select all journals in multi selection mode",
+            ),
+            UICommand::MulSelSelectNone => CommandInfo::new(
+                "Clear selection",
+                "Clear journals selection in multi selection mode",
+            ),
+            UICommand::MulSelInverSelection => CommandInfo::new(
+                "Invert selection",
+                "Invert journals selection in multi selection mode",
+            ),
+            UICommand::MulSelDeleteEntries => CommandInfo::new(
+                "Delete selection",
+                "Delete selected journals in multi selection mode",
+            ),
         }
     }
 
@@ -127,6 +164,13 @@ impl UICommand {
             UICommand::EditInExternalEditor => {
                 exec_edit_in_external_editor(ui_components, app).await
             }
+            UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components),
+            UICommand::LeaveMultiSelectMode => exec_leave_select_mode(ui_components, app),
+            UICommand::MulSelToggleSelected => exec_toggle_selected(app),
+            UICommand::MulSelSelectAll => exec_select_all(app),
+            UICommand::MulSelSelectNone => exec_select_none(app),
+            UICommand::MulSelInverSelection => exec_invert_selection(app),
+            UICommand::MulSelDeleteEntries => exec_delete_selected_entries(ui_components, app),
         }
     }
 
@@ -151,7 +195,9 @@ impl UICommand {
             UICommand::CreateEntry => {
                 continue_create_entry(ui_components, app, msg_box_result).await
             }
-            UICommand::EditCurrentEntry => not_implemented(),
+            UICommand::EditCurrentEntry => {
+                continue_edit_current_entry(ui_components, app, msg_box_result).await
+            }
             UICommand::DeleteCurrentEntry => {
                 continue_delete_current_entry(ui_components, app, msg_box_result).await
             }
@@ -167,6 +213,17 @@ impl UICommand {
             }
             UICommand::EditInExternalEditor => {
                 continue_edit_in_external_editor(ui_components, app, msg_box_result).await
+            }
+            UICommand::EnterMultiSelectMode => {
+                continue_enter_select_mode(ui_components, app, msg_box_result).await
+            }
+            UICommand::LeaveMultiSelectMode => not_implemented(),
+            UICommand::MulSelToggleSelected => not_implemented(),
+            UICommand::MulSelSelectAll => not_implemented(),
+            UICommand::MulSelSelectNone => not_implemented(),
+            UICommand::MulSelInverSelection => not_implemented(),
+            UICommand::MulSelDeleteEntries => {
+                continue_delete_selected_entries(ui_components, app, msg_box_result).await
             }
         }
     }

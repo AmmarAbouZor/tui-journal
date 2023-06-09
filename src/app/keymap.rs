@@ -47,7 +47,13 @@ impl Display for Input {
             KeyCode::Delete => "Delete",
             KeyCode::Insert => "Isnert",
             KeyCode::F(_) => "F",
-            KeyCode::Char(char) => char.encode_utf8(&mut char_convert_tmp),
+            KeyCode::Char(char) => {
+                if char.is_whitespace() {
+                    "<Space>"
+                } else {
+                    char.encode_utf8(&mut char_convert_tmp)
+                }
+            }
             KeyCode::Null => "Null",
             KeyCode::Esc => "Esc",
             _ => panic!("{:?} is not implemented", self.key_code),
@@ -179,6 +185,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('y'), KeyModifiers::NONE),
             UICommand::EditInExternalEditor,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
+            UICommand::EnterMultiSelectMode,
+        ),
     ]
 }
 
@@ -203,6 +213,75 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('['), KeyModifiers::CONTROL),
             UICommand::FinishEditEntryContent,
+        ),
+    ]
+}
+
+pub fn get_multi_select_keymaps() -> Vec<Keymap> {
+    vec![
+        Keymap::new(
+            Input::new(KeyCode::Char('q'), KeyModifiers::NONE),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Esc, KeyModifiers::NONE),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
+            UICommand::LeaveMultiSelectMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Up, KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('k'), KeyModifiers::NONE),
+            UICommand::SelectedPrevEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Down, KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('j'), KeyModifiers::NONE),
+            UICommand::SelectedNextEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char(' '), KeyModifiers::NONE),
+            UICommand::MulSelToggleSelected,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Enter, KeyModifiers::NONE),
+            UICommand::MulSelToggleSelected,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('m'), KeyModifiers::CONTROL),
+            UICommand::MulSelToggleSelected,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('a'), KeyModifiers::NONE),
+            UICommand::MulSelSelectAll,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('x'), KeyModifiers::NONE),
+            UICommand::MulSelSelectNone,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('i'), KeyModifiers::NONE),
+            UICommand::MulSelInverSelection,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('d'), KeyModifiers::NONE),
+            UICommand::MulSelDeleteEntries,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
+            UICommand::ShowHelp,
         ),
     ]
 }

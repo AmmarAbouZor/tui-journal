@@ -6,7 +6,10 @@ use backend::DataProvider;
 
 use scopeguard::defer;
 
-use super::{editor_cmd::exec_save_entry_content, CmdResult};
+use super::{
+    editor_cmd::{discard_current_content, exec_save_entry_content},
+    CmdResult,
+};
 
 pub fn exec_select_prev_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
@@ -134,6 +137,17 @@ pub fn exec_edit_current_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::EditCurrentEntry));
+    } else {
+        edit_current_entry(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     if let Some(entry) = app
         .current_entry_id
         .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
@@ -141,6 +155,24 @@ pub fn exec_edit_current_entry<D: DataProvider>(
         ui_components
             .popup_stack
             .push(Popup::Entry(Box::new(EntryPopup::from_entry(entry))));
+    }
+}
+
+pub async fn continue_edit_current_entry<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            edit_current_entry(ui_components, app);
+        }
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            edit_current_entry(ui_components, app);
+        }
     }
 
     Ok(HandleInputReturnType::Handled)
@@ -225,7 +257,10 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
             exec_save_entry_content(ui_components, app).await?;
             export_entry_content(ui_components, app);
         }
-        MsgBoxResult::No => export_entry_content(ui_components, app),
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            export_entry_content(ui_components, app);
+        }
     }
 
     Ok(HandleInputReturnType::Handled)

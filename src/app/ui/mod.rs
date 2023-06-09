@@ -12,7 +12,8 @@ use self::{
 
 use super::{
     keymap::{
-        get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap,
+        get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps,
+        get_multi_select_keymaps, Input, Keymap,
     },
     runner::HandleInputReturnType,
     App,
@@ -61,6 +62,7 @@ pub struct UIComponents<'a> {
     global_keymaps: Vec<Keymap>,
     entries_list_keymaps: Vec<Keymap>,
     editor_keymaps: Vec<Keymap>,
+    multi_select_keymaps: Vec<Keymap>,
     entries_list: EntriesList,
     editor: Editor<'a>,
     popup_stack: Vec<Popup<'a>>,
@@ -73,6 +75,7 @@ impl<'a, 'b> UIComponents<'a> {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
         let editor_keymaps = get_editor_mode_keymaps();
+        let multi_select_keymaps = get_multi_select_keymaps();
         let mut entries_list = EntriesList::new();
         let editor = Editor::new();
 
@@ -83,6 +86,7 @@ impl<'a, 'b> UIComponents<'a> {
             global_keymaps,
             entries_list_keymaps,
             editor_keymaps,
+            multi_select_keymaps,
             entries_list,
             editor,
             popup_stack: Vec::new(),
@@ -122,12 +126,8 @@ impl<'a, 'b> UIComponents<'a> {
             .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
             .split(chunks[0]);
 
-        self.entries_list.render_widget(
-            f,
-            entries_chunks[0],
-            &app.entries,
-            &self.entries_list_keymaps,
-        );
+        self.entries_list
+            .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
         self.editor.render_widget(f, entries_chunks[1]);
 
         self.render_popup(f);
@@ -161,6 +161,13 @@ impl<'a, 'b> UIComponents<'a> {
                 return key.command.clone().execute(self, app).await;
             }
             return self.editor.handle_input(input, app);
+        }
+
+        if self.entries_list.multi_select_mode {
+            if let Some(key) = self.multi_select_keymaps.iter().find(|c| &c.key == input) {
+                return key.command.to_owned().execute(self, app).await;
+            }
+            return Ok(HandleInputReturnType::Handled);
         }
 
         if let Some(cmd) = self

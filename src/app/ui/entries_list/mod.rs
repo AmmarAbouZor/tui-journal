@@ -7,19 +7,22 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
 use tui::Frame;
 
-use backend::Entry;
+use backend::DataProvider;
 
 use crate::app::keymap::Keymap;
+use crate::app::App;
 
 use super::INACTIVE_CONTROL_COLOR;
 use super::{UICommand, ACTIVE_CONTROL_COLOR};
 
 const LIST_INNER_MARGINE: usize = 5;
+const SELECTED_FOREGROUND_COLOR: Color = Color::Yellow;
 
 #[derive(Debug)]
 pub struct EntriesList {
     pub state: ListState,
     is_active: bool,
+    pub multi_select_mode: bool,
 }
 
 impl<'a> EntriesList {
@@ -27,33 +30,50 @@ impl<'a> EntriesList {
         Self {
             state: ListState::default(),
             is_active: false,
+            multi_select_mode: false,
         }
     }
 
-    fn render_list<B: Backend>(&mut self, frame: &mut Frame<B>, entries: &'a [Entry], area: Rect) {
+    fn render_list<B: Backend, D: DataProvider>(
+        &mut self,
+        frame: &mut Frame<B>,
+        app: &App<D>,
+        area: Rect,
+    ) {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
             (INACTIVE_CONTROL_COLOR, Color::LightBlue)
         };
 
-        let items: Vec<ListItem> = entries
+        let items: Vec<ListItem> = app
+            .entries
             .iter()
             .map(|entry| {
+                let highlight_selected =
+                    self.multi_select_mode && app.selected_entries.contains(&entry.id);
+
+                let mut title = entry.title.to_string();
+
+                if highlight_selected {
+                    title.insert_str(0, "* ");
+                }
+
                 // Text wrapping
-                let title_lines = textwrap::wrap(
-                    entry.title.as_str(),
-                    area.width as usize - LIST_INNER_MARGINE,
-                );
+                let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGINE);
+
+                let fg_color = if highlight_selected {
+                    SELECTED_FOREGROUND_COLOR
+                } else {
+                    foreground_color
+                };
 
                 let mut spans: Vec<Spans> = title_lines
                     .iter()
                     .map(|line| {
                         Spans::from(Span::styled(
                             line.to_string(),
-                            Style::default()
-                                .fg(foreground_color)
-                                .add_modifier(Modifier::BOLD),
+                            Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
                         ))
                     })
                     .collect();
@@ -82,7 +102,7 @@ impl<'a> EntriesList {
                     .bg(highlight_bg)
                     .add_modifier(Modifier::BOLD),
             )
-            .highlight_symbol(">> ");
+            .highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut self.state);
     }
@@ -99,7 +119,11 @@ impl<'a> EntriesList {
             .map(|keymap| format!("'{}'", keymap.key))
             .collect();
 
-        let place_holder_text = format!("\n Use {} to create new entry ", keys_text.join(","));
+        let place_holder_text = if self.multi_select_mode {
+            String::from("\nNo entries to select")
+        } else {
+            format!("\n Use {} to create new entry ", keys_text.join(","))
+        };
 
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
@@ -111,28 +135,40 @@ impl<'a> EntriesList {
 
     #[inline]
     fn get_list_block(&self) -> Block<'a> {
+        let title = if self.multi_select_mode {
+            "Journals - Multi-Select"
+        } else {
+            "Journals"
+        };
+
+        let border_style = match (self.is_active, self.multi_select_mode) {
+            (_, true) => Style::default()
+                .fg(SELECTED_FOREGROUND_COLOR)
+                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::ITALIC),
+            (true, _) => Style::default()
+                .fg(ACTIVE_CONTROL_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (false, _) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+        };
+
         Block::default()
             .borders(Borders::ALL)
-            .title("Journals")
-            .border_style(match self.is_active {
-                true => Style::default()
-                    .fg(ACTIVE_CONTROL_COLOR)
-                    .add_modifier(Modifier::BOLD),
-                false => Style::default().fg(INACTIVE_CONTROL_COLOR),
-            })
+            .title(title)
+            .border_style(border_style)
     }
 
-    pub fn render_widget<B: Backend>(
+    pub fn render_widget<B: Backend, D: DataProvider>(
         &mut self,
         frame: &mut Frame<B>,
         area: Rect,
-        entries: &'a [Entry],
+        app: &App<D>,
         list_keymaps: &[Keymap],
     ) {
-        if entries.is_empty() {
+        if app.entries.is_empty() {
             self.render_place_holder(frame, area, list_keymaps);
         } else {
-            self.render_list(frame, entries, area);
+            self.render_list(frame, app, area);
         }
     }
 

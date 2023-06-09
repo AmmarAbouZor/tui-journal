@@ -45,12 +45,20 @@ pub fn continue_discard_content<D: DataProvider>(
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
-        MsgBoxResult::Yes => ui_components
-            .editor
-            .set_current_entry(app.current_entry_id, app),
+        MsgBoxResult::Yes => discard_current_content(ui_components, app),
         MsgBoxResult::No => {}
         _ => unreachable!("{:?} isn't implemented for discard content", msg_box_result),
     }
 
     Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+pub fn discard_current_content<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) {
+    ui_components
+        .editor
+        .set_current_entry(app.current_entry_id, app);
 }

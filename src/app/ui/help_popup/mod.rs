@@ -10,12 +10,16 @@ use tui::{
 
 use crate::app::keymap::Input;
 
-use self::{global_bindings::GlobalBindings, keybindings_table::KeybindingsTable};
+use self::{
+    global_bindings::GlobalBindings, keybindings_table::KeybindingsTable,
+    multi_select_bindings::MultiSelectBindings,
+};
 
 use super::{commands::CommandInfo, ui_functions::centered_rect};
 
 mod global_bindings;
 mod keybindings_table;
+mod multi_select_bindings;
 
 const KEY_PERC: u16 = 18;
 const NAME_PERC: u16 = 27;
@@ -32,6 +36,7 @@ const EDITOR_HINT_TEXT: &str = r"The Editor has two modes:
 pub enum KeybindingsTabs {
     Global,
     Editor,
+    MultiSelect,
 }
 
 impl KeybindingsTabs {
@@ -39,6 +44,7 @@ impl KeybindingsTabs {
         match self {
             KeybindingsTabs::Global => 0,
             KeybindingsTabs::Editor => 1,
+            KeybindingsTabs::MultiSelect => 2,
         }
     }
 
@@ -50,20 +56,26 @@ impl KeybindingsTabs {
         vec![
             Spans::from(vec![Span::styled("G", highlight_style), Span::raw("lobal")]),
             Spans::from(vec![Span::styled("E", highlight_style), Span::raw("ditor")]),
+            Spans::from(vec![
+                Span::styled("M", highlight_style),
+                Span::raw("ulti-Select"),
+            ]),
         ]
     }
 
     fn get_next(&self) -> KeybindingsTabs {
         match self {
             KeybindingsTabs::Global => KeybindingsTabs::Editor,
-            KeybindingsTabs::Editor => KeybindingsTabs::Global,
+            KeybindingsTabs::Editor => KeybindingsTabs::MultiSelect,
+            KeybindingsTabs::MultiSelect => KeybindingsTabs::Global,
         }
     }
 
     fn get_previous(&self) -> KeybindingsTabs {
         match self {
-            KeybindingsTabs::Global => KeybindingsTabs::Editor,
+            KeybindingsTabs::Global => KeybindingsTabs::MultiSelect,
             KeybindingsTabs::Editor => KeybindingsTabs::Global,
+            KeybindingsTabs::MultiSelect => KeybindingsTabs::Editor,
         }
     }
 }
@@ -78,14 +90,17 @@ pub enum HelpInputInputReturn {
 pub struct HelpPopup {
     selected_tab: KeybindingsTabs,
     global_bindings: GlobalBindings,
+    multi_select_bindings: MultiSelectBindings,
 }
 
 impl HelpPopup {
     pub fn new(selected_tab: KeybindingsTabs) -> Self {
         let global_bindings = GlobalBindings::new();
+        let multi_select_bindings = MultiSelectBindings::new();
         Self {
             selected_tab,
             global_bindings,
+            multi_select_bindings,
         }
     }
 
@@ -116,6 +131,9 @@ impl HelpPopup {
                 render_keybindings(frame, chunks[1], &mut self.global_bindings)
             }
             KeybindingsTabs::Editor => render_editor_hint(frame, chunks[1]),
+            KeybindingsTabs::MultiSelect => {
+                render_keybindings(frame, chunks[1], &mut self.multi_select_bindings)
+            }
         }
     }
 
@@ -132,6 +150,10 @@ impl HelpPopup {
                 self.selected_tab = KeybindingsTabs::Editor;
                 HelpInputInputReturn::Keep
             }
+            KeyCode::Char('m') => {
+                self.selected_tab = KeybindingsTabs::MultiSelect;
+                HelpInputInputReturn::Keep
+            }
             KeyCode::Tab | KeyCode::Right | KeyCode::Char('l') => {
                 self.selected_tab = self.selected_tab.get_next();
                 HelpInputInputReturn::Keep
@@ -144,6 +166,7 @@ impl HelpPopup {
                 match self.selected_tab {
                     KeybindingsTabs::Global => self.global_bindings.select_next(),
                     KeybindingsTabs::Editor => {}
+                    KeybindingsTabs::MultiSelect => self.multi_select_bindings.select_next(),
                 }
                 HelpInputInputReturn::Keep
             }
@@ -151,6 +174,7 @@ impl HelpPopup {
                 match self.selected_tab {
                     KeybindingsTabs::Global => self.global_bindings.select_previous(),
                     KeybindingsTabs::Editor => {}
+                    KeybindingsTabs::MultiSelect => self.multi_select_bindings.select_previous(),
                 }
                 HelpInputInputReturn::Keep
             }

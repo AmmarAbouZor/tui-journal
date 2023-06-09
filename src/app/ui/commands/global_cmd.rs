@@ -32,9 +32,13 @@ pub async fn continue_quit<'a, D: DataProvider>(
 }
 
 pub fn exec_show_help(ui_components: &mut UIComponents) -> CmdResult {
-    let start_tab = match ui_components.active_control {
-        ControlType::EntriesList => KeybindingsTabs::Global,
-        ControlType::EntryContentTxt => KeybindingsTabs::Editor,
+    let start_tab = match (
+        ui_components.active_control,
+        ui_components.entries_list.multi_select_mode,
+    ) {
+        (ControlType::EntriesList, false) => KeybindingsTabs::Global,
+        (ControlType::EntriesList, true) => KeybindingsTabs::MultiSelect,
+        (ControlType::EntryContentTxt, _) => KeybindingsTabs::Editor,
     };
 
     ui_components
