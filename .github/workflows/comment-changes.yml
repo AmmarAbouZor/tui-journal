@@ -23,9 +23,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: fregante/setup-git-user@v2.0.1
       - run: rustup update
 
-      - uses: baptiste0928/cargo-install@v2.0.0
+      - uses: baptiste0928/cargo-install@v2.1.0
         with:
           crate: aeruginous
 
