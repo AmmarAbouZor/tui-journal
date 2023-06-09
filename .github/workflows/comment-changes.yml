@@ -45,6 +45,7 @@ jobs:
           assignees: |
             AmmarAbouZor
           branch: documentation/aeruginous-comment-changes
+          branch-suffix: timestamp
           commit-message: '[Aeruginous] Create CHANGELOG Fragment'
           labels: |
             documentation
