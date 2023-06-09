@@ -112,4 +112,12 @@ impl DataProvider for SqliteDataProvide {
 
         Ok(entry)
     }
+
+    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
+        todo!()
+    }
+
+    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
+        todo!()
+    }
 }

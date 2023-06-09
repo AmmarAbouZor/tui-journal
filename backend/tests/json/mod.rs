@@ -89,3 +89,28 @@ async fn update_entry() {
     assert_eq!(entries[0].content, String::from("Updated Content"));
     assert_eq!(entries[1].title, String::from("Updated Title"));
 }
+
+#[tokio::test]
+async fn text_export_import() {
+    let temp_file_source = TempFile::new("json_export_source");
+    let provider_source = create_provide_with_two_entries(temp_file_source.file_path.clone()).await;
+
+    let created_ids = [0, 1];
+
+    let dto_source = provider_source
+        .get_export_object(&created_ids)
+        .await
+        .unwrap();
+
+    let temp_file_dist = TempFile::new("json_export_dist");
+    let provider_dist = JsonDataProvide::new(temp_file_dist.file_path.clone());
+
+    provider_dist
+        .import_entries(dto_source.clone())
+        .await
+        .unwrap();
+
+    let dto_dist = provider_dist.get_export_object(&created_ids).await.unwrap();
+
+    assert_eq!(dto_source, dto_dist);
+}

@@ -18,6 +18,8 @@ mod sqlite;
 #[cfg(feature = "sqlite")]
 pub use sqlite::SqliteDataProvide;
 
+pub const TRANSFER_DATA_VERSION: u16 = 100;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ModifyEntryError {
     #[error("{0}")]
@@ -32,6 +34,8 @@ pub trait DataProvider {
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
     async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
+    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO>;
+    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()>;
 }
 
 #[cfg_attr(feature = "sqlite", derive(FromRow))]
@@ -65,7 +69,7 @@ impl Entry {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntryDraft {
     pub date: DateTime<Utc>,
     pub title: String,
@@ -79,6 +83,30 @@ impl EntryDraft {
             date,
             title,
             content,
+        }
+    }
+
+    pub fn from_entry(entry: Entry) -> Self {
+        Self {
+            date: entry.date,
+            title: entry.title,
+            content: entry.content,
+        }
+    }
+}
+
+/// Entries data transfer object
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EntriesDTO {
+    pub version: u16,
+    pub entries: Vec<EntryDraft>,
+}
+
+impl EntriesDTO {
+    pub fn new(entries: Vec<EntryDraft>) -> Self {
+        Self {
+            version: TRANSFER_DATA_VERSION,
+            entries,
         }
     }
 }
