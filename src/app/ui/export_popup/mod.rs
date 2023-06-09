@@ -67,7 +67,7 @@ impl<'a> ExportPopup<'a> {
         Ok(export_popup)
     }
 
-    pub fn create_muti_select<D: DataProvider>(app: &App<D>) -> anyhow::Result<Self> {
+    pub fn create_multi_select<D: DataProvider>(app: &App<D>) -> anyhow::Result<Self> {
         let mut default_path = if let Some(path) = &app.settings.export.default_path {
             path.clone()
         } else {

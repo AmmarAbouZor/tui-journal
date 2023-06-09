@@ -165,7 +165,7 @@ pub fn exec_export_selected_entries<D: DataProvider>(
         return Ok(HandleInputReturnType::Handled);
     }
 
-    match ExportPopup::create_muti_select(app) {
+    match ExportPopup::create_multi_select(app) {
         Ok(popup) => ui_components
             .popup_stack
             .push(Popup::Export(Box::new(popup))),
