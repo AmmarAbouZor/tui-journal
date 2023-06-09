@@ -120,18 +120,20 @@ impl DataProvider for SqliteDataProvide {
             .collect::<Vec<String>>()
             .join(", ");
 
-        let entries: Vec<Entry> = sqlx::query_as(
+        let sql = format!(
             r"SELECT * FROM entries
-        WHERE id IN ($1)
+        WHERE id IN ({})
         ORDER BY date DESC",
-        )
-        .bind(&ids_text)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(|err| {
-            log::error!("Loading entries failed. Error Info {err}");
-            anyhow!(err)
-        })?;
+            ids_text
+        );
+
+        let entries: Vec<Entry> = sqlx::query_as(sql.as_str())
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|err| {
+                log::error!("Loading entries failed. Error Info {err}");
+                anyhow!(err)
+            })?;
 
         let entry_drafts = entries.into_iter().map(EntryDraft::from_entry).collect();
 

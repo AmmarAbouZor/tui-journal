@@ -97,6 +97,8 @@ async fn text_export_import() {
         .await
         .unwrap();
 
+    assert_eq!(dto_source.entries.len(), created_ids.len());
+
     let provider_dist = create_prvoider().await;
 
     provider_dist

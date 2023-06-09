@@ -102,6 +102,8 @@ async fn text_export_import() {
         .await
         .unwrap();
 
+    assert_eq!(dto_source.entries.len(), created_ids.len());
+
     let temp_file_dist = TempFile::new("json_export_dist");
     let provider_dist = JsonDataProvide::new(temp_file_dist.file_path.clone());
 
