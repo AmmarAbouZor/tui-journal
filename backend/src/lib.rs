@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
 
-#[cfg(feature = "json")]
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "sqlite")]
