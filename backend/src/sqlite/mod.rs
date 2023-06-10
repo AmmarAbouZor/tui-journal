@@ -112,4 +112,44 @@ impl DataProvider for SqliteDataProvide {
 
         Ok(entry)
     }
+
+    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
+        let ids_text = entries_ids
+            .iter()
+            .map(|id| id.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        let sql = format!(
+            r"SELECT * FROM entries
+        WHERE id IN ({})
+        ORDER BY date DESC",
+            ids_text
+        );
+
+        let entries: Vec<Entry> = sqlx::query_as(sql.as_str())
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|err| {
+                log::error!("Loading entries failed. Error Info {err}");
+                anyhow!(err)
+            })?;
+
+        let entry_drafts = entries.into_iter().map(EntryDraft::from_entry).collect();
+
+        Ok(EntriesDTO::new(entry_drafts))
+    }
+
+    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
+        debug_assert_eq!(
+            TRANSFER_DATA_VERSION, entries_dto.version,
+            "Version mismatches check if there is a need to do a converting to the data"
+        );
+
+        for entry_darft in entries_dto.entries {
+            self.add_entry(entry_darft).await?;
+        }
+
+        Ok(())
+    }
 }

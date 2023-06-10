@@ -21,9 +21,12 @@ async fn main() -> Result<()> {
 
     let cli = cli::Cli::parse();
 
+    let mut pending_cmd = None;
+
     match cli.handle_cli(&mut settings).await? {
         cli::CliResult::Return => return Ok(()),
         cli::CliResult::Continue => {}
+        cli::CliResult::PendingCommand(cmd) => pending_cmd = Some(cmd),
     }
 
     enable_raw_mode()?;
@@ -34,10 +37,12 @@ async fn main() -> Result<()> {
 
     chain_panic_hook();
 
-    app::run(&mut terminal, settings).await.map_err(|err| {
-        log::error!("[PANIC] {}", err.to_string());
-        err
-    })?;
+    app::run(&mut terminal, settings, pending_cmd)
+        .await
+        .map_err(|err| {
+            log::error!("[PANIC] {}", err.to_string());
+            err
+        })?;
 
     // restore terminal
     disable_raw_mode()?;

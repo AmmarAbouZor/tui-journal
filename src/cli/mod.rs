@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -8,6 +8,10 @@ use crate::{
     logging::{get_default_path, setup_logging},
     settings::{BackendType, Settings},
 };
+
+pub mod commands;
+pub use commands::CliCommand;
+pub use commands::PendingCliCommand;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -38,28 +42,14 @@ pub struct Cli {
     log_file: Option<PathBuf>,
 
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Option<CliCommand>,
 }
 
-#[derive(Subcommand, Debug)]
-pub enum Commands {
-    /// Print the current settings including the paths for the backend files
-    #[clap(visible_alias = "pc")]
-    PrintConfig,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CliResult {
     Return,
     Continue,
-}
-
-impl Commands {
-    pub async fn exec(self, settings: &mut Settings) -> anyhow::Result<()> {
-        match self {
-            Commands::PrintConfig => exec_print_config(settings).await,
-        }
-    }
+    PendingCommand(PendingCliCommand),
 }
 
 impl Cli {
@@ -87,8 +77,7 @@ impl Cli {
         setup_logging(self.verbose, self.log_file)?;
 
         if let Some(cmd) = self.command.take() {
-            cmd.exec(settings).await?;
-            Ok(CliResult::Return)
+            cmd.exec(settings).await
         } else {
             Ok(CliResult::Continue)
         }
@@ -129,14 +118,6 @@ async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Resu
 #[inline]
 fn set_backend_type(backend: BackendType, settings: &mut Settings) {
     settings.backend_type = Some(backend);
-}
-
-async fn exec_print_config(settings: &mut Settings) -> anyhow::Result<()> {
-    let settings_text = settings.get_as_text()?;
-
-    println!("{settings_text}");
-
-    Ok(())
 }
 
 fn log_help() -> String {

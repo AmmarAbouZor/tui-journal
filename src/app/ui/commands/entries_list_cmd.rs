@@ -234,7 +234,7 @@ pub fn export_entry_content<D: DataProvider>(ui_components: &mut UIComponents, a
         .current_entry_id
         .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
     {
-        match ExportPopup::create(entry, app) {
+        match ExportPopup::create_entry_content(entry, app) {
             Ok(popup) => ui_components
                 .popup_stack
                 .push(Popup::Export(Box::new(popup))),

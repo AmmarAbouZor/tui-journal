@@ -1,8 +1,8 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{collections::HashSet, fs::File, path::PathBuf};
 
-use backend::{DataProvider, Entry, EntryDraft};
+use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 
-use anyhow::Context;
+use anyhow::{anyhow, bail, Context};
 use chrono::{DateTime, Utc};
 pub use runner::run;
 pub use ui::UIComponents;
@@ -149,7 +149,7 @@ where
         Ok(())
     }
 
-    async fn export_journal_content(&self, entry_id: u32, path: PathBuf) -> anyhow::Result<()> {
+    async fn export_entry_content(&self, entry_id: u32, path: PathBuf) -> anyhow::Result<()> {
         if let Some(parent) = path.parent() {
             tokio::fs::create_dir_all(parent).await?;
         }
@@ -157,6 +157,40 @@ where
         let entry = self.get_entry(entry_id).expect("Entry should exist");
 
         tokio::fs::write(path, entry.content.to_owned()).await?;
+
+        Ok(())
+    }
+
+    async fn export_entries(&self, path: PathBuf) -> anyhow::Result<()> {
+        if let Some(parent) = path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+
+        let selected_ids: Vec<u32> = self.selected_entries.iter().cloned().collect();
+
+        let entries_dto = self.data_provide.get_export_object(&selected_ids).await?;
+
+        let file = File::create(path)?;
+        serde_json::to_writer_pretty(&file, &entries_dto)?;
+
+        Ok(())
+    }
+
+    async fn import_entries(&self, file_path: PathBuf) -> anyhow::Result<()> {
+        if !file_path.exists() {
+            bail!("Import file doesn't exist: path {}", file_path.display())
+        }
+
+        let file = File::open(file_path)
+            .map_err(|err| anyhow!("Error while opening import file: Error: {err}"))?;
+
+        let entries_dto: EntriesDTO = serde_json::from_reader(&file)
+            .map_err(|err| anyhow!("Error while parsing import file. Error: {err}"))?;
+
+        self.data_provide
+            .import_entries(entries_dto)
+            .await
+            .map_err(|err| anyhow!("Error while importing the entry. Error: {err}"))?;
 
         Ok(())
     }

@@ -280,6 +280,10 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
             UICommand::MulSelDeleteEntries,
         ),
         Keymap::new(
+            Input::new(KeyCode::Char('>'), KeyModifiers::NONE),
+            UICommand::MulSelExportEntries,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
             UICommand::ShowHelp,
         ),

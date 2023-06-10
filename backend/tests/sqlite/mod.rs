@@ -2,7 +2,7 @@ use backend::*;
 use chrono::{TimeZone, Utc};
 
 async fn create_provider_with_two_entries() -> SqliteDataProvide {
-    let provider = SqliteDataProvide::create("sqlite::memory:").await.unwrap();
+    let provider = create_prvoider().await;
 
     let mut entry_draft_1 = EntryDraft::new(Utc::now(), String::from("Title 1"));
     entry_draft_1.content.push_str("Content entry 1");
@@ -16,6 +16,11 @@ async fn create_provider_with_two_entries() -> SqliteDataProvide {
     provider.add_entry(entry_draft_2).await.unwrap();
 
     provider
+}
+
+#[inline]
+async fn create_prvoider() -> SqliteDataProvide {
+    SqliteDataProvide::create("sqlite::memory:").await.unwrap()
 }
 
 #[tokio::test]
@@ -79,4 +84,29 @@ async fn update_entry() {
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0].content, String::from("Updated Content"));
     assert_eq!(entries[1].title, String::from("Updated Title"));
+}
+
+#[tokio::test]
+async fn text_export_import() {
+    let provider_source = create_provider_with_two_entries().await;
+
+    let created_ids = [1, 2];
+
+    let dto_source = provider_source
+        .get_export_object(&created_ids)
+        .await
+        .unwrap();
+
+    assert_eq!(dto_source.entries.len(), created_ids.len());
+
+    let provider_dist = create_prvoider().await;
+
+    provider_dist
+        .import_entries(dto_source.clone())
+        .await
+        .unwrap();
+
+    let dto_dist = provider_dist.get_export_object(&created_ids).await.unwrap();
+
+    assert_eq!(dto_source, dto_dist);
 }

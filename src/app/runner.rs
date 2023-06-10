@@ -3,6 +3,7 @@ use crossterm::event::{Event, EventStream};
 use tui::{backend::Backend, Terminal};
 
 use crate::app::{App, UIComponents};
+use crate::cli::PendingCliCommand;
 use crate::settings::{BackendType, Settings};
 use futures_util::{FutureExt, StreamExt};
 
@@ -13,6 +14,7 @@ use backend::JsonDataProvide;
 use backend::SqliteDataProvide;
 
 use super::keymap::Input;
+use super::ui::ui_functions::render_message_centered;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {
@@ -21,7 +23,11 @@ pub enum HandleInputReturnType {
     ExitApp,
 }
 
-pub async fn run<B: Backend>(terminal: &mut Terminal<B>, settings: Settings) -> Result<()> {
+pub async fn run<B: Backend>(
+    terminal: &mut Terminal<B>,
+    settings: Settings,
+    pending_cmd: Option<PendingCliCommand>,
+) -> Result<()> {
     match settings.backend_type.unwrap_or_default() {
         #[cfg(feature = "json")]
         BackendType::Json => {
@@ -31,7 +37,7 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, settings: Settings) -> 
                 crate::settings::json_backend::get_default_json_path()?
             };
             let data_provider = JsonDataProvide::new(path);
-            run_intern(terminal, data_provider, settings).await
+            run_intern(terminal, data_provider, settings, pending_cmd).await
         }
         #[cfg(not(feature = "json"))]
         BackendType::Json => {
@@ -47,7 +53,7 @@ pub async fn run<B: Backend>(terminal: &mut Terminal<B>, settings: Settings) -> 
                 crate::settings::sqlite_backend::get_default_sqlite_path()?
             };
             let data_provider = SqliteDataProvide::from_file(path).await?;
-            run_intern(terminal, data_provider, settings).await
+            run_intern(terminal, data_provider, settings, pending_cmd).await
         }
         #[cfg(not(feature = "sqlite"))]
         BackendType::Sqlite => {
@@ -62,6 +68,7 @@ async fn run_intern<B, D>(
     terminal: &mut Terminal<B>,
     data_provider: D,
     settings: Settings,
+    pending_cmd: Option<PendingCliCommand>,
 ) -> anyhow::Result<()>
 where
     B: Backend,
@@ -69,6 +76,11 @@ where
 {
     let mut ui_components = UIComponents::new();
     let mut app = App::new(data_provider, settings);
+    if let Some(cmd) = pending_cmd {
+        if let Err(err) = exec_pending_cmd(terminal, &app, cmd).await {
+            ui_components.show_err_msg(err.to_string());
+        }
+    }
     if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
     }
@@ -106,6 +118,22 @@ where
             },
         }
     }
+}
+
+async fn exec_pending_cmd<B: Backend, D: DataProvider>(
+    terminal: &mut Terminal<B>,
+    app: &App<D>,
+    pending_cmd: PendingCliCommand,
+) -> anyhow::Result<()> {
+    match pending_cmd {
+        PendingCliCommand::ImportJorunals(file_path) => {
+            terminal.draw(|f| render_message_centered(f, "Importing journals..."))?;
+
+            app.import_entries(file_path).await?;
+        }
+    }
+
+    Ok(())
 }
 
 fn draw_ui<B: Backend, D: DataProvider>(

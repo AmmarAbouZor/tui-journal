@@ -19,22 +19,26 @@ use super::{
 
 const FOOTER_TEXT: &str = "Enter: confirm | Esc or <Ctrl-c>: Cancel";
 const FOOTER_MARGINE: u16 = 8;
+const DEFAULT_FILE_NAME: &str = "tjournal_export.json";
 
 pub struct ExportPopup<'a> {
     path_txt: TextArea<'a>,
     path_err_msg: String,
-    entry_id: u32,
-    entry_title: String,
+    entry_id: Option<u32>,
+    paragraph_text: String,
 }
 
 pub enum ExportPopupInputReturn {
     KeepPopup,
     Cancel,
-    Export(u32, PathBuf),
+    Export(PathBuf, Option<u32>),
 }
 
 impl<'a> ExportPopup<'a> {
-    pub fn create<D: DataProvider>(entry: &Entry, app: &App<D>) -> anyhow::Result<Self> {
+    pub fn create_entry_content<D: DataProvider>(
+        entry: &Entry,
+        app: &App<D>,
+    ) -> anyhow::Result<Self> {
         let mut default_path = if let Some(path) = &app.settings.export.default_path {
             path.clone()
         } else {
@@ -49,11 +53,45 @@ impl<'a> ExportPopup<'a> {
         let mut path_txt = TextArea::new(vec![default_path.to_string_lossy().to_string()]);
         path_txt.move_cursor(CursorMove::End);
 
+        let paragraph_text = format!("Journal: {}", entry.title.to_owned());
+
         let mut export_popup = ExportPopup {
             path_txt,
             path_err_msg: String::default(),
-            entry_id: entry.id,
-            entry_title: entry.title.to_owned(),
+            entry_id: Some(entry.id),
+            paragraph_text,
+        };
+
+        export_popup.validate_path();
+
+        Ok(export_popup)
+    }
+
+    pub fn create_multi_select<D: DataProvider>(app: &App<D>) -> anyhow::Result<Self> {
+        let mut default_path = if let Some(path) = &app.settings.export.default_path {
+            path.clone()
+        } else {
+            env::current_dir()?
+        };
+
+        // Add filename if it's not already defined
+        if default_path.extension().is_none() {
+            default_path.push(DEFAULT_FILE_NAME);
+        }
+
+        let mut path_txt = TextArea::new(vec![default_path.to_string_lossy().to_string()]);
+        path_txt.move_cursor(CursorMove::End);
+
+        let paragraph_text = format!(
+            "Export the selected {} journals",
+            app.selected_entries.len()
+        );
+
+        let mut export_popup = ExportPopup {
+            path_txt,
+            path_err_msg: String::default(),
+            entry_id: None,
+            paragraph_text,
         };
 
         export_popup.validate_path();
@@ -79,6 +117,10 @@ impl<'a> ExportPopup<'a> {
         self.path_err_msg.is_empty()
     }
 
+    fn is_multi_select_mode(&self) -> bool {
+        self.entry_id.is_none()
+    }
+
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
         let mut area = centered_rect_exact_height(70, 11, area);
 
@@ -86,9 +128,13 @@ impl<'a> ExportPopup<'a> {
             area.height += 1;
         }
 
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .title("Export journal content");
+        let title = if self.is_multi_select_mode() {
+            "Export journals"
+        } else {
+            "Export journal content"
+        };
+
+        let block = Block::default().borders(Borders::ALL).title(title);
 
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
@@ -108,8 +154,8 @@ impl<'a> ExportPopup<'a> {
             )
             .split(area);
 
-        let journal_para_text = format!("Journal: {}", self.entry_title);
-        let journal_paragraph = Paragraph::new(journal_para_text).wrap(Wrap { trim: false });
+        let journal_paragraph =
+            Paragraph::new(self.paragraph_text.as_str()).wrap(Wrap { trim: false });
         frame.render_widget(journal_paragraph, chunks[0]);
 
         if self.path_err_msg.is_empty() {
@@ -167,6 +213,6 @@ impl<'a> ExportPopup<'a> {
             .parse()
             .expect("PathBuf from string should never fail");
 
-        ExportPopupInputReturn::Export(self.entry_id, path)
+        ExportPopupInputReturn::Export(path, self.entry_id)
     }
 }
