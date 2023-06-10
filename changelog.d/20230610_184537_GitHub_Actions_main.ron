@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "Synchronizing problems with sqlite back-end",
+    ],
+  },
+)
