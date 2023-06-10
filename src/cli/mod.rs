@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -8,6 +8,10 @@ use crate::{
     logging::{get_default_path, setup_logging},
     settings::{BackendType, Settings},
 };
+
+pub mod commands;
+pub use commands::CliCommand;
+pub use commands::PendingCliCommand;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -41,41 +45,11 @@ pub struct Cli {
     pub command: Option<CliCommand>,
 }
 
-#[derive(Subcommand, Debug, Clone, PartialEq, Eq)]
-pub enum CliCommand {
-    /// Print the current settings including the paths for the back-end files
-    #[clap(visible_alias = "pc")]
-    PrintConfig,
-    /// Import journals from the given JSON file path to the current back-end file
-    #[clap(visible_alias = "imj")]
-    ImportJournals {
-        /// Path of JSON file
-        #[arg(short = 'p', long = "path", required = true, value_name = "FILE PATH")]
-        file_path: PathBuf,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PendingCliCommand {
-    ImportJorunals(PathBuf),
-}
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CliResult {
     Return,
     Continue,
     PendingCommand(PendingCliCommand),
-}
-
-impl CliCommand {
-    pub async fn exec(self, settings: &mut Settings) -> anyhow::Result<CliResult> {
-        match self {
-            CliCommand::PrintConfig => exec_print_config(settings).await,
-            CliCommand::ImportJournals { file_path: path } => Ok(CliResult::PendingCommand(
-                PendingCliCommand::ImportJorunals(path),
-            )),
-        }
-    }
 }
 
 impl Cli {
@@ -144,14 +118,6 @@ async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Resu
 #[inline]
 fn set_backend_type(backend: BackendType, settings: &mut Settings) {
     settings.backend_type = Some(backend);
-}
-
-async fn exec_print_config(settings: &mut Settings) -> anyhow::Result<CliResult> {
-    let settings_text = settings.get_as_text()?;
-
-    println!("{settings_text}");
-
-    Ok(CliResult::Return)
 }
 
 fn log_help() -> String {
