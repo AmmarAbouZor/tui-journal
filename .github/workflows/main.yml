@@ -10,6 +10,16 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.5.3
+        with:
+          persist-credentials: false
+
+      - uses: devops-actions/actionlint@v0.1.1
+
   build:
 
     runs-on: ubuntu-latest
@@ -44,17 +54,3 @@ jobs:
       - uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
           args: --validate
-
-  super-linter:
-    name: super-linter
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.5.2
-        with:
-          persist-credentials: false
-
-      - env:
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_GITHUB_ACTIONS: true
-        uses: super-linter/super-linter/slim@v5.0.0
