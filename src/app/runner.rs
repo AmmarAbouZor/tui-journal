@@ -77,7 +77,9 @@ where
     let mut ui_components = UIComponents::new();
     let mut app = App::new(data_provider, settings);
     if let Some(cmd) = pending_cmd {
-        exec_pending_cmd(terminal, &app, cmd).await?;
+        if let Err(err) = exec_pending_cmd(terminal, &app, cmd).await {
+            ui_components.show_err_msg(err.to_string());
+        }
     }
     if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
