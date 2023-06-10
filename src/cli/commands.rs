@@ -8,13 +8,13 @@ use super::*;
 
 #[derive(Subcommand, Debug, Clone, PartialEq, Eq)]
 pub enum CliCommand {
-    /// Print the current settings including the paths for the back-end files
+    /// Print the current settings including the paths for the back-end files.
     #[clap(visible_alias = "pc")]
     PrintConfig,
-    /// Import journals from the given JSON file path to the current back-end file
+    /// Import journals from the given transfer JSON file to the current back-end file.
     #[clap(visible_alias = "imj")]
     ImportJournals {
-        /// Path of JSON file
+        /// Path of the JSON file to import from.
         #[arg(short = 'p', long = "path", required = true, value_name = "FILE PATH")]
         file_path: PathBuf,
     },

@@ -190,7 +190,7 @@ where
         self.data_provide
             .import_entries(entries_dto)
             .await
-            .map_err(|err| anyhow!("Error while importing the entrie. Error: {err}"))?;
+            .map_err(|err| anyhow!("Error while importing the entry. Error: {err}"))?;
 
         Ok(())
     }
