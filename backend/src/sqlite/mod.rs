@@ -1,8 +1,12 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use super::*;
 use anyhow::anyhow;
-use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use sqlx::{
+    migrate::MigrateDatabase,
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
+    Sqlite, SqlitePool,
+};
 
 pub struct SqliteDataProvide {
     pool: SqlitePool,
@@ -31,7 +35,14 @@ impl SqliteDataProvide {
             Sqlite::create_database(db_url).await?;
         }
 
-        let pool = SqlitePool::connect(db_url).await?;
+        // We are using the database as a normal file for one user.
+        // Journal mode will causes problems with the synchronisation in our case and it must be
+        // turned off
+        let options = SqliteConnectOptions::from_str(db_url)?
+            .journal_mode(SqliteJournalMode::Off)
+            .synchronous(SqliteSynchronous::Off);
+
+        let pool = SqlitePoolOptions::new().connect_with(options).await?;
 
         sqlx::migrate!("backend/src/sqlite/migrations")
             .run(&pool)
