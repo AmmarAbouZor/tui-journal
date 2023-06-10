@@ -14,6 +14,7 @@ use backend::JsonDataProvide;
 use backend::SqliteDataProvide;
 
 use super::keymap::Input;
+use super::ui::ui_functions::render_message_centered;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {
@@ -124,17 +125,13 @@ async fn exec_pending_cmd<B: Backend, D: DataProvider>(
 ) -> anyhow::Result<()> {
     match pending_cmd {
         PendingCliCommand::ImportJorunals(file_path) => {
-            render_working(terminal, "Importing journals...");
+            terminal.draw(|f| render_message_centered(f, "Importing journals..."))?;
 
             app.import_entries(file_path).await?;
         }
     }
 
     Ok(())
-}
-
-fn render_working<B: Backend>(terminal: &mut Terminal<B>, working_text: &str) {
-    //TODO: render small message box with the working text inside it
 }
 
 fn draw_ui<B: Backend, D: DataProvider>(

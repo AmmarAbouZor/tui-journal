@@ -37,7 +37,7 @@ mod export_popup;
 mod footer;
 mod help_popup;
 mod msg_box;
-mod ui_functions;
+pub mod ui_functions;
 
 pub use commands::UICommand;
 pub use msg_box::MsgBoxResult;
