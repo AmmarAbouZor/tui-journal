@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Changed": [
-      "improve GHA linting speed dramatically",
-    ],
-  },
-)

@@ -1,9 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "configure CHANGELOG maintenance utilities",
-      "CITATION.cff",
-    ],
-  },
-)
