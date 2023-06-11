@@ -1,0 +1,25 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "Export journal file extension",
+      "Setting back-end path from CLI",
+      "Editor will be cleared after deleting entries if there are no entries left",
+    ],
+    "Added": [
+      "Edit current journal content in external editor",
+      "Release CD action",
+      "Export current journal\'s content",
+    ],
+    "Changed": [
+      "Enhance render loop",
+      "Help popup improvements",
+      "CI Improvements",
+      "[Documentation] Create README Badges",
+      "settings Fixes & improvements",
+      "Add section to install the dependency  OpenSSL development package on Linux",
+      "Add NetBSD",
+      "Make creating new entry more user-friendly postponing the validation at initialisation",
+    ],
+  },
+)
