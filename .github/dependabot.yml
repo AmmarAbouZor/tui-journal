@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: "weekly"
+    assignees:
+      - AmmarAbouZor
+    commit-message:
+      prefix: 'Chore: '
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: "weekly" 
+    assignees:
+      - AmmarAbouZor
+    commit-message:
+      prefix: 'Chore: '
