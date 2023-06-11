@@ -36,9 +36,10 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from withing the app.
 - Control many journals at once via the multi-select mode
-- See the keybindings from inside the app
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
+- Export and Import journals between different back-end files.
 - Export the current journal's content to a predefined export path or the current directory 
+- See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
 
 ## Roadmap
@@ -124,6 +125,7 @@ Usage: tjournal [OPTIONS] [COMMAND]
 
 Commands:
   print-config  Print the current settings including the paths for the backend files [aliases: pc]
+  import-journals  Import journals from the given transfer JSON file to the current back-end file [aliases: imj]
   help          Print this message or the help of the given subcommand(s)
 
 Options:
@@ -151,7 +153,7 @@ backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqli
 external_editor = "nvim"
 
 [export]
-default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export journal content. Falls back to the current directory if not specified.
+default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.
 
 [json_backend]
