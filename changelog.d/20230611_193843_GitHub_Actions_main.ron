@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "- update install rust toolchain action since the old one isn\'t available\r\n  anymore",
+    ],
+  },
+)
