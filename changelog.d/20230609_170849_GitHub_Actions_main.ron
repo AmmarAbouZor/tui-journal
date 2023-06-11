@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Changed": [
-      "bump baptiste0928/cargo-install to v2.1.0",
-    ],
-  },
-)

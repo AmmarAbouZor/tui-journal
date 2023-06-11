@@ -3,5 +3,51 @@
     "Keep a Changelog": "https://keepachangelog.com/en/1.0.0/",
   },
   introduction: Some("All notable changes to this project are documented in this file.\n\nThe format is based on `Keep a Changelog`_."),
-  sections: [],
+  sections: [
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 1,
+        patch: 4,
+      ),
+      released: "2023-06-11T18:52:52.732030789+00:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Export Import functions for multiple journals",
+            "configure CHANGELOG maintenance utilities",
+            "CITATION.cff",
+            "Edit current journal content in external editor",
+            "Release CD action",
+            "Export current journal\'s content",
+            "Multi-selection for journals",
+            "Tabs and scrolling to help popup",
+          ],
+          "Changed": [
+            "bump baptiste0928/cargo-install to v2.1.0",
+            "improve GHA linting speed dramatically",
+            "Enhance render loop",
+            "Help popup improvements",
+            "CI Improvements",
+            "[Documentation] Create README Badges",
+            "settings Fixes & improvements",
+            "Add section to install the dependency  OpenSSL development package on Linux",
+            "Add NetBSD",
+            "Make creating new entry more user-friendly postponing the validation at initialisation",
+            "Option to Use Git Configured Editor as External editor",
+          ],
+          "Fixed": [
+            "Export journal file extension",
+            "Setting back-end path from CLI",
+            "Editor will be cleared after deleting entries if there are no entries left",
+            "bugs in fragment creation",
+            "Synchronizing problems with sqlite back-end",
+          ],
+        },
+      ),
+    ),
+  ],
 )
