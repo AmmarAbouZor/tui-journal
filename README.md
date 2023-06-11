@@ -146,7 +146,8 @@ Here is a sample of the settings in the `config.toml` file:
 
 ```toml
 backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqlite.
-# Set the external terminal editor to use from withing the app. If the value isn't set the app will use the environment varialbes VISUAL, EDITOR then it'll try with vi.  
+# Set the external terminal editor to use from withing the app.
+# If the value isn't set the app will try to retrieve the editor from git global configurations then It'll try with the environment varialbes VISUAL, EDITOR then it'll fallback to vi.  
 external_editor = "nvim"
 
 [export]
