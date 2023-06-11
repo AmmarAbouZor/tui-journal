@@ -20,7 +20,7 @@ log = "0.4.17"
 chrono = { version = "0.4.24", features = ["serde"] }
 async-trait = "0.1.68"
 clap = { version = "4.2.4", features = ["derive"] }
-crossterm = {version =  "0.25", features = ["event-stream"]}
+crossterm = {version =  "0.26", features = ["event-stream"]}
 directories = "5.0.0"
 simplelog = "0.12.1"
 textwrap = "0.16.0"
