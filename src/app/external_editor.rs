@@ -24,6 +24,7 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
         .external_editor
         .as_ref()
         .cloned()
+        .or_else(|| get_git_editor().ok())
         .or_else(|| env::var(ENV_EDITOR_OPTIONS[0]).ok())
         .or_else(|| env::var(ENV_EDITOR_OPTIONS[1]).ok())
         .unwrap_or(String::from("vi"));
@@ -74,4 +75,17 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
         })?;
 
     Ok(())
+}
+
+/// Tries to get the configured git editor from Git global config.
+fn get_git_editor() -> anyhow::Result<String> {
+    let config = git2::Config::open_default()?;
+    let editor = config.get_string("core.editor").map_err(|err| {
+        log::trace!("Failed to retrieve git editor, Err: {err}");
+        err
+    })?;
+
+    log::trace!("Git editor is: {}", editor);
+
+    Ok(editor)
 }
