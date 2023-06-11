@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "Option to Use Git Configured Editor as External editor",
+    ],
+  },
+)
