@@ -59,12 +59,17 @@ where
         self.entries.iter().find(|e| e.id == entry_id)
     }
 
-    pub async fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
+    pub async fn add_entry(
+        &mut self,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+    ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
         let entry = self
             .data_provide
-            .add_entry(EntryDraft::new(date, title))
+            .add_entry(EntryDraft::new(date, title, tags))
             .await?;
         let entry_id = entry.id;
 
@@ -89,6 +94,7 @@ where
         &mut self,
         title: String,
         date: DateTime<Utc>,
+        tags: Vec<String>,
     ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
 
@@ -100,6 +106,7 @@ where
 
         entry.title = title;
         entry.date = date;
+        entry.tags = tags;
 
         let clone = entry.clone();
 

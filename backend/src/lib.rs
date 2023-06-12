@@ -38,23 +38,31 @@ pub trait DataProvider {
 }
 
 #[cfg_attr(feature = "sqlite", derive(FromRow))]
-#[cfg_attr(feature = "json", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     pub id: u32,
     pub date: DateTime<Utc>,
     pub title: String,
     pub content: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 impl Entry {
     #[allow(dead_code)]
-    pub fn new(id: u32, date: DateTime<Utc>, title: String, content: String) -> Self {
+    pub fn new(
+        id: u32,
+        date: DateTime<Utc>,
+        title: String,
+        content: String,
+        tags: Vec<String>,
+    ) -> Self {
         Self {
             id,
             date,
             title,
             content,
+            tags,
         }
     }
 
@@ -64,6 +72,7 @@ impl Entry {
             date: draft.date,
             title: draft.title,
             content: draft.content,
+            tags: draft.tags,
         }
     }
 }
@@ -73,15 +82,17 @@ pub struct EntryDraft {
     pub date: DateTime<Utc>,
     pub title: String,
     pub content: String,
+    pub tags: Vec<String>,
 }
 
 impl EntryDraft {
-    pub fn new(date: DateTime<Utc>, title: String) -> Self {
+    pub fn new(date: DateTime<Utc>, title: String, tags: Vec<String>) -> Self {
         let content = String::new();
         Self {
             date,
             title,
             content,
+            tags,
         }
     }
 
@@ -90,6 +101,7 @@ impl EntryDraft {
             date: entry.date,
             title: entry.title,
             content: entry.content,
+            tags: entry.tags,
         }
     }
 }

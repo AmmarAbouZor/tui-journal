@@ -263,12 +263,15 @@ impl<'a> EntryPopup<'a> {
             .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
             .unwrap();
 
-        if self.is_edit_entry {
-            app.update_current_entry(title, date).await?;
-            Ok(EntryPopupInputReturn::UpdateCurrentEntry)
-        } else {
-            let entry_id = app.add_entry(title, date).await?;
-            Ok(EntryPopupInputReturn::AddEntry(entry_id))
-        }
+        //TODO:
+        todo!()
+
+        // if self.is_edit_entry {
+        //     app.update_current_entry(title, date).await?;
+        //     Ok(EntryPopupInputReturn::UpdateCurrentEntry)
+        // } else {
+        //     let entry_id = app.add_entry(title, date).await?;
+        //     Ok(EntryPopupInputReturn::AddEntry(entry_id))
+        // }
     }
 }

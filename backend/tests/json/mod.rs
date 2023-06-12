@@ -9,11 +9,16 @@ mod temp_file;
 
 async fn create_provide_with_two_entries(path_file: PathBuf) -> JsonDataProvide {
     let json_provide = JsonDataProvide::new(path_file);
-    let mut entry_draft_1 = EntryDraft::new(Utc::now(), String::from("Title 1"));
+    let mut entry_draft_1 = EntryDraft::new(
+        Utc::now(),
+        String::from("Title 1"),
+        vec![String::from("Tag_1"), String::from("Tag_2")],
+    );
     entry_draft_1.content.push_str("Content entry 1");
     let mut entry_draft_2 = EntryDraft::new(
         Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
         String::from("Title 2"),
+        Vec::new(),
     );
     entry_draft_2.content.push_str("Content entry 2");
 
@@ -45,6 +50,7 @@ async fn add_entry() {
     let mut entry_draft = EntryDraft::new(
         Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
         String::from("Title added"),
+        vec![String::from("Tag_1"), String::from("Tag_3")],
     );
     entry_draft.content.push_str("Content entry added");
 
@@ -56,6 +62,10 @@ async fn add_entry() {
     assert_eq!(entries[2].id, 2);
     assert_eq!(entries[2].title, String::from("Title added"));
     assert_eq!(entries[2].content, String::from("Content entry added"));
+    assert_eq!(
+        entries[2].tags,
+        vec![String::from("Tag_1"), String::from("Tag_3")]
+    );
 }
 
 #[tokio::test]
@@ -79,6 +89,7 @@ async fn update_entry() {
 
     entries[0].content = String::from("Updated Content");
     entries[1].title = String::from("Updated Title");
+    entries[1].tags.push(String::from("Tag_4"));
 
     provider.update_entry(entries.pop().unwrap()).await.unwrap();
     provider.update_entry(entries.pop().unwrap()).await.unwrap();
@@ -88,6 +99,7 @@ async fn update_entry() {
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0].content, String::from("Updated Content"));
     assert_eq!(entries[1].title, String::from("Updated Title"));
+    assert!(entries[1].tags.contains(&String::from("Tag_4")));
 }
 
 #[tokio::test]
