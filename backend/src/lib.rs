@@ -4,9 +4,6 @@ use async_trait::async_trait;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "sqlite")]
-use sqlx::FromRow;
-
 #[cfg(feature = "json")]
 mod json;
 #[cfg(feature = "json")]
@@ -37,7 +34,6 @@ pub trait DataProvider {
     async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()>;
 }
 
-#[cfg_attr(feature = "sqlite", derive(FromRow))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entry {
     pub id: u32,

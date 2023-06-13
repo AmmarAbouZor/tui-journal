@@ -88,6 +88,7 @@ async fn update_entry() {
     let mut entries = provider.load_all_entries().await.unwrap();
 
     entries[0].content = String::from("Updated Content");
+    entries[0].tags.pop().unwrap();
     entries[1].title = String::from("Updated Title");
     entries[1].tags.push(String::from("Tag_4"));
 
@@ -98,6 +99,7 @@ async fn update_entry() {
 
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0].content, String::from("Updated Content"));
+    assert_eq!(entries[0].tags.len(), 1);
     assert_eq!(entries[1].title, String::from("Updated Title"));
     assert!(entries[1].tags.contains(&String::from("Tag_4")));
 }
