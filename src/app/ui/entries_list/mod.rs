@@ -90,6 +90,27 @@ impl<'a> EntriesList {
                         .remove_modifier(Modifier::BOLD),
                 )));
 
+                if !entry.tags.is_empty() {
+                    let tags: Vec<String> = entry.tags.iter().map(String::from).collect();
+                    let tag_line = tags.join(" | ");
+
+                    // Text wrapping
+                    let tag_line =
+                        textwrap::wrap(&tag_line, area.width as usize - LIST_INNER_MARGINE);
+
+                    tag_line
+                        .into_iter()
+                        .map(|line| {
+                            Spans::from(Span::styled(
+                                line.to_string(),
+                                Style::default()
+                                    .fg(Color::LightCyan)
+                                    .add_modifier(Modifier::DIM),
+                            ))
+                        })
+                        .for_each(|span| spans.push(span));
+                }
+
                 ListItem::new(spans)
             })
             .collect();
