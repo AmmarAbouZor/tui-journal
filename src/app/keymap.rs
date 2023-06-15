@@ -189,6 +189,14 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
             UICommand::EnterMultiSelectMode,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('f'), KeyModifiers::NONE),
+            UICommand::ShowFilter,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('x'), KeyModifiers::NONE),
+            UICommand::ResetFilter,
+        ),
     ]
 }
 

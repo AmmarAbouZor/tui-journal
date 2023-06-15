@@ -1,4 +1,8 @@
-use std::{collections::HashSet, fs::File, path::PathBuf};
+use std::{
+    collections::{BTreeSet, HashSet},
+    fs::File,
+    path::PathBuf,
+};
 
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 
@@ -8,6 +12,7 @@ pub use runner::run;
 pub use ui::UIComponents;
 
 mod external_editor;
+mod filter;
 mod keymap;
 mod runner;
 mod ui;
@@ -15,6 +20,8 @@ mod ui;
 pub use runner::HandleInputReturnType;
 
 use crate::settings::Settings;
+
+use self::filter::Filter;
 
 pub struct App<D>
 where
@@ -26,6 +33,7 @@ where
     pub selected_entries: HashSet<u32>,
     pub settings: Settings,
     pub redraw_after_restore: bool,
+    pub filter: Option<Filter>,
 }
 
 impl<D> App<D>
@@ -42,6 +50,7 @@ where
             selected_entries,
             settings,
             redraw_after_restore: false,
+            filter: None,
         }
     }
 
@@ -200,5 +209,15 @@ where
             .map_err(|err| anyhow!("Error while importing the entry. Error: {err}"))?;
 
         Ok(())
+    }
+
+    fn get_all_tags(&self) -> Vec<String> {
+        let mut tags = BTreeSet::new();
+
+        for tag in self.entries.iter().flat_map(|entry| &entry.tags) {
+            tags.insert(tag);
+        }
+
+        tags.into_iter().map(String::from).collect()
     }
 }

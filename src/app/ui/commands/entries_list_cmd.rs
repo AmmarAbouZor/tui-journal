@@ -333,3 +333,53 @@ pub async fn continue_edit_in_external_editor<'a, D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_show_filter<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ShowFilter));
+    } else {
+        show_filter(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn show_filter<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    let tags = app.get_all_tags();
+    ui_components
+        .popup_stack
+        .push(Popup::Filter(Box::new(FilterPopup::new(
+            tags,
+            app.filter.clone(),
+        ))));
+}
+
+pub async fn continue_show_filter<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            show_filter(ui_components, app);
+        }
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            show_filter(ui_components, app);
+        }
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    app.filter = None;
+
+    Ok(HandleInputReturnType::Handled)
+}
