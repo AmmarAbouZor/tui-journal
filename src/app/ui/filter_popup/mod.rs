@@ -1,12 +1,23 @@
 use std::collections::HashSet;
 
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::{backend::Backend, layout::Rect, widgets::ListState, Frame};
+use tui::{
+    backend::Backend,
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
+    Frame,
+};
 
 use crate::app::{
     filter::{CriteriaRelation, Filter, FilterCritrion},
     keymap::Input,
 };
+
+use super::ui_functions::centered_rect;
+
+const FOOTER_TEXT: &str = r"Enter or <Ctrl-m>: confirm | r: Change relations | <Space>: Toggle selected | Esc or q or <Ctrl-c>: Cancel";
+const FOOTER_MARGINE: u16 = 8;
 
 pub struct FilterPopup {
     state: ListState,
@@ -35,16 +46,126 @@ impl FilterPopup {
             })
             .collect();
 
-        Self {
+        let mut filter_popup = FilterPopup {
             state: ListState::default(),
             tags,
             relation,
             selected_tags,
-        }
+        };
+
+        filter_popup.cycle_next_tag();
+
+        filter_popup
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        todo!()
+        let area = centered_rect(70, 70, area);
+
+        let block = Block::default().borders(Borders::ALL).title("Filter");
+        frame.render_widget(Clear, area);
+        frame.render_widget(block, area);
+
+        let footer_height = if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
+            2
+        } else {
+            1
+        };
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .horizontal_margin(4)
+            .vertical_margin(2)
+            .constraints(
+                [
+                    Constraint::Length(3),
+                    Constraint::Min(4),
+                    Constraint::Length(footer_height),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+
+        let relation_text = match self.relation {
+            CriteriaRelation::And => "Journals must meet all the criteria",
+            CriteriaRelation::Or => "Journals must meet any of the criteria",
+        };
+
+        let relation = Paragraph::new(relation_text)
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .title("Criteria Relations"),
+            );
+
+        frame.render_widget(relation, chunks[0]);
+
+        if self.tags.is_empty() {
+            self.render_tags_place_holder(frame, chunks[1]);
+        } else {
+            self.render_tags_list(frame, chunks[1]);
+        }
+
+        let footer = Paragraph::new(FOOTER_TEXT)
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: false })
+            .block(
+                Block::default()
+                    .borders(Borders::NONE)
+                    .style(Style::default()),
+            );
+
+        frame.render_widget(footer, chunks[2]);
+    }
+
+    fn render_tags_list<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+        let items: Vec<ListItem> = self
+            .tags
+            .iter()
+            .map(|tag| {
+                let is_selected = self.selected_tags.contains(tag);
+
+                let (tag_text, style) = if is_selected {
+                    (
+                        format!("* {tag}"),
+                        Style::default()
+                            .fg(Color::LightYellow)
+                            .add_modifier(Modifier::BOLD),
+                    )
+                } else {
+                    (tag.to_owned(), Style::default())
+                };
+
+                ListItem::new(tag_text).style(style)
+            })
+            .collect();
+
+        let list = List::new(items)
+            .block(FilterPopup::get_list_block())
+            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
+            .highlight_symbol(">> ");
+
+        frame.render_stateful_widget(list, area, &mut self.state);
+    }
+
+    fn render_tags_place_holder<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+        let place_holder_text = String::from("\nNo entries with tags to select from");
+
+        let place_holder = Paragraph::new(place_holder_text)
+            .wrap(Wrap { trim: false })
+            .alignment(Alignment::Center)
+            .block(FilterPopup::get_list_block());
+
+        frame.render_widget(place_holder, area);
+    }
+
+    #[inline]
+    fn get_list_block<'a>() -> Block<'a> {
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Tags")
+            .border_type(BorderType::Rounded)
     }
 
     pub fn handle_input(&mut self, input: &Input) -> FilterPopupReturn {
@@ -52,11 +173,11 @@ impl FilterPopup {
 
         match input.key_code {
             KeyCode::Char('j') | KeyCode::Down => {
-                self.select_next();
+                self.cycle_next_tag();
                 FilterPopupReturn::KeepPopup
             }
             KeyCode::Char('k') | KeyCode::Up => {
-                self.select_prev();
+                self.cycle_prev_tag();
                 FilterPopupReturn::KeepPopup
             }
             KeyCode::Char(' ') => {
@@ -76,7 +197,7 @@ impl FilterPopup {
     }
 
     #[inline]
-    fn select_next(&mut self) {
+    fn cycle_next_tag(&mut self) {
         if self.tags.is_empty() {
             return;
         }
@@ -92,7 +213,7 @@ impl FilterPopup {
     }
 
     #[inline]
-    fn select_prev(&mut self) {
+    fn cycle_prev_tag(&mut self) {
         if self.tags.is_empty() {
             return;
         }
