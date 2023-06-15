@@ -47,8 +47,7 @@ impl<'a> EntriesList {
         };
 
         let items: Vec<ListItem> = app
-            .entries
-            .iter()
+            .get_active_entries()
             .map(|entry| {
                 let highlight_selected =
                     self.multi_select_mode && app.selected_entries.contains(&entry.id);
@@ -186,7 +185,7 @@ impl<'a> EntriesList {
         app: &App<D>,
         list_keymaps: &[Keymap],
     ) {
-        if app.entries.is_empty() {
+        if app.get_active_entries().next().is_none() {
             self.render_place_holder(frame, area, list_keymaps);
         } else {
             self.render_list(frame, app, area);

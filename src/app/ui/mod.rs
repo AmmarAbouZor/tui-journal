@@ -107,7 +107,7 @@ impl<'a, 'b> UIComponents<'a> {
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
         app.current_entry_id = entry_id;
         if let Some(id) = entry_id {
-            let entry_index = app.entries.iter().position(|entry| entry.id == id);
+            let entry_index = app.get_active_entries().position(|entry| entry.id == id);
             self.entries_list.state.select(entry_index);
         }
 
@@ -259,7 +259,11 @@ impl<'a, 'b> UIComponents<'a> {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
                     filter_popup::FilterPopupReturn::Apply(filter) => {
-                        app.filter = filter;
+                        app.aplay_filter(filter);
+                        if app.get_current_entry().is_none() {
+                            let first_entry = app.get_active_entries().next().map(|entry| entry.id);
+                            self.set_current_entry(first_entry, app);
+                        }
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
                 },

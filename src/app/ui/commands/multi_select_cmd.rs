@@ -83,9 +83,11 @@ fn toggle_entry_selection<D: DataProvider>(entry_id: u32, app: &mut App<D>) {
 }
 
 pub fn exec_select_all<D: DataProvider>(app: &mut App<D>) -> CmdResult {
-    app.entries.iter().map(|entry| entry.id).for_each(|id| {
+    let active_ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+
+    for id in active_ids {
         app.selected_entries.insert(id);
-    });
+    }
 
     Ok(HandleInputReturnType::Handled)
 }
@@ -97,9 +99,9 @@ pub fn exec_select_none<D: DataProvider>(app: &mut App<D>) -> CmdResult {
 }
 
 pub fn exec_invert_selection<D: DataProvider>(app: &mut App<D>) -> CmdResult {
-    let entries_ids: Vec<u32> = app.entries.iter().map(|entry| entry.id).collect();
+    let active_ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
 
-    entries_ids.into_iter().for_each(|id| {
+    active_ids.into_iter().for_each(|id| {
         toggle_entry_selection(id, app);
     });
 

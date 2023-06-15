@@ -54,6 +54,16 @@ where
         }
     }
 
+    /// Get entries that met the filter criteria if any
+    pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
+        self.entries.iter().filter(|entry| {
+            self.filter
+                .as_ref()
+                .map(|f| f.check_entry(entry))
+                .unwrap_or(true)
+        })
+    }
+
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
         log::trace!("Loading entries");
 
@@ -65,7 +75,7 @@ where
     }
 
     pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
-        self.entries.iter().find(|e| e.id == entry_id)
+        self.get_active_entries().find(|e| e.id == entry_id)
     }
 
     pub async fn add_entry(
@@ -91,7 +101,7 @@ where
 
     pub fn get_current_entry(&self) -> Option<&Entry> {
         self.current_entry_id
-            .and_then(|id| self.entries.iter().find(|entry| entry.id == id))
+            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
     }
 
     pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
@@ -159,7 +169,7 @@ where
             .expect("entry must be in the entries list");
 
         if self.current_entry_id.unwrap_or(0) == removed_entry.id {
-            let first_id = self.entries.first().map(|entry| entry.id);
+            let first_id = self.get_active_entries().next().map(|entry| entry.id);
             ui_components.set_current_entry(first_id, self);
         }
         Ok(())
@@ -211,7 +221,7 @@ where
         Ok(())
     }
 
-    fn get_all_tags(&self) -> Vec<String> {
+    pub fn get_all_tags(&self) -> Vec<String> {
         let mut tags = BTreeSet::new();
 
         for tag in self.entries.iter().flat_map(|entry| &entry.tags) {
@@ -219,5 +229,10 @@ where
         }
 
         tags.into_iter().map(String::from).collect()
+    }
+
+    pub fn aplay_filter(&mut self, filter: Option<Filter>) {
+        //TODO: make onter list to the active Ids so the filter calculated once its applied only
+        self.filter = filter;
     }
 }

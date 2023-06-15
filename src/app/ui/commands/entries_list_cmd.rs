@@ -31,7 +31,11 @@ fn select_prev_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
         .state
         .selected()
         .and_then(|index| index.checked_sub(1))
-        .and_then(|prev_index| app.entries.get(prev_index).map(|entry| entry.id));
+        .and_then(|prev_index| {
+            app.get_active_entries()
+                .nth(prev_index)
+                .map(|entry| entry.id)
+        });
 
     if prev_id.is_some() {
         ui_components.set_current_entry(prev_id, app);
@@ -75,7 +79,11 @@ fn select_next_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
         .state
         .selected()
         .and_then(|index| index.checked_add(1))
-        .and_then(|next_index| app.entries.get(next_index).map(|entry| entry.id));
+        .and_then(|next_index| {
+            app.get_active_entries()
+                .nth(next_index)
+                .map(|entry| entry.id)
+        });
 
     if next_id.is_some() {
         ui_components.set_current_entry(next_id, app);
@@ -148,10 +156,7 @@ pub fn exec_edit_current_entry<D: DataProvider>(
 
 #[inline]
 fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
-    if let Some(entry) = app
-        .current_entry_id
-        .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
-    {
+    if let Some(entry) = app.get_current_entry() {
         ui_components
             .popup_stack
             .push(Popup::Entry(Box::new(EntryPopup::from_entry(entry))));
@@ -230,10 +235,7 @@ pub fn exec_export_entry_content<D: DataProvider>(
 
 #[inline]
 pub fn export_entry_content<D: DataProvider>(ui_components: &mut UIComponents, app: &App<D>) {
-    if let Some(entry) = app
-        .current_entry_id
-        .and_then(|id| app.entries.iter().find(|entry| entry.id == id))
-    {
+    if let Some(entry) = app.get_current_entry() {
         match ExportPopup::create_entry_content(entry, app) {
             Ok(popup) => ui_components
                 .popup_stack
@@ -285,10 +287,7 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
 ) -> anyhow::Result<()> {
     use tokio::fs;
 
-    if let Some(entry) = app
-        .current_entry_id
-        .and_then(|id| app.entries.iter_mut().find(|entry| entry.id == id))
-    {
+    if let Some(entry) = app.get_current_entry_mut() {
         const FILE_NAME: &str = "tui_journal.txt";
 
         let file_path = env::temp_dir().join(FILE_NAME);
@@ -379,7 +378,7 @@ pub async fn continue_show_filter<'a, D: DataProvider>(
 }
 
 pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
-    app.filter = None;
+    app.aplay_filter(None);
 
     Ok(HandleInputReturnType::Handled)
 }
