@@ -30,7 +30,10 @@ where
     pub data_provide: D,
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
+    /// Selected entries' IDs in multi-select mode
     pub selected_entries: HashSet<u32>,
+    /// Active entries' IDs if a filter is applied
+    pub active_filtered_entries: HashSet<u32>,
     pub settings: Settings,
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
@@ -43,11 +46,13 @@ where
     pub fn new(data_provide: D, settings: Settings) -> Self {
         let entries = Vec::new();
         let selected_entries = HashSet::new();
+        let active_filtered_entries = HashSet::new();
         Self {
             data_provide,
             entries,
             current_entry_id: None,
             selected_entries,
+            active_filtered_entries,
             settings,
             redraw_after_restore: false,
             filter: None,
@@ -55,13 +60,17 @@ where
     }
 
     /// Get entries that met the filter criteria if any
-    pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
-        self.entries.iter().filter(|entry| {
-            self.filter
-                .as_ref()
-                .map(|f| f.check_entry(entry))
-                .unwrap_or(true)
-        })
+    pub fn get_active_entries(&self) -> Box<dyn Iterator<Item = &Entry> + '_> {
+        if self.filter.is_some() {
+            Box::new(
+                self.entries
+                    .iter()
+                    .filter(|entry| self.active_filtered_entries.contains(&entry.id)),
+            )
+        } else {
+            debug_assert!(self.active_filtered_entries.is_empty());
+            Box::new(self.entries.iter())
+        }
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -70,6 +79,8 @@ where
         self.entries = self.data_provide.load_all_entries().await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        self.update_filter_entries();
 
         Ok(())
     }
@@ -95,6 +106,8 @@ where
         self.entries.push(entry);
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        self.update_filter_entries();
 
         Ok(entry_id)
     }
@@ -133,6 +146,8 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
+        self.update_filter_entries();
+
         Ok(())
     }
 
@@ -148,6 +163,8 @@ where
             let clone = entry.clone();
 
             self.data_provide.update_entry(clone).await?;
+
+            self.update_filter_entries();
         }
 
         Ok(())
@@ -231,8 +248,21 @@ where
         tags.into_iter().map(String::from).collect()
     }
 
-    pub fn aplay_filter(&mut self, filter: Option<Filter>) {
-        //TODO: make onter list to the active Ids so the filter calculated once its applied only
+    pub fn apply_filter(&mut self, filter: Option<Filter>) {
         self.filter = filter;
+        self.update_filter_entries();
+    }
+
+    fn update_filter_entries(&mut self) {
+        if let Some(filter) = self.filter.as_ref() {
+            self.active_filtered_entries = self
+                .entries
+                .iter()
+                .filter(|entry| filter.check_entry(entry))
+                .map(|entry| entry.id)
+                .collect();
+        } else {
+            self.active_filtered_entries.clear();
+        }
     }
 }

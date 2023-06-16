@@ -378,7 +378,7 @@ pub async fn continue_show_filter<'a, D: DataProvider>(
 }
 
 pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
-    app.aplay_filter(None);
+    app.apply_filter(None);
 
     Ok(HandleInputReturnType::Handled)
 }

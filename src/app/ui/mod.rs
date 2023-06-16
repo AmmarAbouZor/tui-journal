@@ -259,11 +259,7 @@ impl<'a, 'b> UIComponents<'a> {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
                     filter_popup::FilterPopupReturn::Apply(filter) => {
-                        app.aplay_filter(filter);
-                        if app.get_current_entry().is_none() {
-                            let first_entry = app.get_active_entries().next().map(|entry| entry.id);
-                            self.set_current_entry(first_entry, app);
-                        }
+                        app.apply_filter(filter);
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
                 },
@@ -367,5 +363,12 @@ impl<'a, 'b> UIComponents<'a> {
 
     pub fn show_err_msg(&mut self, err_txt: String) {
         self.show_msg_box(MsgBoxType::Error(err_txt), MsgBoxActions::Ok, None);
+    }
+
+    pub fn update_current_entry<D: DataProvider>(&mut self, app: &mut App<D>) {
+        if app.get_current_entry().is_none() {
+            let first_entry = app.get_active_entries().next().map(|entry| entry.id);
+            self.set_current_entry(first_entry, app);
+        }
     }
 }

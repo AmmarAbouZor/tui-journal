@@ -102,6 +102,7 @@ where
                             Ok(result) => {
                                 match result {
                                     HandleInputReturnType::Handled | HandleInputReturnType::NotFound =>{
+                                        ui_components.update_current_entry(&mut app);
                                         draw_ui(terminal, &mut app, &mut ui_components)?;
                                     },
                                     HandleInputReturnType::ExitApp => return Ok(()),
