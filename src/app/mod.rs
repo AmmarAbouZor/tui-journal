@@ -32,8 +32,8 @@ where
     pub current_entry_id: Option<u32>,
     /// Selected entries' IDs in multi-select mode
     pub selected_entries: HashSet<u32>,
-    /// Active entries' IDs if a filter is applied
-    pub active_filtered_entries: HashSet<u32>,
+    /// Inactive entries' IDs due to not meeting the filter criteria
+    pub filtered_out_entries: HashSet<u32>,
     pub settings: Settings,
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
@@ -46,13 +46,13 @@ where
     pub fn new(data_provide: D, settings: Settings) -> Self {
         let entries = Vec::new();
         let selected_entries = HashSet::new();
-        let active_filtered_entries = HashSet::new();
+        let filtered_out_entries = HashSet::new();
         Self {
             data_provide,
             entries,
             current_entry_id: None,
             selected_entries,
-            active_filtered_entries,
+            filtered_out_entries,
             settings,
             redraw_after_restore: false,
             filter: None,
@@ -60,17 +60,10 @@ where
     }
 
     /// Get entries that met the filter criteria if any
-    pub fn get_active_entries(&self) -> Box<dyn Iterator<Item = &Entry> + '_> {
-        if self.filter.is_some() {
-            Box::new(
-                self.entries
-                    .iter()
-                    .filter(|entry| self.active_filtered_entries.contains(&entry.id)),
-            )
-        } else {
-            debug_assert!(self.active_filtered_entries.is_empty());
-            Box::new(self.entries.iter())
-        }
+    pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
+        self.entries
+            .iter()
+            .filter(|entry| !self.filtered_out_entries.contains(&entry.id))
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -255,14 +248,14 @@ where
 
     fn update_filter_entries(&mut self) {
         if let Some(filter) = self.filter.as_ref() {
-            self.active_filtered_entries = self
+            self.filtered_out_entries = self
                 .entries
                 .iter()
-                .filter(|entry| filter.check_entry(entry))
+                .filter(|entry| !filter.check_entry(entry))
                 .map(|entry| entry.id)
                 .collect();
         } else {
-            self.active_filtered_entries.clear();
+            self.filtered_out_entries.clear();
         }
     }
 }
