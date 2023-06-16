@@ -21,7 +21,7 @@ pub use runner::HandleInputReturnType;
 
 use crate::settings::Settings;
 
-use self::filter::Filter;
+use self::filter::{Filter, FilterCritrion};
 
 pub struct App<D>
 where
@@ -73,7 +73,7 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
-        self.update_filter_entries();
+        self.update_filtered_out_entries();
 
         Ok(())
     }
@@ -100,7 +100,7 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
-        self.update_filter_entries();
+        self.update_filtered_out_entries();
 
         Ok(entry_id)
     }
@@ -139,9 +139,27 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
-        self.update_filter_entries();
+        self.update_filter();
+        self.update_filtered_out_entries();
 
         Ok(())
+    }
+
+    /// Checks if the filter still valid and update it if needed
+    pub fn update_filter(&mut self) {
+        if self.filter.is_some() {
+            let all_tags = self.get_all_tags();
+            let filter = self.filter.as_mut().unwrap();
+
+            filter.critria.retain(|cr| {
+                let FilterCritrion::Tag(tag) = cr;
+                all_tags.contains(tag)
+            });
+
+            if filter.critria.is_empty() {
+                self.filter = None;
+            }
+        }
     }
 
     pub async fn update_current_entry_content(
@@ -157,31 +175,25 @@ where
 
             self.data_provide.update_entry(clone).await?;
 
-            self.update_filter_entries();
+            self.update_filtered_out_entries();
         }
 
         Ok(())
     }
 
-    pub async fn delete_entry<'a>(
-        &mut self,
-        ui_components: &mut UIComponents<'a>,
-        entry_id: u32,
-    ) -> anyhow::Result<()> {
+    pub async fn delete_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
         log::trace!("Deleting entry with id: {entry_id}");
 
         self.data_provide.remove_entry(entry_id).await?;
-        let removed_entry = self
-            .entries
+        self.entries
             .iter()
             .position(|entry| entry.id == entry_id)
             .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
 
-        if self.current_entry_id.unwrap_or(0) == removed_entry.id {
-            let first_id = self.get_active_entries().next().map(|entry| entry.id);
-            ui_components.set_current_entry(first_id, self);
-        }
+        self.update_filter();
+        self.update_filtered_out_entries();
+
         Ok(())
     }
 
@@ -243,10 +255,10 @@ where
 
     pub fn apply_filter(&mut self, filter: Option<Filter>) {
         self.filter = filter;
-        self.update_filter_entries();
+        self.update_filtered_out_entries();
     }
 
-    fn update_filter_entries(&mut self) {
+    fn update_filtered_out_entries(&mut self) {
         if let Some(filter) = self.filter.as_ref() {
             self.filtered_out_entries = self
                 .entries

@@ -130,7 +130,6 @@ pub fn exec_delete_selected_entries<D: DataProvider>(
 }
 
 pub async fn continue_delete_selected_entries<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -138,7 +137,7 @@ pub async fn continue_delete_selected_entries<'a, D: DataProvider>(
         MsgBoxResult::Yes => {
             let delete_ids: Vec<u32> = app.selected_entries.iter().cloned().collect();
             for entry_id in delete_ids {
-                app.delete_entry(ui_components, entry_id).await?;
+                app.delete_entry(entry_id).await?;
             }
             app.selected_entries.clear();
         }

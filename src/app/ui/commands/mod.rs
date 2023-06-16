@@ -217,7 +217,7 @@ impl UICommand {
                 continue_edit_current_entry(ui_components, app, msg_box_result).await
             }
             UICommand::DeleteCurrentEntry => {
-                continue_delete_current_entry(ui_components, app, msg_box_result).await
+                continue_delete_current_entry(app, msg_box_result).await
             }
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
@@ -241,7 +241,7 @@ impl UICommand {
             UICommand::MulSelSelectNone => not_implemented(),
             UICommand::MulSelInverSelection => not_implemented(),
             UICommand::MulSelDeleteEntries => {
-                continue_delete_selected_entries(ui_components, app, msg_box_result).await
+                continue_delete_selected_entries(app, msg_box_result).await
             }
             UICommand::MulSelExportEntries => not_implemented(),
             UICommand::ShowFilter => continue_show_filter(ui_components, app, msg_box_result).await,

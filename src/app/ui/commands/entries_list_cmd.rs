@@ -197,14 +197,12 @@ pub fn exec_delete_current_entry<D: DataProvider>(
 }
 
 pub async fn continue_delete_current_entry<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
     match msg_box_result {
         MsgBoxResult::Yes => {
             app.delete_entry(
-                ui_components,
                 app.current_entry_id
                     .expect("current entry must have a value"),
             )
