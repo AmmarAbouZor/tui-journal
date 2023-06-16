@@ -10,6 +10,7 @@ pub(crate) struct EntryIntermediate {
     pub date: DateTime<Utc>,
     pub title: String,
     pub content: String,
+    /// Tags as a string with commas as separator for the tags
     pub tags: Option<String>,
 }
 

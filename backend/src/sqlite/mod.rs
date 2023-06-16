@@ -36,7 +36,9 @@ impl SqliteDataProvide {
     pub async fn create(db_url: &str) -> anyhow::Result<Self> {
         if !Sqlite::database_exists(db_url).await? {
             log::trace!("Creating Database with the URL '{}'", db_url);
-            Sqlite::create_database(db_url).await?;
+            Sqlite::create_database(db_url)
+                .await
+                .map_err(|err| anyhow!("Creating database failed. Error info: {err}"))?;
         }
 
         // We are using the database as a normal file for one user.
@@ -50,7 +52,11 @@ impl SqliteDataProvide {
 
         sqlx::migrate!("backend/src/sqlite/migrations")
             .run(&pool)
-            .await?;
+            .await
+            .map_err(|err| match err {
+                sqlx::migrate::MigrateError::VersionMissing(id) => anyhow!("Database version mismatches. Error Info: migration {id} was previously applied but is missing in the resolved migrations"),
+                err => anyhow!("Error while applying migrations on database: Error info {err}"),
+            })?;
 
         Ok(Self { pool })
     }
