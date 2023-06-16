@@ -16,7 +16,7 @@ use crate::app::{
 
 use super::ui_functions::centered_rect;
 
-const FOOTER_TEXT: &str = r"Enter or <Ctrl-m>: confirm | r: Change relations | <Space>: Toggle selected | Esc or q or <Ctrl-c>: Cancel";
+const FOOTER_TEXT: &str = r"Enter or <Ctrl-m>: Confirm | r: Change Matching Logic | <Space>: Toggle Selected | Esc, q or <Ctrl-c>: Cancel";
 const FOOTER_MARGINE: u16 = 8;
 
 pub struct FilterPopup {
@@ -86,7 +86,7 @@ impl FilterPopup {
             .split(area);
 
         let relation_text = match self.relation {
-            CriteriaRelation::And => "Journals must meet all the criteria",
+            CriteriaRelation::And => "Journals must meet all criteria",
             CriteriaRelation::Or => "Journals must meet any of the criteria",
         };
 
@@ -96,7 +96,7 @@ impl FilterPopup {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded)
-                    .title("Criteria Relations"),
+                    .title("Matching Logic"),
             );
 
         frame.render_widget(relation, chunks[0]);
@@ -150,7 +150,7 @@ impl FilterPopup {
     }
 
     fn render_tags_place_holder<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let place_holder_text = String::from("\nNo entries with tags to select from");
+        let place_holder_text = String::from("\nNo journals with tags provided");
 
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
