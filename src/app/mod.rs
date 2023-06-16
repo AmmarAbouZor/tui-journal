@@ -59,11 +59,25 @@ where
         }
     }
 
-    /// Get entries that met the filter criteria if any
+    /// Get entries that meet the filter criteria if any otherwise it returns all entries
     pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
         self.entries
             .iter()
             .filter(|entry| !self.filtered_out_entries.contains(&entry.id))
+    }
+
+    pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
+        self.get_active_entries().find(|e| e.id == entry_id)
+    }
+
+    pub fn get_current_entry(&self) -> Option<&Entry> {
+        self.current_entry_id
+            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
+    }
+
+    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
+        self.current_entry_id
+            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -76,10 +90,6 @@ where
         self.update_filtered_out_entries();
 
         Ok(())
-    }
-
-    pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
-        self.get_active_entries().find(|e| e.id == entry_id)
     }
 
     pub async fn add_entry(
@@ -103,16 +113,6 @@ where
         self.update_filtered_out_entries();
 
         Ok(entry_id)
-    }
-
-    pub fn get_current_entry(&self) -> Option<&Entry> {
-        self.current_entry_id
-            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
-    }
-
-    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
-        self.current_entry_id
-            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
     pub async fn update_current_entry(
@@ -143,23 +143,6 @@ where
         self.update_filtered_out_entries();
 
         Ok(())
-    }
-
-    /// Checks if the filter still valid and update it if needed
-    pub fn update_filter(&mut self) {
-        if self.filter.is_some() {
-            let all_tags = self.get_all_tags();
-            let filter = self.filter.as_mut().unwrap();
-
-            filter.critria.retain(|cr| {
-                let FilterCritrion::Tag(tag) = cr;
-                all_tags.contains(tag)
-            });
-
-            if filter.critria.is_empty() {
-                self.filter = None;
-            }
-        }
     }
 
     pub async fn update_current_entry_content(
@@ -253,11 +236,30 @@ where
         tags.into_iter().map(String::from).collect()
     }
 
+    /// Sets and applies the given filter on the entries
     pub fn apply_filter(&mut self, filter: Option<Filter>) {
         self.filter = filter;
         self.update_filtered_out_entries();
     }
 
+    /// Checks if the filter criteria still valid and update them if needed
+    fn update_filter(&mut self) {
+        if self.filter.is_some() {
+            let all_tags = self.get_all_tags();
+            let filter = self.filter.as_mut().unwrap();
+
+            filter.critria.retain(|cr| {
+                let FilterCritrion::Tag(tag) = cr;
+                all_tags.contains(tag)
+            });
+
+            if filter.critria.is_empty() {
+                self.filter = None;
+            }
+        }
+    }
+
+    /// Applies filter on the entries and filter out the ones who don't meet the filter's criteria
     fn update_filtered_out_entries(&mut self) {
         if let Some(filter) = self.filter.as_ref() {
             self.filtered_out_entries = self
