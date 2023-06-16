@@ -8,6 +8,8 @@ use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 
 use anyhow::{anyhow, bail, Context};
 use chrono::{DateTime, Utc};
+use rayon::prelude::*;
+
 pub use runner::run;
 pub use ui::UIComponents;
 
@@ -264,7 +266,7 @@ where
         if let Some(filter) = self.filter.as_ref() {
             self.filtered_out_entries = self
                 .entries
-                .iter()
+                .par_iter()
                 .filter(|entry| !filter.check_entry(entry))
                 .map(|entry| entry.id)
                 .collect();
