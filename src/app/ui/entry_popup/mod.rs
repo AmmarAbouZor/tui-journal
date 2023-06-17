@@ -14,12 +14,16 @@ use crate::app::{keymap::Input, App};
 
 use backend::{DataProvider, Entry};
 
+use self::tags::{TagsPopup, TagsPopupReturn};
+
 use super::{
     ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
 };
 
+mod tags;
+
 const FOOTER_TEXT: &str =
-    "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel";
+    "Enter: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-m>: Open tags";
 const FOOTER_MARGINE: u16 = 8;
 
 pub struct EntryPopup<'a> {
@@ -31,6 +35,7 @@ pub struct EntryPopup<'a> {
     title_err_msg: String,
     date_err_msg: String,
     tags_err_msg: String,
+    tags_popup: Option<TagsPopup>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -72,6 +77,7 @@ impl<'a> EntryPopup<'a> {
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            tags_popup: None,
         }
     }
 
@@ -100,6 +106,7 @@ impl<'a> EntryPopup<'a> {
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            tags_popup: None,
         };
 
         entry_pupop.validate_title();
@@ -231,6 +238,10 @@ impl<'a> EntryPopup<'a> {
             );
 
         frame.render_widget(footer, chunks[3]);
+
+        if let Some(tags_popup) = self.tags_popup.as_mut() {
+            tags_popup.render_widget(frame, area)
+        }
     }
 
     pub fn is_input_valid(&self) -> bool {
@@ -280,6 +291,12 @@ impl<'a> EntryPopup<'a> {
         input: &Input,
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
+        if self.tags_popup.is_some() {
+            self.handle_popup_input(input);
+
+            return Ok(EntryPopupInputReturn::KeepPupup);
+        }
+
         let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
 
         match input.key_code {
@@ -292,6 +309,20 @@ impl<'a> EntryPopup<'a> {
                     ActiveText::Date => ActiveText::Tags,
                     ActiveText::Tags => ActiveText::Title,
                 };
+                Ok(EntryPopupInputReturn::KeepPupup)
+            }
+            KeyCode::Char(' ') | KeyCode::Char('t') if has_ctrl => {
+                debug_assert!(self.tags_popup.is_none());
+
+                let tags = app.get_all_tags();
+                let tags_text = self
+                    .tags_txt
+                    .lines()
+                    .first()
+                    .expect("Tags textbox has one line");
+
+                self.tags_popup = Some(TagsPopup::new(tags_text, tags));
+
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
             _ => {
@@ -313,6 +344,24 @@ impl<'a> EntryPopup<'a> {
                     }
                 }
                 Ok(EntryPopupInputReturn::KeepPupup)
+            }
+        }
+    }
+
+    pub fn handle_popup_input(&mut self, input: &Input) {
+        let tags_popup = self
+            .tags_popup
+            .as_mut()
+            .expect("Tags popup must be some at this point");
+
+        match tags_popup.handle_input(input) {
+            TagsPopupReturn::Keep => {}
+            TagsPopupReturn::Cancel => self.tags_popup = None,
+            TagsPopupReturn::Apply(tags_text) => {
+                self.tags_txt = TextArea::new(vec![tags_text]);
+                self.tags_txt.move_cursor(CursorMove::End);
+                self.active_txt = ActiveText::Tags;
+                self.tags_popup = None;
             }
         }
     }
