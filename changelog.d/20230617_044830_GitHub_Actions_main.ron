@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "Keep journals list in focus after closing the external editor",
+    ],
+  },
+)
