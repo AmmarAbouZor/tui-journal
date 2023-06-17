@@ -18,6 +18,8 @@ use super::{
     ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
 };
 
+mod tags;
+
 const FOOTER_TEXT: &str =
     "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel";
 const FOOTER_MARGINE: u16 = 8;
