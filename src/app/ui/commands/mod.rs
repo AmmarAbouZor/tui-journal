@@ -42,6 +42,8 @@ pub enum UICommand {
     MulSelInverSelection,
     MulSelDeleteEntries,
     MulSelExportEntries,
+    ShowFilter,
+    ResetFilter,
 }
 
 #[derive(Debug, Clone)]
@@ -142,6 +144,14 @@ impl UICommand {
                 "Export selection",
                 "Export selected journals to a transfer JSON file, which can be imported to other back-end files",
             ),
+            UICommand::ShowFilter => CommandInfo::new(
+                "Open filter",
+                "Open filter popup for journals",
+            ),
+            UICommand::ResetFilter => CommandInfo::new(
+                "Reset filter",
+                "Reset the applied filter on journals",
+            ),
         }
     }
 
@@ -177,6 +187,8 @@ impl UICommand {
             UICommand::MulSelInverSelection => exec_invert_selection(app),
             UICommand::MulSelDeleteEntries => exec_delete_selected_entries(ui_components, app),
             UICommand::MulSelExportEntries => exec_export_selected_entries(ui_components, app),
+            UICommand::ShowFilter => exec_show_filter(ui_components, app),
+            UICommand::ResetFilter => exec_reset_filter(app),
         }
     }
 
@@ -205,7 +217,7 @@ impl UICommand {
                 continue_edit_current_entry(ui_components, app, msg_box_result).await
             }
             UICommand::DeleteCurrentEntry => {
-                continue_delete_current_entry(ui_components, app, msg_box_result).await
+                continue_delete_current_entry(app, msg_box_result).await
             }
             UICommand::StartEditEntryContent => not_implemented(),
             UICommand::FinishEditEntryContent => not_implemented(),
@@ -229,9 +241,11 @@ impl UICommand {
             UICommand::MulSelSelectNone => not_implemented(),
             UICommand::MulSelInverSelection => not_implemented(),
             UICommand::MulSelDeleteEntries => {
-                continue_delete_selected_entries(ui_components, app, msg_box_result).await
+                continue_delete_selected_entries(app, msg_box_result).await
             }
             UICommand::MulSelExportEntries => not_implemented(),
+            UICommand::ShowFilter => continue_show_filter(ui_components, app, msg_box_result).await,
+            UICommand::ResetFilter => not_implemented(),
         }
     }
 }

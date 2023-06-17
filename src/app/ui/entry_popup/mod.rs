@@ -20,21 +20,24 @@ use super::{
 
 const FOOTER_TEXT: &str =
     "Enter: confirm | Tab: Change focused input box | Esc or <Ctrl-c>: Cancel";
-
 const FOOTER_MARGINE: u16 = 8;
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
     date_txt: TextArea<'a>,
+    tags_txt: TextArea<'a>,
     is_edit_entry: bool,
     active_txt: ActiveText,
     title_err_msg: String,
     date_err_msg: String,
+    tags_err_msg: String,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum ActiveText {
     Title,
     Date,
+    Tags,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -58,13 +61,17 @@ impl<'a> EntryPopup<'a> {
             date.year()
         )]);
 
+        let tags_txt = TextArea::default();
+
         Self {
             title_txt,
             date_txt,
+            tags_txt,
             is_edit_entry: false,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
+            tags_err_msg: String::default(),
         }
     }
 
@@ -79,23 +86,31 @@ impl<'a> EntryPopup<'a> {
             entry.date.year()
         )]);
 
+        let tags = tags_to_text(&entry.tags);
+
+        let mut tags_txt = TextArea::new(vec![tags]);
+        tags_txt.move_cursor(CursorMove::End);
+
         let mut entry_pupop = Self {
             title_txt,
             date_txt,
+            tags_txt,
             is_edit_entry: true,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
+            tags_err_msg: String::default(),
         };
 
         entry_pupop.validate_title();
         entry_pupop.validat_date();
+        entry_pupop.validat_tags();
 
         entry_pupop
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let mut area = centered_rect_exact_height(70, 11, area);
+        let mut area = centered_rect_exact_height(70, 14, area);
 
         if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
             area.height += 1;
@@ -120,6 +135,7 @@ impl<'a> EntryPopup<'a> {
                 [
                     Constraint::Length(3),
                     Constraint::Length(3),
+                    Constraint::Length(3),
                     Constraint::Min(1),
                 ]
                 .as_ref(),
@@ -128,6 +144,7 @@ impl<'a> EntryPopup<'a> {
 
         self.title_txt.set_cursor_line_style(Style::default());
         self.date_txt.set_cursor_line_style(Style::default());
+        self.tags_txt.set_cursor_line_style(Style::default());
 
         let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
@@ -136,10 +153,17 @@ impl<'a> EntryPopup<'a> {
             ActiveText::Title => {
                 self.title_txt.set_cursor_style(active_cursor_style);
                 self.date_txt.set_cursor_style(deactivate_cursor_style);
+                self.tags_txt.set_cursor_style(deactivate_cursor_style);
             }
             ActiveText::Date => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.date_txt.set_cursor_style(active_cursor_style);
+                self.tags_txt.set_cursor_style(deactivate_cursor_style);
+            }
+            ActiveText::Tags => {
+                self.title_txt.set_cursor_style(deactivate_cursor_style);
+                self.date_txt.set_cursor_style(deactivate_cursor_style);
+                self.tags_txt.set_cursor_style(active_cursor_style);
             }
         };
 
@@ -173,8 +197,29 @@ impl<'a> EntryPopup<'a> {
             );
         }
 
+        if self.tags_err_msg.is_empty() {
+            let title = if self.active_txt == ActiveText::Tags {
+                "Tags - A comma-separated list"
+            } else {
+                "Tags"
+            };
+            self.tags_txt
+                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
+            self.tags_txt
+                .set_block(Block::default().borders(Borders::ALL).title(title));
+        } else {
+            self.tags_txt
+                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
+            self.tags_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(format!("Tags : {}", self.date_err_msg)),
+            );
+        }
+
         frame.render_widget(self.title_txt.widget(), chunks[0]);
         frame.render_widget(self.date_txt.widget(), chunks[1]);
+        frame.render_widget(self.tags_txt.widget(), chunks[2]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
@@ -185,11 +230,19 @@ impl<'a> EntryPopup<'a> {
                     .style(Style::default()),
             );
 
-        frame.render_widget(footer, chunks[2]);
+        frame.render_widget(footer, chunks[3]);
     }
 
     pub fn is_input_valid(&self) -> bool {
-        self.title_err_msg.is_empty() && self.date_err_msg.is_empty()
+        self.title_err_msg.is_empty()
+            && self.date_err_msg.is_empty()
+            && self.tags_err_msg.is_empty()
+    }
+
+    pub fn validate_all(&mut self) {
+        self.validate_title();
+        self.validat_date();
+        self.validat_tags();
     }
 
     fn validate_title(&mut self) {
@@ -208,6 +261,20 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
+    fn validat_tags(&mut self) {
+        let tags = text_to_tags(
+            self.tags_txt
+                .lines()
+                .first()
+                .expect("Tags TextBox have one line"),
+        );
+        if tags.iter().any(|tag| tag.contains(',')) {
+            self.tags_err_msg = "Tags are invalid".into();
+        } else {
+            self.tags_err_msg.clear();
+        }
+    }
+
     pub async fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
@@ -222,7 +289,8 @@ impl<'a> EntryPopup<'a> {
             KeyCode::Tab => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
-                    ActiveText::Date => ActiveText::Title,
+                    ActiveText::Date => ActiveText::Tags,
+                    ActiveText::Tags => ActiveText::Title,
                 };
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
@@ -238,6 +306,11 @@ impl<'a> EntryPopup<'a> {
                             self.validat_date();
                         }
                     }
+                    ActiveText::Tags => {
+                        if self.tags_txt.input(KeyEvent::from(input)) {
+                            self.validat_tags();
+                        }
+                    }
                 }
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
@@ -249,8 +322,7 @@ impl<'a> EntryPopup<'a> {
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
         // Validation
-        self.validate_title();
-        self.validat_date();
+        self.validate_all();
         if !self.is_input_valid() {
             return Ok(EntryPopupInputReturn::KeepPupup);
         }
@@ -263,12 +335,31 @@ impl<'a> EntryPopup<'a> {
             .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
             .unwrap();
 
+        let tags = text_to_tags(
+            self.tags_txt
+                .lines()
+                .first()
+                .expect("Tags TextBox have one line"),
+        );
+
         if self.is_edit_entry {
-            app.update_current_entry(title, date).await?;
+            app.update_current_entry(title, date, tags).await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {
-            let entry_id = app.add_entry(title, date).await?;
+            let entry_id = app.add_entry(title, date, tags).await?;
             Ok(EntryPopupInputReturn::AddEntry(entry_id))
         }
     }
+}
+
+#[inline]
+fn tags_to_text(tags: &[String]) -> String {
+    tags.join(", ")
+}
+
+#[inline]
+fn text_to_tags(text: &str) -> Vec<String> {
+    text.split_terminator(',')
+        .map(|tag| String::from(tag.trim()))
+        .collect()
 }

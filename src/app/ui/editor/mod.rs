@@ -86,7 +86,7 @@ impl<'a> Editor<'a> {
         input: &Input,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
-        if app.entries.is_empty() {
+        if app.get_current_entry().is_none() {
             return Ok(HandleInputReturnType::Handled);
         }
 

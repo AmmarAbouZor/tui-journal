@@ -7,6 +7,7 @@ use self::{
     entries_list::EntriesList,
     entry_popup::{EntryPopup, EntryPopupInputReturn},
     export_popup::ExportPopup,
+    filter_popup::FilterPopup,
     footer::render_footer,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
@@ -34,6 +35,7 @@ mod editor;
 mod entries_list;
 mod entry_popup;
 mod export_popup;
+mod filter_popup;
 mod footer;
 mod help_popup;
 mod msg_box;
@@ -58,6 +60,7 @@ pub enum Popup<'a> {
     Entry(Box<EntryPopup<'a>>),
     MsgBox(Box<MsgBox>),
     Export(Box<ExportPopup<'a>>),
+    Filter(Box<FilterPopup>),
 }
 
 pub struct UIComponents<'a> {
@@ -104,7 +107,7 @@ impl<'a, 'b> UIComponents<'a> {
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
         app.current_entry_id = entry_id;
         if let Some(id) = entry_id {
-            let entry_index = app.entries.iter().position(|entry| entry.id == id);
+            let entry_index = app.get_active_entries().position(|entry| entry.id == id);
             self.entries_list.state.select(entry_index);
         }
 
@@ -145,6 +148,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.size()),
                 Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
+                Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.size()),
             }
         }
     }
@@ -249,6 +253,16 @@ impl<'a, 'b> UIComponents<'a> {
                         }
                     };
                 }
+                Popup::Filter(filter_popup) => match filter_popup.handle_input(input) {
+                    filter_popup::FilterPopupReturn::KeepPopup => {}
+                    filter_popup::FilterPopupReturn::Cancel => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
+                    filter_popup::FilterPopupReturn::Apply(filter) => {
+                        app.apply_filter(filter);
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
+                },
             }
             Ok(HandleInputReturnType::Handled)
         } else {
@@ -349,5 +363,12 @@ impl<'a, 'b> UIComponents<'a> {
 
     pub fn show_err_msg(&mut self, err_txt: String) {
         self.show_msg_box(MsgBoxType::Error(err_txt), MsgBoxActions::Ok, None);
+    }
+
+    pub fn update_current_entry<D: DataProvider>(&mut self, app: &mut App<D>) {
+        if app.get_current_entry().is_none() {
+            let first_entry = app.get_active_entries().next().map(|entry| entry.id);
+            self.set_current_entry(first_entry, app);
+        }
     }
 }

@@ -1,13 +1,20 @@
-use std::{collections::HashSet, fs::File, path::PathBuf};
+use std::{
+    collections::{BTreeSet, HashSet},
+    fs::File,
+    path::PathBuf,
+};
 
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 
 use anyhow::{anyhow, bail, Context};
 use chrono::{DateTime, Utc};
+use rayon::prelude::*;
+
 pub use runner::run;
 pub use ui::UIComponents;
 
 mod external_editor;
+mod filter;
 mod keymap;
 mod runner;
 mod ui;
@@ -16,6 +23,8 @@ pub use runner::HandleInputReturnType;
 
 use crate::settings::Settings;
 
+use self::filter::{Filter, FilterCritrion};
+
 pub struct App<D>
 where
     D: DataProvider,
@@ -23,9 +32,13 @@ where
     pub data_provide: D,
     pub entries: Vec<Entry>,
     pub current_entry_id: Option<u32>,
+    /// Selected entries' IDs in multi-select mode
     pub selected_entries: HashSet<u32>,
+    /// Inactive entries' IDs due to not meeting the filter criteria
+    pub filtered_out_entries: HashSet<u32>,
     pub settings: Settings,
     pub redraw_after_restore: bool,
+    pub filter: Option<Filter>,
 }
 
 impl<D> App<D>
@@ -35,14 +48,38 @@ where
     pub fn new(data_provide: D, settings: Settings) -> Self {
         let entries = Vec::new();
         let selected_entries = HashSet::new();
+        let filtered_out_entries = HashSet::new();
         Self {
             data_provide,
             entries,
             current_entry_id: None,
             selected_entries,
+            filtered_out_entries,
             settings,
             redraw_after_restore: false,
+            filter: None,
         }
+    }
+
+    /// Get entries that meet the filter criteria if any otherwise it returns all entries
+    pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
+        self.entries
+            .iter()
+            .filter(|entry| !self.filtered_out_entries.contains(&entry.id))
+    }
+
+    pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
+        self.get_active_entries().find(|e| e.id == entry_id)
+    }
+
+    pub fn get_current_entry(&self) -> Option<&Entry> {
+        self.current_entry_id
+            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
+    }
+
+    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
+        self.current_entry_id
+            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -52,19 +89,22 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
+        self.update_filtered_out_entries();
+
         Ok(())
     }
 
-    pub fn get_entry(&self, entry_id: u32) -> Option<&Entry> {
-        self.entries.iter().find(|e| e.id == entry_id)
-    }
-
-    pub async fn add_entry(&mut self, title: String, date: DateTime<Utc>) -> anyhow::Result<u32> {
+    pub async fn add_entry(
+        &mut self,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+    ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
         let entry = self
             .data_provide
-            .add_entry(EntryDraft::new(date, title))
+            .add_entry(EntryDraft::new(date, title, tags))
             .await?;
         let entry_id = entry.id;
 
@@ -72,23 +112,16 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
+        self.update_filtered_out_entries();
+
         Ok(entry_id)
-    }
-
-    pub fn get_current_entry(&self) -> Option<&Entry> {
-        self.current_entry_id
-            .and_then(|id| self.entries.iter().find(|entry| entry.id == id))
-    }
-
-    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
-        self.current_entry_id
-            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
     pub async fn update_current_entry(
         &mut self,
         title: String,
         date: DateTime<Utc>,
+        tags: Vec<String>,
     ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
 
@@ -100,12 +133,16 @@ where
 
         entry.title = title;
         entry.date = date;
+        entry.tags = tags;
 
         let clone = entry.clone();
 
         self.data_provide.update_entry(clone).await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        self.update_filter();
+        self.update_filtered_out_entries();
 
         Ok(())
     }
@@ -122,30 +159,26 @@ where
             let clone = entry.clone();
 
             self.data_provide.update_entry(clone).await?;
+
+            self.update_filtered_out_entries();
         }
 
         Ok(())
     }
 
-    pub async fn delete_entry<'a>(
-        &mut self,
-        ui_components: &mut UIComponents<'a>,
-        entry_id: u32,
-    ) -> anyhow::Result<()> {
+    pub async fn delete_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
         log::trace!("Deleting entry with id: {entry_id}");
 
         self.data_provide.remove_entry(entry_id).await?;
-        let removed_entry = self
-            .entries
+        self.entries
             .iter()
             .position(|entry| entry.id == entry_id)
             .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
 
-        if self.current_entry_id.unwrap_or(0) == removed_entry.id {
-            let first_id = self.entries.first().map(|entry| entry.id);
-            ui_components.set_current_entry(first_id, self);
-        }
+        self.update_filter();
+        self.update_filtered_out_entries();
+
         Ok(())
     }
 
@@ -193,5 +226,52 @@ where
             .map_err(|err| anyhow!("Error while importing the entry. Error: {err}"))?;
 
         Ok(())
+    }
+
+    pub fn get_all_tags(&self) -> Vec<String> {
+        let mut tags = BTreeSet::new();
+
+        for tag in self.entries.iter().flat_map(|entry| &entry.tags) {
+            tags.insert(tag);
+        }
+
+        tags.into_iter().map(String::from).collect()
+    }
+
+    /// Sets and applies the given filter on the entries
+    pub fn apply_filter(&mut self, filter: Option<Filter>) {
+        self.filter = filter;
+        self.update_filtered_out_entries();
+    }
+
+    /// Checks if the filter criteria still valid and update them if needed
+    fn update_filter(&mut self) {
+        if self.filter.is_some() {
+            let all_tags = self.get_all_tags();
+            let filter = self.filter.as_mut().unwrap();
+
+            filter.critria.retain(|cr| {
+                let FilterCritrion::Tag(tag) = cr;
+                all_tags.contains(tag)
+            });
+
+            if filter.critria.is_empty() {
+                self.filter = None;
+            }
+        }
+    }
+
+    /// Applies filter on the entries and filter out the ones who don't meet the filter's criteria
+    fn update_filtered_out_entries(&mut self) {
+        if let Some(filter) = self.filter.as_ref() {
+            self.filtered_out_entries = self
+                .entries
+                .par_iter()
+                .filter(|entry| !filter.check_entry(entry))
+                .map(|entry| entry.id)
+                .collect();
+        } else {
+            self.filtered_out_entries.clear();
+        }
     }
 }
