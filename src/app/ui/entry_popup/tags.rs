@@ -141,7 +141,7 @@ impl TagsPopup {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(Block::default().borders(Borders::TOP));
+            .block(Block::default().borders(Borders::NONE));
 
         frame.render_widget(place_holder, area);
     }
