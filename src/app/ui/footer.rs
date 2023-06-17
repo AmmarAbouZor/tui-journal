@@ -74,21 +74,21 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
 
     if ui_components.active_control == ControlType::EntriesList {
         if app.filter.is_none() {
-            let show_fiter_keymap: Vec<_> = ui_components
+            let show_filter_keymap: Vec<_> = ui_components
                 .entries_list_keymaps
                 .iter()
                 .filter(|keymap| keymap.command == UICommand::ShowFilter)
                 .collect();
 
-            footer_parts.push(get_keymap_text(show_fiter_keymap));
+            footer_parts.push(get_keymap_text(show_filter_keymap));
         } else {
-            let reset_fiter_keymap: Vec<_> = ui_components
+            let reset_filter_keymap: Vec<_> = ui_components
                 .entries_list_keymaps
                 .iter()
                 .filter(|keymap| keymap.command == UICommand::ResetFilter)
                 .collect();
 
-            footer_parts.push(get_keymap_text(reset_fiter_keymap));
+            footer_parts.push(get_keymap_text(reset_filter_keymap));
         }
     }
 
