@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use crossterm::event::{KeyCode, KeyModifiers};
 use tui::{
@@ -18,7 +18,7 @@ use super::text_to_tags;
 
 const FOOTER_TEXT: &str =
     r"<Space>: Toggle Selected | Enter or <Ctrl-m>: Confirm | Esc, q or <Ctrl-c>: Cancel";
-const FOOTER_MARGINE: u16 = 8;
+const FOOTER_MARGINE: u16 = 4;
 
 pub enum TagsPopupReturn {
     Keep,
@@ -26,22 +26,30 @@ pub enum TagsPopupReturn {
     Apply(String),
 }
 
-struct TagsPopup {
+pub struct TagsPopup {
     state: ListState,
     tags: Vec<String>,
-    selected_tags: HashSet<String>,
+    selected_tags: BTreeSet<String>,
 }
 
 impl TagsPopup {
-    fn new(tags_text: &str, mut tags: Vec<String>) -> Self {
+    pub fn new(tags_text: &str, mut tags: Vec<String>) -> Self {
         let state = ListState::default();
-        let selected_tags = HashSet::from_iter(text_to_tags(tags_text).into_iter());
 
-        selected_tags.iter().for_each(|tag| {
-            if !tags.contains(tag) {
-                tags.insert(0, tag.into());
-            }
-        });
+        let existing_tags = text_to_tags(tags_text);
+
+        let unsaved_tags: Vec<String> = existing_tags
+            .iter()
+            .filter(|tag| !tags.contains(tag))
+            .cloned()
+            .collect();
+
+        unsaved_tags
+            .into_iter()
+            .rev()
+            .for_each(|tag| tags.insert(0, tag));
+
+        let selected_tags = BTreeSet::from_iter(existing_tags);
 
         let mut tags_popup = Self {
             state,
@@ -55,7 +63,9 @@ impl TagsPopup {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        let area = centered_rect(95, 70, area);
+        let mut area = centered_rect(70, 100, area);
+        area.y += 1;
+        area.height -= 2;
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -66,14 +76,14 @@ impl TagsPopup {
         frame.render_widget(block, area);
 
         let footer_height = if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
-            2
+            3
         } else {
-            1
+            2
         };
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .horizontal_margin(3)
+            .horizontal_margin(1)
             .vertical_margin(1)
             .constraints([Constraint::Min(3), Constraint::Length(footer_height)].as_ref())
             .split(area);
@@ -89,7 +99,7 @@ impl TagsPopup {
             .wrap(Wrap { trim: false })
             .block(
                 Block::default()
-                    .borders(Borders::NONE)
+                    .borders(Borders::TOP)
                     .style(Style::default()),
             );
 
@@ -136,7 +146,7 @@ impl TagsPopup {
         frame.render_widget(place_holder, area);
     }
 
-    fn handle_input(&mut self, input: &Input) -> TagsPopupReturn {
+    pub fn handle_input(&mut self, input: &Input) -> TagsPopupReturn {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
         match input.key_code {
             KeyCode::Char('j') | KeyCode::Down => self.cycle_next_tag(),
@@ -201,7 +211,15 @@ impl TagsPopup {
     }
 
     fn confirm(&self) -> TagsPopupReturn {
-        let tags_text = tags_to_text(&self.tags);
+        // We must take the tags from the tags vector becuase it matches the order in the tags list
+        let selected_tags: Vec<String> = self
+            .tags
+            .iter()
+            .filter(|tag| self.selected_tags.contains(*tag))
+            .cloned()
+            .collect();
+
+        let tags_text = tags_to_text(&selected_tags);
 
         TagsPopupReturn::Apply(tags_text)
     }
