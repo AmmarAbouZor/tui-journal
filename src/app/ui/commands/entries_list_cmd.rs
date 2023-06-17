@@ -307,7 +307,7 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
         if file_path.exists() {
             let new_content = fs::read_to_string(&file_path).await?;
             ui_components.editor.set_entry_content(&new_content, app);
-            ui_components.change_active_control(ControlType::EntryContentTxt);
+            ui_components.change_active_control(ControlType::EntriesList);
         }
     }
 
