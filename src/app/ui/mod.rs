@@ -124,7 +124,7 @@ impl<'a, 'b> UIComponents<'a> {
             .constraints([Constraint::Min(2), Constraint::Length(1)].as_ref())
             .split(f.size());
 
-        render_footer(f, chunks[1], self);
+        render_footer(f, chunks[1], self, app);
 
         let entries_chunks = Layout::default()
             .direction(Direction::Horizontal)
