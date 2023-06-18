@@ -261,6 +261,12 @@ impl<'a, 'b> UIComponents<'a> {
                     filter_popup::FilterPopupReturn::Apply(filter) => {
                         app.apply_filter(filter);
                         self.popup_stack.pop().expect("popup stack isn't empty");
+
+                        // This fixes the bug: Entry will not be highlighted when the result of the filter is one entry only
+                        if app.get_active_entries().count() == 1 {
+                            let entry_id = app.get_active_entries().next().map(|entrie| entrie.id);
+                            self.set_current_entry(entry_id, app);
+                        }
                     }
                 },
             }
