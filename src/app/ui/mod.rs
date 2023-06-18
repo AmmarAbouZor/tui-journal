@@ -60,7 +60,7 @@ pub enum Popup<'a> {
     Entry(Box<EntryPopup<'a>>),
     MsgBox(Box<MsgBox>),
     Export(Box<ExportPopup<'a>>),
-    Filter(Box<FilterPopup>),
+    Filter(Box<FilterPopup<'a>>),
 }
 
 pub struct UIComponents<'a> {
