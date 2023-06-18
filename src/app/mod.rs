@@ -250,9 +250,10 @@ where
             let all_tags = self.get_all_tags();
             let filter = self.filter.as_mut().unwrap();
 
-            filter.critria.retain(|cr| {
-                let FilterCritrion::Tag(tag) = cr;
-                all_tags.contains(tag)
+            filter.critria.retain(|cr| match cr {
+                FilterCritrion::Tag(tag) => all_tags.contains(tag),
+                FilterCritrion::Title(_) => true,
+                FilterCritrion::Content(_) => true,
             });
 
             if filter.critria.is_empty() {

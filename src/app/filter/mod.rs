@@ -1,4 +1,5 @@
 use backend::Entry;
+use rayon::prelude::*;
 
 pub mod criterion;
 
@@ -29,8 +30,8 @@ impl Filter {
     /// Checks if the entry meets the filter criteria
     pub fn check_entry(&self, entry: &Entry) -> bool {
         match self.relation {
-            CriteriaRelation::And => self.critria.iter().all(|cr| cr.check_entry(entry)),
-            CriteriaRelation::Or => self.critria.iter().any(|cr| cr.check_entry(entry)),
+            CriteriaRelation::And => self.critria.par_iter().all(|cr| cr.check_entry(entry)),
+            CriteriaRelation::Or => self.critria.par_iter().any(|cr| cr.check_entry(entry)),
         }
     }
 }

@@ -115,7 +115,7 @@ impl<'a> EntriesList {
             .collect();
 
         let list = List::new(items)
-            .block(self.get_list_block())
+            .block(self.get_list_block(app.filter.is_some()))
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -132,6 +132,7 @@ impl<'a> EntriesList {
         frame: &mut Frame<B>,
         area: Rect,
         list_keymaps: &[Keymap],
+        has_filter: bool,
     ) {
         let keys_text: Vec<String> = list_keymaps
             .iter()
@@ -148,17 +149,18 @@ impl<'a> EntriesList {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block());
+            .block(self.get_list_block(has_filter));
 
         frame.render_widget(place_holder, area);
     }
 
     #[inline]
-    fn get_list_block(&self) -> Block<'a> {
-        let title = if self.multi_select_mode {
-            "Journals - Multi-Select"
-        } else {
-            "Journals"
+    fn get_list_block(&self, has_filter: bool) -> Block<'a> {
+        let title = match (self.multi_select_mode, has_filter) {
+            (true, true) => "Journals - Multi-Select - Filtered",
+            (true, false) => "Journals - Multi-Select",
+            (false, true) => "Journals - Filtered",
+            (false, false) => "Journals",
         };
 
         let border_style = match (self.is_active, self.multi_select_mode) {
@@ -186,7 +188,7 @@ impl<'a> EntriesList {
         list_keymaps: &[Keymap],
     ) {
         if app.get_active_entries().next().is_none() {
-            self.render_place_holder(frame, area, list_keymaps);
+            self.render_place_holder(frame, area, list_keymaps, app.filter.is_some());
         } else {
             self.render_list(frame, app, area);
         }
