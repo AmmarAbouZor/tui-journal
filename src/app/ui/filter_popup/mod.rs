@@ -18,7 +18,7 @@ use crate::app::{
 use super::ui_functions::centered_rect;
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
-const FOOTER_MARGINE: u16 = 8;
+const FOOTER_MARGINE: usize = 8;
 const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 
 pub struct FilterPopup<'a> {
@@ -92,11 +92,9 @@ impl<'a> FilterPopup<'a> {
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
 
-        let footer_height = if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
-            2
-        } else {
-            1
-        };
+        let footer_height = textwrap::fill(FOOTER_TEXT, (area.width as usize) - FOOTER_MARGINE)
+            .lines()
+            .count();
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -108,7 +106,7 @@ impl<'a> FilterPopup<'a> {
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Min(4),
-                    Constraint::Length(footer_height),
+                    Constraint::Length(footer_height.try_into().unwrap()),
                 ]
                 .as_ref(),
             )
