@@ -36,6 +36,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from withing the app.
 - Add custom tags to the journals and use them in the built-in filter.
+- Search functions for journals title and content in the built-in filter.
 - Control many journals at once via the multi-select mode
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - Export and Import journals between different back-end files.
@@ -51,7 +52,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [ ]  RESTful back-end server with a client in the app.
 #### Application:
 - [x]  Edit journals content with external text editor from withing the app.
-- [ ]  Filter & Search functionalities.
+- [x]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
 - [ ]  Load entries as chunks for better performance.
 ## Installation
