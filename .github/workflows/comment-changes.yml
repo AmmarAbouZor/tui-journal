@@ -41,7 +41,7 @@ jobs:
             -n 1 \
             -o changelog.d/
 
-      - uses: peter-evans/create-pull-request@v5.0.1
+      - uses: peter-evans/create-pull-request@v5.0.2
         with:
           assignees: |
             AmmarAbouZor
