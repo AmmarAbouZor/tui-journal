@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Added": [
+      "automatic version increment and CFF self-maintenance",
+    ],
+  },
+)
