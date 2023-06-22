@@ -2,6 +2,16 @@ name: changelog-assembly
 
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: Release type
+        required: true
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 permissions:
   contents: write
@@ -9,6 +19,7 @@ permissions:
 
 jobs:
   ronlog:
+    if: contains(fromJson('["major", "minor", "patch"]'), inputs.release)
     name: ronlog
     runs-on: ubuntu-latest
     steps:
@@ -21,9 +32,15 @@ jobs:
           crate: aeruginous
 
       - run: |
-          aeruginous ronlog release \
-            -i changelog.d/ \
-            -v "$(cargo r -- --version | cut -d\  -f2)"
+          aeruginous increment-version \
+            -v "$(cat .version)" \
+            -r ${{ inputs.release }} \
+            -e .version \
+            -e CITATION.cff \
+            -e Cargo.lock \
+            -e Cargo.toml
+          aeruginous cff-release-today CITATION.cff
+          aeruginous ronlog release -i changelog.d/ -v "$(cat .version)"
 
       - uses: peter-evans/create-pull-request@v5.0.2
         with:
