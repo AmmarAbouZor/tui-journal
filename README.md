@@ -165,6 +165,11 @@ file_path = "<Documents-folder>/tui-journal/entries.json"
 file_path = "<Documents-folder>/tui-journal/entries.db"
 ```
 
+## Documentation
+
+For detailed information about the TUI Journal app, including usage guide, keymaps, and configuration details, please refer to the [Wiki](https://github.com/AmmarAbouZor/tui-journal/wiki).
+
+
 ## Acknowledgments
 
 TUI-Journal would not have been possible without the following open-source crates:
