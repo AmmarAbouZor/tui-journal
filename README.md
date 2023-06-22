@@ -25,8 +25,9 @@
 TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite. 
 
 ## Demo
-
-![](assets/demo.gif)
+<p align="center">
+   <img src="assets/demo.gif">
+</p>
 
 ## Features
 
