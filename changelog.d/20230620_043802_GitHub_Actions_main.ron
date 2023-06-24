@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "Create Cleanup Cache GitHub Action",
-    ],
-  },
-)

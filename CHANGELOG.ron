@@ -8,6 +8,35 @@
       references: {},
       version: (
         major: 0,
+        minor: 2,
+        patch: 0,
+      ),
+      released: "2023-06-24T19:05:58.025030712+00:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Improvements On Release Action Pipline",
+            "Add Filter Keybindings To Main Footer",
+            "Update app Preview in README",
+            "Keep journals list in focus after closing the external editor",
+          ],
+          "Added": [
+            "Create Cleanup Cache GitHub Action",
+            "Select-Tags Popup in Create/Edit Journals Prompt",
+            "Wiki Documentation",
+            "Tags (Categories) for journal + Filter Function",
+            "automatic version increment and CFF self-maintenance",
+            "Search Functions in Filter",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 1,
         patch: 4,
       ),
@@ -16,6 +45,13 @@
       changes: (
         references: {},
         changes: {
+          "Fixed": [
+            "Export journal file extension",
+            "Setting back-end path from CLI",
+            "Editor will be cleared after deleting entries if there are no entries left",
+            "bugs in fragment creation",
+            "Synchronizing problems with sqlite back-end",
+          ],
           "Added": [
             "Export Import functions for multiple journals",
             "configure CHANGELOG maintenance utilities",
@@ -38,13 +74,6 @@
             "Add NetBSD",
             "Make creating new entry more user-friendly postponing the validation at initialisation",
             "Option to Use Git Configured Editor as External editor",
-          ],
-          "Fixed": [
-            "Export journal file extension",
-            "Setting back-end path from CLI",
-            "Editor will be cleared after deleting entries if there are no entries left",
-            "bugs in fragment creation",
-            "Synchronizing problems with sqlite back-end",
           ],
         },
       ),
