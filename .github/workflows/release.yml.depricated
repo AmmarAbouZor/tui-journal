@@ -2,13 +2,8 @@ name: release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - .version
-
-permissions:
-  contents: write
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   create-release:
@@ -16,18 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
-      app_version: ${{ steps.tag_name.outputs.version }}
+      app_version: ${{ env.APP_VERSION }}
     steps:
-      - uses: actions/checkout@v3.5.3
+      - name: Get release version
+        shell: bash
+        if: env.APP_VERSION == ''
+        run: |
+          echo "APP_VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          echo "App version: ${{ env.APP_VERSION }}"
 
-      - id: tag_name
-        run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
-
-      - id: release
-        uses: softprops/action-gh-release@v0.1.15
+      - name: Create release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          generate_release_notes: true
-          tag_name: v${{ steps.tag_name.outputs.version }}
+          tag_name: ${{ env.APP_VERSION }}
+          release_name: TUI-Journal ${{ env.APP_VERSION }}
+          body: Please See [CHANGELOG.ron](https://github.com/AmmarAbouZor/tui-journal/blob/main/CHANGELOG.ron) for details.
+          prerelease: false
 
   build-release:
     name: build-release
@@ -48,7 +50,13 @@ jobs:
           - x86_64-pc-windows-msvc
 
     steps:
-      - uses: actions/checkout@v3.5.3
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
 
       - name: Build binaries
         run: ${{ env.CARGO }} build --verbose --release --target ${{ matrix.target }}
