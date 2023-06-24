@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "- Remove deprecated actions\n- Release starts automatically with when .version file changes\n- Release notes generate automatically",
+    ],
+  },
+)
