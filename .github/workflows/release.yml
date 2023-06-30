@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   create-release:
+    if: github.repository == 'AmmarAbouZor/tui-journal'
     name: create-release
     runs-on: ubuntu-latest
     outputs:
@@ -31,6 +32,7 @@ jobs:
           tag_name: v${{ steps.tag_name.outputs.version }}
 
   build-release:
+    if: github.repository == 'AmmarAbouZor/tui-journal'
     name: build-release
     needs: ['create-release']
     runs-on: ${{ matrix.os }}
