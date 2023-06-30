@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "Prevent release generation in forks",
+    ],
+  },
+)
