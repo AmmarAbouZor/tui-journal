@@ -35,6 +35,7 @@ jobs:
           aeruginous increment-version \
             -v "$(cat .version)" \
             -r ${{ inputs.release }} \
+            -p tui-journal \
             -e .version \
             -e CITATION.cff \
             -e Cargo.lock \
