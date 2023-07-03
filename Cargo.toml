@@ -26,7 +26,7 @@ simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.40"
 toml = "0.7.3"
-sqlx = {version = "0.6.3", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
+sqlx = {version = "0.7.0", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 
 # TODO: follow issue link: https://github.com/rhysd/tui-textarea/issues/19 and reapplay the migration
