@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "Fix Release action using MakeFile",
+    ],
+  },
+)
