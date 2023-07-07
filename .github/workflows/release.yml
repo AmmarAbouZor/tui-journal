@@ -12,6 +12,35 @@ permissions:
   contents: write
 
 jobs:
+
+  build-release:
+    if: github.repository == 'AmmarAbouZor/tui-journal'
+    name: build-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-2022]
+
+    steps:
+    - uses: actions/checkout@v3.5.3
+
+    - name: Setup MUSL
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        rustup target add x86_64-unknown-linux-musl
+        sudo apt-get -qq install musl-tools
+
+    - name: Build Release Mac
+      if: matrix.os == 'macos-latest'
+      run: make release-mac
+    - name: Build Release Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: make release-linux-musl
+    - name: Build Release Win
+      if: matrix.os == 'windows-latest'
+      run: make release-win
+
   create-release:
     if: github.repository == 'AmmarAbouZor/tui-journal'
     name: create-release
@@ -30,52 +59,10 @@ jobs:
         with:
           generate_release_notes: true
           tag_name: v${{ steps.tag_name.outputs.version }}
+          files: |
+            ./release/*.tar.gz
+            ./release/*.zip
+            ./release/*.msi
 
-  build-release:
-    if: github.repository == 'AmmarAbouZor/tui-journal'
-    name: build-release
-    needs: ['create-release']
-    runs-on: ${{ matrix.os }}
-    env:
-      CARGO: cargo
-      TARGET_DIR: ./target
-      RUST_BACKTRACE: 1
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-2022]
-        target:
-          - x86_64-unknown-linux-musl
-          - aarch64-unknown-linux-gnu
-          - x86_64-apple-darwin
-          - x86_64-pc-windows-msvc
-
-    steps:
-      - uses: actions/checkout@v3.5.3
-
-      - name: Build binaries
-        run: ${{ env.CARGO }} build --verbose --release --target ${{ matrix.target }}
-
-      - name: Build archive
-        run: |
-          staging="tjournal-${{ needs.create-release.outputs.app_version }}-${{ matrix.target }}"
-          mkdir -p "$staging"
-          if [ "${{ matrix.os }}" = "windows-2022" ]; then
-            cp "target/${{ matrix.target }}/release/tjournal.exe" "$staging/"
-            7z a -tzip "$staging.zip" "$staging"
-            echo "ASSET=$staging.zip" >> "$GITHUB_ENV"
-          else
-            cp "target/${{ matrix.target }}/release/tjournal" "$staging/"
-            tar czf "$staging.tar.gz" "$staging"
-            echo "ASSET=$staging.tar.gz" >> "$GITHUB_ENV"
-          fi
-
-      - name: Upload release archive
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ${{ env.ASSET }}
-          asset_name: ${{ env.ASSET }}
-          asset_content_type: application/octet-stream
