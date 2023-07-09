@@ -44,6 +44,7 @@ pub enum UICommand {
     MulSelExportEntries,
     ShowFilter,
     ResetFilter,
+    ShowFuzzyFind,
 }
 
 #[derive(Debug, Clone)]
@@ -152,6 +153,10 @@ impl UICommand {
                 "Reset filter",
                 "Reset the applied filter on journals",
             ),
+            UICommand::ShowFuzzyFind => CommandInfo::new(
+                "Fuzzy find",
+                "Open fuzzy find popup for journals",
+            ),
         }
     }
 
@@ -189,6 +194,7 @@ impl UICommand {
             UICommand::MulSelExportEntries => exec_export_selected_entries(ui_components, app),
             UICommand::ShowFilter => exec_show_filter(ui_components, app),
             UICommand::ResetFilter => exec_reset_filter(app),
+            UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
         }
     }
 
@@ -246,6 +252,9 @@ impl UICommand {
             UICommand::MulSelExportEntries => not_implemented(),
             UICommand::ShowFilter => continue_show_filter(ui_components, app, msg_box_result).await,
             UICommand::ResetFilter => not_implemented(),
+            UICommand::ShowFuzzyFind => {
+                continue_fuzzy_find(ui_components, app, msg_box_result).await
+            }
         }
     }
 }
