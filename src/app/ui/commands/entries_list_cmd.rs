@@ -1,4 +1,4 @@
-use std::env;
+use std::{collections::HashMap, env};
 
 use crate::app::{external_editor, ui::*, App, UIComponents};
 
@@ -396,8 +396,13 @@ pub fn exec_show_fuzzy_find<D: DataProvider>(
 
 #[inline]
 fn show_fuzzy_find<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
-    //TODO:
-    todo!()
+    let entries: HashMap<u32, String> = app
+        .get_active_entries()
+        .map(|entry| (entry.id, entry.title.to_owned()))
+        .collect();
+    ui_components
+        .popup_stack
+        .push(Popup::FuzzFind(Box::new(FuzzFindPopup::new(entries))));
 }
 
 pub async fn continue_fuzzy_find<'a, D: DataProvider>(

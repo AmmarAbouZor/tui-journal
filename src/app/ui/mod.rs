@@ -9,6 +9,7 @@ use self::{
     export_popup::ExportPopup,
     filter_popup::FilterPopup,
     footer::render_footer,
+    fuzz_find::FuzzFindPopup,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
 };
@@ -37,6 +38,7 @@ mod entry_popup;
 mod export_popup;
 mod filter_popup;
 mod footer;
+mod fuzz_find;
 mod help_popup;
 mod msg_box;
 pub mod ui_functions;
@@ -61,6 +63,7 @@ pub enum Popup<'a> {
     MsgBox(Box<MsgBox>),
     Export(Box<ExportPopup<'a>>),
     Filter(Box<FilterPopup<'a>>),
+    FuzzFind(Box<FuzzFindPopup<'a>>),
 }
 
 pub struct UIComponents<'a> {
@@ -149,6 +152,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
                 Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.size()),
+                Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.size()),
             }
         }
     }
@@ -267,6 +271,15 @@ impl<'a, 'b> UIComponents<'a> {
                             let entry_id = app.get_active_entries().next().map(|entrie| entrie.id);
                             self.set_current_entry(entry_id, app);
                         }
+                    }
+                },
+                Popup::FuzzFind(fuzz_find) => match fuzz_find.handle_input(input) {
+                    fuzz_find::FuzzFindReturn::KeepPopup => {}
+                    fuzz_find::FuzzFindReturn::Close => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
+                    fuzz_find::FuzzFindReturn::SelectEntry(entry_id) => {
+                        self.set_current_entry(entry_id, app);
                     }
                 },
             }
