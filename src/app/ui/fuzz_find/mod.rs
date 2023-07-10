@@ -1,11 +1,22 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, usize};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
-use tui::{backend::Backend, layout::Rect, widgets::ListState, Frame};
+use tui::{
+    backend::Backend,
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
+    widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
+    Frame,
+};
 use tui_textarea::TextArea;
 
 use crate::app::keymap::Input;
+
+use super::ui_functions::centered_rect;
+
+const FOOTER_TEXT: &str = "Esc, Enter, <Ctrl-m>, <Ctrl-c>: Close | Up, Down, <Ctrl-n>, <Ctrl-p>: cycle through filtered list";
+const FOOTER_MARGINE: usize = 8;
 
 pub struct FuzzFindPopup<'a> {
     query_text_box: TextArea<'a>,
@@ -35,7 +46,11 @@ impl FilteredEntry {
 
 impl<'a> FuzzFindPopup<'a> {
     pub fn new(entries: HashMap<u32, String>) -> Self {
-        let query_text_box = TextArea::default();
+        let mut query_text_box = TextArea::default();
+        let block = Block::default().title("Search Query").borders(Borders::ALL);
+        query_text_box.set_cursor_line_style(Style::default());
+        query_text_box.set_block(block);
+
         Self {
             query_text_box,
             entries,
@@ -47,8 +62,80 @@ impl<'a> FuzzFindPopup<'a> {
     }
 
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
-        //TODO:
-        todo!()
+        let area = centered_rect(60, 60, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .title("Fuzzy Find");
+
+        frame.render_widget(Clear, area);
+        frame.render_widget(block, area);
+
+        let footer_height = textwrap::fill(FOOTER_TEXT, (area.width as usize) - FOOTER_MARGINE)
+            .lines()
+            .count();
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .horizontal_margin(2)
+            .vertical_margin(2)
+            .constraints(
+                [
+                    Constraint::Length(3),
+                    Constraint::Min(4),
+                    Constraint::Length(footer_height.try_into().unwrap()),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+
+        frame.render_widget(self.query_text_box.widget(), chunks[0]);
+
+        self.render_entries_list(frame, chunks[1]);
+
+        self.render_footer(frame, chunks[2]);
+    }
+
+    #[inline]
+    fn render_entries_list<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+        let items: Vec<ListItem> = self
+            .filtered_entries
+            .iter()
+            .map(|entry| {
+                let entry_title = self
+                    .entries
+                    .get(&entry.id)
+                    .expect("Entry must be in entries map");
+
+                ListItem::new(entry_title.to_owned())
+            })
+            .collect();
+
+        let block_title = format!("Entries: {}", self.filtered_entries.len());
+
+        let block = Block::default().title(block_title).borders(Borders::ALL);
+
+        let list = List::new(items)
+            .block(block)
+            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
+            .highlight_symbol(">> ");
+
+        frame.render_stateful_widget(list, area, &mut self.list_state);
+    }
+
+    #[inline]
+    fn render_footer<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+        let footer = Paragraph::new(FOOTER_TEXT)
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: false })
+            .block(
+                Block::default()
+                    .borders(Borders::NONE)
+                    .style(Style::default()),
+            );
+
+        frame.render_widget(footer, area);
     }
 
     pub fn handle_input(&mut self, input: &Input) -> FuzzFindReturn {
