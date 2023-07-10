@@ -274,12 +274,13 @@ impl<'a, 'b> UIComponents<'a> {
                     }
                 },
                 Popup::FuzzFind(fuzz_find) => match fuzz_find.handle_input(input) {
-                    fuzz_find::FuzzFindReturn::KeepPopup => {}
                     fuzz_find::FuzzFindReturn::Close => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
                     fuzz_find::FuzzFindReturn::SelectEntry(entry_id) => {
-                        self.set_current_entry(entry_id, app);
+                        if entry_id.is_some() {
+                            self.set_current_entry(entry_id, app);
+                        }
                     }
                 },
             }

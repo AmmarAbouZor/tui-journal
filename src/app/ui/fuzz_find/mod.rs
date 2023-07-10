@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use tui::{backend::Backend, layout::Rect, widgets::ListState, Frame};
 use tui_textarea::TextArea;
@@ -16,7 +17,6 @@ pub struct FuzzFindPopup<'a> {
 }
 
 pub enum FuzzFindReturn {
-    KeepPopup,
     Close,
     SelectEntry(Option<u32>),
 }
@@ -52,8 +52,57 @@ impl<'a> FuzzFindPopup<'a> {
     }
 
     pub fn handle_input(&mut self, input: &Input) -> FuzzFindReturn {
-        //TODO:
-        todo!()
+        let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
+
+        match input.key_code {
+            KeyCode::Esc | KeyCode::Enter => return FuzzFindReturn::Close,
+            KeyCode::Char('c') | KeyCode::Char('m') if has_control => return FuzzFindReturn::Close,
+            KeyCode::Up => self.cycle_prev_entry(),
+            KeyCode::Char('p') if has_control => self.cycle_prev_entry(),
+            KeyCode::Down => self.cycle_next_entry(),
+            KeyCode::Char('n') if has_control => self.cycle_next_entry(),
+            _ => {
+                if self.query_text_box.input(KeyEvent::from(input)) {
+                    self.update_search_query();
+                }
+            }
+        }
+
+        let selected_id = self.list_state.selected().map(|idx| {
+            self.filtered_entries
+                .get(idx)
+                .expect("Index must be in the list boundaries")
+                .id
+        });
+
+        FuzzFindReturn::SelectEntry(selected_id)
+    }
+
+    #[inline]
+    pub fn cycle_next_entry(&mut self) {
+        if self.filtered_entries.is_empty() {
+            return;
+        }
+
+        let mut new_index = self.list_state.selected().map_or(0, |idx| idx + 1);
+
+        new_index = new_index.clamp(0, self.filtered_entries.len() - 1);
+
+        self.list_state.select(Some(new_index));
+    }
+
+    #[inline]
+    pub fn cycle_prev_entry(&mut self) {
+        if self.filtered_entries.is_empty() {
+            return;
+        }
+
+        let new_index = self
+            .list_state
+            .selected()
+            .map_or(0, |idx| idx.saturating_sub(1));
+
+        self.list_state.select(Some(new_index));
     }
 
     fn update_search_query(&mut self) {
