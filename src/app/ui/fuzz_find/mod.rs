@@ -243,7 +243,6 @@ impl<'a> FuzzFindPopup<'a> {
             self.list_state.select(None);
         } else {
             // Select first item when search query is updated
-            // TODO: Check if it better to not select anything at first
             self.list_state.select(Some(0));
         }
     }
