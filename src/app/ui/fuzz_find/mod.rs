@@ -5,7 +5,8 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
 };
@@ -108,7 +109,24 @@ impl<'a> FuzzFindPopup<'a> {
                     .get(&entry.id)
                     .expect("Entry must be in entries map");
 
-                ListItem::new(entry_title.to_owned())
+                let spans: Vec<_> = entry_title
+                    .chars()
+                    .enumerate()
+                    .map(|(idx, ch)| {
+                        Span::styled(
+                            ch.to_string(),
+                            if entry.indices.contains(&idx) {
+                                Style::default()
+                                    .add_modifier(Modifier::BOLD)
+                                    .fg(Color::LightBlue)
+                            } else {
+                                Style::default()
+                            },
+                        )
+                    })
+                    .collect();
+
+                ListItem::new(Spans::from(spans))
             })
             .collect();
 
