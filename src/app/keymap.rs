@@ -197,6 +197,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('x'), KeyModifiers::NONE),
             UICommand::ResetFilter,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
+            UICommand::ShowFuzzyFind,
+        ),
     ]
 }
 

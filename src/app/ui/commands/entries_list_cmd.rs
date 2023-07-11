@@ -1,4 +1,4 @@
-use std::env;
+use std::{collections::HashMap, env};
 
 use crate::app::{external_editor, ui::*, App, UIComponents};
 
@@ -377,6 +377,50 @@ pub async fn continue_show_filter<'a, D: DataProvider>(
 
 pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     app.apply_filter(None);
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_show_fuzzy_find<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ShowFuzzyFind));
+    } else {
+        show_fuzzy_find(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+#[inline]
+fn show_fuzzy_find<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    let entries: HashMap<u32, String> = app
+        .get_active_entries()
+        .map(|entry| (entry.id, entry.title.to_owned()))
+        .collect();
+    ui_components
+        .popup_stack
+        .push(Popup::FuzzFind(Box::new(FuzzFindPopup::new(entries))));
+}
+
+pub async fn continue_fuzzy_find<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            show_fuzzy_find(ui_components, app);
+        }
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            show_fuzzy_find(ui_components, app);
+        }
+    }
 
     Ok(HandleInputReturnType::Handled)
 }
