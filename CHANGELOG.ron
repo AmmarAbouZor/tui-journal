@@ -17,7 +17,7 @@
         references: {},
         changes: {
           "Changed": [
-            "Improvements On Release Action Pipline",
+            "Improvements On Release Action Pipeline",
             "Add Filter Keybindings To Main Footer",
             "Update app Preview in README",
             "Keep journals list in focus after closing the external editor",

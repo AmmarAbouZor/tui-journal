@@ -268,7 +268,7 @@ impl<'a, 'b> UIComponents<'a> {
 
                         // This fixes the bug: Entry will not be highlighted when the result of the filter is one entry only
                         if app.get_active_entries().count() == 1 {
-                            let entry_id = app.get_active_entries().next().map(|entrie| entrie.id);
+                            let entry_id = app.get_active_entries().next().map(|entry| entry.id);
                             self.set_current_entry(entry_id, app);
                         }
                     }
