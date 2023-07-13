@@ -8,6 +8,33 @@
       references: {},
       version: (
         major: 0,
+        minor: 3,
+        patch: 0,
+      ),
+      released: "2023-07-13T17:56:17.860700035+00:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Fuzzy Finder Demo",
+            "Fuzzy Finder for Journals",
+            "Add package name to CHANGELOG assembly workflow",
+          ],
+          "Changed": [
+            "Call Docker images of linters directly",
+          ],
+          "Fixed": [
+            "Prevent release generation in forks",
+            "Fix Release action using MakeFile",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 2,
         patch: 0,
       ),

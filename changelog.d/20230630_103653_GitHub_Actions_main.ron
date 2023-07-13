@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "Add package name to CHANGELOG assembly workflow",
-    ],
-  },
-)
