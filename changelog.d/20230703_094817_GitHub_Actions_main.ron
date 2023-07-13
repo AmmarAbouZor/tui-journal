@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Changed": [
-      "Call Docker images of linters directly",
-    ],
-  },
-)

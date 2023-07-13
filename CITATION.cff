@@ -3,8 +3,8 @@ cff-version: 1.2.0
 message: Please cite this software using these information.
 
 # Version information.
-date-released: 2023-06-24
-version: 0.2.0
+date-released: 2023-07-13
+version: 0.3.0
 
 # Project information.
 abstract: Your journal app if you live in a terminl
