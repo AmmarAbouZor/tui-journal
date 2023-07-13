@@ -29,6 +29,15 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
    <img src="assets/demo.gif">
 </p>
 
+<details>
+  <summary><h3>Fuzzy Finder</h3></summary>
+  
+<p align="center">
+   <img src="assets/fuzzy_find.gif">
+</p>
+
+</details>
+
 ## Features
 
 - Write and manage journal/notes entries from the terminal.
