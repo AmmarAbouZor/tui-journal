@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "Replace panic with compile_error in build script",
+    ],
+  },
+)
