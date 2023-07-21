@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "Release GitHub Action",
+    ],
+  },
+)
