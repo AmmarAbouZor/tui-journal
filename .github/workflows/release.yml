@@ -44,6 +44,7 @@ jobs:
   create-release:
     if: github.repository == 'AmmarAbouZor/tui-journal'
     name: create-release
+    needs: ['build-release']
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
