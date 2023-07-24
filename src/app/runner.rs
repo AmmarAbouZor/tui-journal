@@ -5,7 +5,7 @@ use tui::{backend::Backend, Terminal};
 use crate::app::{App, UIComponents};
 use crate::cli::PendingCliCommand;
 use crate::settings::{BackendType, Settings};
-use futures_util::{FutureExt, StreamExt};
+use futures_util::StreamExt;
 
 use backend::DataProvider;
 #[cfg(feature = "json")]
@@ -90,35 +90,26 @@ where
     draw_ui(terminal, &mut app, &mut ui_components)?;
 
     let mut input_stream = EventStream::new();
-    loop {
-        tokio::select! {
-            biased;
-
-            input =  input_stream.next().fuse() => {
-                match input {
-                    Some(event) => {
-                        let event = event.context("Error gettig input stream")?;
-                        match handle_input(event, &mut app, &mut ui_components).await{
-                            Ok(result) => {
-                                match result {
-                                    HandleInputReturnType::Handled | HandleInputReturnType::NotFound =>{
-                                        ui_components.update_current_entry(&mut app);
-                                        draw_ui(terminal, &mut app, &mut ui_components)?;
-                                    },
-                                    HandleInputReturnType::ExitApp => return Ok(()),
-                                };
-                            },
-                            Err(err) => {
-                                ui_components.show_err_msg(err.to_string());
-                                draw_ui(terminal, &mut app, &mut ui_components)?;
-                            }
-                        }
-                    },
-                    None => return Ok(()),
-                }
-            },
+    while let Some(event) = input_stream.next().await {
+        let event = event.context("Error gettig input stream")?;
+        match handle_input(event, &mut app, &mut ui_components).await {
+            Ok(result) => {
+                match result {
+                    HandleInputReturnType::Handled | HandleInputReturnType::NotFound => {
+                        ui_components.update_current_entry(&mut app);
+                        draw_ui(terminal, &mut app, &mut ui_components)?;
+                    }
+                    HandleInputReturnType::ExitApp => return Ok(()),
+                };
+            }
+            Err(err) => {
+                ui_components.show_err_msg(err.to_string());
+                draw_ui(terminal, &mut app, &mut ui_components)?;
+            }
         }
     }
+
+    Ok(())
 }
 
 async fn exec_pending_cmd<B: Backend, D: DataProvider>(
