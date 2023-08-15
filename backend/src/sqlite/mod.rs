@@ -28,7 +28,7 @@ impl SqliteDataProvide {
             file_path
         };
 
-        let db_url = format!("sqlite://{}", file_full_path.to_string_lossy());
+        let db_url = format!("sqlite:{}", file_full_path.to_string_lossy());
 
         SqliteDataProvide::create(&db_url).await
     }
