@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Changed": [
-      "Optimization for the app main loop",
-    ],
-  },
-)

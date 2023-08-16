@@ -9,6 +9,29 @@
       version: (
         major: 0,
         minor: 3,
+        patch: 1,
+      ),
+      released: "2023-08-16T18:10:45.172936899+00:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Replace panic with compile_error in build script",
+            "Release GitHub Action",
+            "Optimization for the app main loop",
+          ],
+          "Fixed": [
+            "Fix SQLite connection string path on Windows",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 3,
         patch: 0,
       ),
       released: "2023-07-13T17:56:17.860700035+00:00",
@@ -16,13 +39,13 @@
       changes: (
         references: {},
         changes: {
+          "Changed": [
+            "Call Docker images of linters directly",
+          ],
           "Added": [
             "Fuzzy Finder Demo",
             "Fuzzy Finder for Journals",
             "Add package name to CHANGELOG assembly workflow",
-          ],
-          "Changed": [
-            "Call Docker images of linters directly",
           ],
           "Fixed": [
             "Prevent release generation in forks",
@@ -72,6 +95,19 @@
       changes: (
         references: {},
         changes: {
+          "Changed": [
+            "bump baptiste0928/cargo-install to v2.1.0",
+            "improve GHA linting speed dramatically",
+            "Enhance render loop",
+            "Help popup improvements",
+            "CI Improvements",
+            "[Documentation] Create README Badges",
+            "settings Fixes & improvements",
+            "Add section to install the dependency  OpenSSL development package on Linux",
+            "Add NetBSD",
+            "Make creating new entry more user-friendly postponing the validation at initialisation",
+            "Option to Use Git Configured Editor as External editor",
+          ],
           "Fixed": [
             "Export journal file extension",
             "Setting back-end path from CLI",
@@ -88,19 +124,6 @@
             "Export current journal\'s content",
             "Multi-selection for journals",
             "Tabs and scrolling to help popup",
-          ],
-          "Changed": [
-            "bump baptiste0928/cargo-install to v2.1.0",
-            "improve GHA linting speed dramatically",
-            "Enhance render loop",
-            "Help popup improvements",
-            "CI Improvements",
-            "[Documentation] Create README Badges",
-            "settings Fixes & improvements",
-            "Add section to install the dependency  OpenSSL development package on Linux",
-            "Add NetBSD",
-            "Make creating new entry more user-friendly postponing the validation at initialisation",
-            "Option to Use Git Configured Editor as External editor",
           ],
         },
       ),

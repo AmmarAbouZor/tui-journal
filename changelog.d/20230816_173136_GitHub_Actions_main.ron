@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Fixed": [
-      "Fix SQLite connection string path on Windows",
-    ],
-  },
-)
