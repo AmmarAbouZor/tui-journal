@@ -17,17 +17,23 @@ jobs:
     if: github.repository == 'AmmarAbouZor/tui-journal'
     name: build-release
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            container: rust
+            dependencies: "libssl-dev"
+          - os: macos-latest
+          - os: windows-latest
 
     steps:
     - uses: actions/checkout@v3.5.3
 
-    - name: Setup Linux
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt update && apt install -y libssl-dev
+    - name: Install Linux dependencies
+      if: matrix.dependencies
+      run: apt update && apt install -y ${{ matrix.dependencies }}
 
     - name: Build Release Mac
       if: matrix.os == 'macos-latest'
