@@ -27,7 +27,7 @@ jobs:
 
     - name: Setup Linux
       if: matrix.os == 'ubuntu-latest'
-      run: apt update && apt install -y libssl-dev
+      run: sudo apt update && apt install -y libssl-dev
 
     - name: Build Release Mac
       if: matrix.os == 'macos-latest'
