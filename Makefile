@@ -28,11 +28,11 @@ release-win: build-release
 	cargo wix -p tjournal --no-build --nocapture --output ./release/tjournal.msi
 	ls -l ./release/tjournal.msi 
 
-release-linux-musl: 
-	cargo build --release --target=x86_64-unknown-linux-musl
-	strip target/x86_64-unknown-linux-musl/release/tjournal
+release-linux: 
+	cargo build --release --target=x86_64-unknown-linux-gnu
+	strip target/x86_64-unknown-linux-gnu/release/tjournal
 	mkdir -p release
-	tar -C ./target/x86_64-unknown-linux-musl/release/ -czvf ./release/tjournal-linux-musl.tar.gz ./tjournal
+	tar -C ./target/x86_64-unknown-linux-gnu/release/ -czvf ./release/tjournal-linux-gnu.tar.gz ./tjournal
 
 install:
 	cargo install --path "." 
