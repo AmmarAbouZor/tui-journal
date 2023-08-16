@@ -12,6 +12,7 @@ use crate::{
 pub mod commands;
 pub use commands::CliCommand;
 pub use commands::PendingCliCommand;
+use path_absolutize::Absolutize;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -88,7 +89,7 @@ impl Cli {
 async fn set_json_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
     ensure_path_exists(&path).await?;
 
-    settings.json_backend.file_path = Some(fs::canonicalize(path)?);
+    settings.json_backend.file_path = path.absolutize().map(PathBuf::from).ok();
 
     Ok(())
 }
@@ -102,7 +103,6 @@ async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
         fs::create_dir_all(parent)?;
     }
 
-    fs::File::create(path)?;
     Ok(())
 }
 
@@ -110,7 +110,7 @@ async fn ensure_path_exists(path: &Path) -> anyhow::Result<()> {
 async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
     ensure_path_exists(&path).await?;
 
-    settings.sqlite_backend.file_path = Some(fs::canonicalize(path)?);
+    settings.sqlite_backend.file_path = path.absolutize().map(PathBuf::from).ok();
 
     Ok(())
 }
