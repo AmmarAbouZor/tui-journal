@@ -113,6 +113,14 @@ To install TUI-Journal with only the SQLite back-end feature, use the following 
 cargo install tui-journal --no-default-features --features sqlite
 ```
 
+### Arch Linux
+
+On Arch Linux, you can install TUI-Journal by using [pacman](https://wiki.archlinux.org/title/Pacman):
+
+```bash
+pacman -S tui-journal
+```
+
 ### NetBSD
 
 On NetBSD a pre-compiled binary built with default features is available from the official repositories. To install it, simply run:
