@@ -67,7 +67,6 @@ jobs:
           files: |
             ./release/*.tar.gz
             ./release/*.zip
-            ./release/*.msi
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

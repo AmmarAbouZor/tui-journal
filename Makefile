@@ -23,10 +23,7 @@ release-mac: build-release
 
 release-win: build-release
 	mkdir -p release
-	tar -C ./target/release/ -czvf ./release/tjournal-win.tar.gz ./tjournal.exe
-	cargo install cargo-wix --version 0.3.3
-	cargo wix -p tui-journal --no-build --nocapture --output ./release/tjournal.msi
-	ls -l ./release/tjournal.msi 
+	7z -y a ./release/tjournal-win.zip ./target/release/tjournal.exe
 
 release-linux: 
 	cargo build --release --target=x86_64-unknown-linux-gnu
