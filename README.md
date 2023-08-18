@@ -38,6 +38,22 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 
 </details>
 
+## Table of Contents
+
+- [Features](#features)
+- [Roadmap](#roadmap)
+- [Installation](#installation)
+  - [Arch Linux](#arch-linux)
+  - [Alpine Linux](#alpine-linux)
+  - [NetBSD](#netbsd)
+  - [Build & Install via Cargo ](#build--install-via-cargo)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Acknowledgments](#acknowledgments)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - Write and manage journal/notes entries from the terminal.
@@ -66,7 +82,35 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [x]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
 - [ ]  Load entries as chunks for better performance.
+
+      
 ## Installation
+
+### Arch Linux
+
+On Arch Linux, you can install TUI-Journal by using [pacman](https://wiki.archlinux.org/title/Pacman):
+
+```bash
+pacman -S tui-journal
+```
+
+### Alpine Linux
+
+TUI-Journal is available for [Alpine Edge](https://pkgs.alpinelinux.org/packages?name=tui-journal&branch=edge). It can be installed via [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) after enabling the [testing repository](https://wiki.alpinelinux.org/wiki/Repositories).
+
+```bash
+apk add tui-journal
+```
+
+### NetBSD
+
+On NetBSD a pre-compiled binary built with default features is available from the official repositories. To install it, simply run:
+
+```bash
+pkgin install tui-journal
+```
+
+### Build & Install via Cargo 
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
 
@@ -113,30 +157,6 @@ To install TUI-Journal with only the SQLite back-end feature, use the following 
 cargo install tui-journal --no-default-features --features sqlite
 ```
 
-### Arch Linux
-
-On Arch Linux, you can install TUI-Journal by using [pacman](https://wiki.archlinux.org/title/Pacman):
-
-```bash
-pacman -S tui-journal
-```
-
-### Alpine Linux
-
-TUI-Journal is available for [Alpine Edge](https://pkgs.alpinelinux.org/packages?name=tui-journal&branch=edge). It can be installed via [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) after enabling the [testing repository](https://wiki.alpinelinux.org/wiki/Repositories).
-
-```bash
-apk add tui-journal
-```
-
-### NetBSD
-
-On NetBSD a pre-compiled binary built with default features is available from the official repositories. To install it, simply run:
-
-```bash
-pkgin install tui-journal
-```
-    
 ## Usage
 
 Once installed, you can run TUI-Journal by typing `tjournal` in your terminal:
