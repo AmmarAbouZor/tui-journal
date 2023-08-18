@@ -121,6 +121,14 @@ On Arch Linux, you can install TUI-Journal by using [pacman](https://wiki.archli
 pacman -S tui-journal
 ```
 
+### Alpine Linux
+
+TUI-Journal is available for [Alpine Edge](https://pkgs.alpinelinux.org/packages?name=tui-journal&branch=edge). It can be installed via [apk](https://wiki.alpinelinux.org/wiki/Alpine_Package_Keeper) after enabling the [testing repository](https://wiki.alpinelinux.org/wiki/Repositories).
+
+```bash
+apk add tui-journal
+```
+
 ### NetBSD
 
 On NetBSD a pre-compiled binary built with default features is available from the official repositories. To install it, simply run:
