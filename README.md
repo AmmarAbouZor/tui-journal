@@ -46,7 +46,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
   - [Arch Linux](#arch-linux)
   - [Alpine Linux](#alpine-linux)
   - [NetBSD](#netbsd)
-  - [Build & Install via Cargo ](build--install-via-cargo)
+  - [Build & Install via Cargo ](#build--install-via-cargo)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
