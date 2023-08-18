@@ -38,6 +38,22 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 
 </details>
 
+## Table of Contents
+
+- [Features](#features)
+- [Roadmap](#roadmap)
+- [Installation](#installation)
+  - [Arch Linux](#arch-linux)
+  - [Alpine Linux](#alpine-linux)
+  - [NetBSD](#netbsd)
+  - [Build & Install via Cargo ](build--install-via-Cargo)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Documentation](#documentation)
+- [Acknowledgments](#acknowledgments)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - Write and manage journal/notes entries from the terminal.
@@ -66,6 +82,8 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [x]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
 - [ ]  Load entries as chunks for better performance.
+
+      
 ## Installation
 
 ### Arch Linux
