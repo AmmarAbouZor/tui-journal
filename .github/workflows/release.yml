@@ -12,8 +12,7 @@ permissions:
   contents: write
 
 jobs:
-
-  build-release:
+  release:
     if: github.repository == 'AmmarAbouZor/tui-journal'
     name: build-release
     runs-on: ${{ matrix.os }}
@@ -45,28 +44,20 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: make release-win
 
-  create-release:
-    if: github.repository == 'AmmarAbouZor/tui-journal'
-    name: create-release
-    needs: ['build-release']
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
-      app_version: ${{ steps.tag_name.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3.5.3
+    - name: tag_name
+      id: tag_name
+      if: matrix.os == 'ubuntu-latest'
+      run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
 
-      - id: tag_name
-        run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
+    - name: release
+      if: matrix.os == 'ubuntu-latest'
+      uses: softprops/action-gh-release@v0.1.15
+      with:
+        generate_release_notes: true
+        tag_name: v${{ steps.tag_name.outputs.version }}
+        files: |
+          ./release/*.tar.gz
+          ./release/*.zip
 
-      - id: release
-        uses: softprops/action-gh-release@v0.1.15
-        with:
-          generate_release_notes: true
-          tag_name: v${{ steps.tag_name.outputs.version }}
-          files: |
-            ./release/*.tar.gz
-            ./release/*.zip
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
