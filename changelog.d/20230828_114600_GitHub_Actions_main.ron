@@ -1,8 +1,8 @@
 (
   references: {},
   changes: {
-    "Changed": [
-      "Release binaries don\'t get attached to the release since they are\ndifferent jobs.\nThis fix join creating and building release steps in one job",
+    "Fixed": [
+      "Attache built binaries to the release",
     ],
   },
 )
