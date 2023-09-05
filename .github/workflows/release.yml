@@ -28,7 +28,7 @@ jobs:
           - os: windows-latest
 
     steps:
-    - uses: actions/checkout@v3.5.3
+    - uses: actions/checkout@v4
 
     - name: Install Linux dependencies
       if: matrix.dependencies
