@@ -36,7 +36,7 @@ scopeguard = "1.2.0"
 git2 = { version = "0.18.0", default-features = false }
 rayon = "1.7.0"
 fuzzy-matcher = "0.3.7"
-path-absolutize = "3.1.0"
+path-absolutize = "3.1.1"
 # Textarea crate supports ratatui but it doesn't provide a new version on crates.io to support it
 # crossterm = "0.26"
 # tui = { version = "0.20", package = "ratatui" }
