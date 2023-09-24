@@ -87,11 +87,11 @@ pub fn centered_rect_exact_dimensions(width: u16, height: u16, r: Rect) -> Rect 
 }
 
 pub fn render_message_centered<B: Backend>(frame: &mut Frame<B>, message: &str) {
-    const TEXT_MARGINE: u16 = 4;
-    const HEIGHT_MARGINE: u16 = 2;
+    const TEXT_MARGIN: u16 = 4;
+    const HEIGHT_MARGIN: u16 = 2;
 
-    let width = message.len() as u16 + TEXT_MARGINE;
-    let height = message.lines().count() as u16 + HEIGHT_MARGINE;
+    let width = message.len() as u16 + TEXT_MARGIN;
+    let height = message.lines().count() as u16 + HEIGHT_MARGIN;
 
     let area = centered_rect_exact_dimensions(width, height, frame.size());
 
