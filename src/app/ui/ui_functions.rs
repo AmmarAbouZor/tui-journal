@@ -106,3 +106,35 @@ pub fn render_message_centered<B: Backend>(frame: &mut Frame<B>, message: &str) 
     frame.render_widget(Clear, area);
     frame.render_widget(paragraph, area);
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_rect_percentage() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect(100, 100, rect), rect);
+        assert_eq!(centered_rect(50, 50, rect), Rect::new(15, 14, 10, 8));
+    }
+
+    #[test]
+    fn test_rect_exact_height() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect_exact_height(100, 16, rect), rect);
+        assert_eq!(
+            centered_rect_exact_height(50, 8, rect),
+            Rect::new(15, 14, 10, 8)
+        );
+    }
+
+    #[test]
+    fn test_rect_exact_dimensions() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect_exact_dimensions(20, 16, rect), rect);
+        assert_eq!(
+            centered_rect_exact_dimensions(10, 8, rect),
+            Rect::new(15, 14, 10, 8)
+        );
+    }
+}
