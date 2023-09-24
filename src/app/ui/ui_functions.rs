@@ -78,7 +78,7 @@ pub fn centered_rect_exact_dimensions(width: u16, height: u16, r: Rect) -> Rect 
         .constraints(
             [
                 Constraint::Percentage((100 - width_percentage) / 2),
-                Constraint::Percentage(width),
+                Constraint::Length(width),
                 Constraint::Percentage((100 - width_percentage) / 2),
             ]
             .as_ref(),
@@ -87,11 +87,11 @@ pub fn centered_rect_exact_dimensions(width: u16, height: u16, r: Rect) -> Rect 
 }
 
 pub fn render_message_centered<B: Backend>(frame: &mut Frame<B>, message: &str) {
-    const TEXT_MARGINE: u16 = 4;
-    const HEIGHT_MARGINE: u16 = 2;
+    const TEXT_MARGIN: u16 = 4;
+    const HEIGHT_MARGIN: u16 = 2;
 
-    let width = message.len() as u16 + TEXT_MARGINE;
-    let height = message.lines().count() as u16 + HEIGHT_MARGINE;
+    let width = message.len() as u16 + TEXT_MARGIN;
+    let height = message.lines().count() as u16 + HEIGHT_MARGIN;
 
     let area = centered_rect_exact_dimensions(width, height, frame.size());
 
@@ -105,4 +105,36 @@ pub fn render_message_centered<B: Backend>(frame: &mut Frame<B>, message: &str) 
 
     frame.render_widget(Clear, area);
     frame.render_widget(paragraph, area);
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_rect_percentage() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect(100, 100, rect), rect);
+        assert_eq!(centered_rect(50, 50, rect), Rect::new(15, 14, 10, 8));
+    }
+
+    #[test]
+    fn test_rect_exact_height() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect_exact_height(100, 16, rect), rect);
+        assert_eq!(
+            centered_rect_exact_height(50, 8, rect),
+            Rect::new(15, 14, 10, 8)
+        );
+    }
+
+    #[test]
+    fn test_rect_exact_dimensions() {
+        let rect = Rect::new(10, 10, 20, 16);
+        assert_eq!(centered_rect_exact_dimensions(20, 16, rect), rect);
+        assert_eq!(
+            centered_rect_exact_dimensions(10, 8, rect),
+            Rect::new(15, 14, 10, 8)
+        );
+    }
 }
