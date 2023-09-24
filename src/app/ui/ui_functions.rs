@@ -78,7 +78,7 @@ pub fn centered_rect_exact_dimensions(width: u16, height: u16, r: Rect) -> Rect 
         .constraints(
             [
                 Constraint::Percentage((100 - width_percentage) / 2),
-                Constraint::Percentage(width),
+                Constraint::Length(width),
                 Constraint::Percentage((100 - width_percentage) / 2),
             ]
             .as_ref(),
