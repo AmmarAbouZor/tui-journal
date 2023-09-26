@@ -13,6 +13,9 @@ use rayon::prelude::*;
 pub use runner::run;
 pub use ui::UIComponents;
 
+#[cfg(test)]
+mod test;
+
 mod external_editor;
 mod filter;
 mod keymap;
