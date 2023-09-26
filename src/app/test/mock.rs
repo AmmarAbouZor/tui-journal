@@ -1,7 +1,4 @@
-use std::{
-    cell::{Cell, RefCell},
-    sync::RwLock,
-};
+use std::sync::RwLock;
 
 use async_trait::async_trait;
 use backend::ModifyEntryError;
@@ -23,7 +20,7 @@ impl MockDataProvider {
         }
     }
 
-    pub fn set_return_false(&mut self, return_error: bool) {
+    pub fn set_return_err(&mut self, return_error: bool) {
         self.return_error = return_error
     }
 
@@ -85,11 +82,12 @@ impl DataProvider for MockDataProvider {
     async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
         self.early_return()?;
 
-        let mut entries = self.entries.read().unwrap();
+        let entries = self.entries.read().unwrap();
 
         Ok(EntriesDTO::new(
             entries
                 .iter()
+                .filter(|entry| entries_ids.contains(&entry.id))
                 .cloned()
                 .map(EntryDraft::from_entry)
                 .collect(),
