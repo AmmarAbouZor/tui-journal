@@ -174,32 +174,41 @@ impl<'a> EntryPopup<'a> {
             }
         };
 
+        let active_style = Style::default().fg(ACTIVE_CONTROL_COLOR);
+        let invalid_style = Style::default().fg(INVALID_CONTROL_COLOR);
+
         if self.title_err_msg.is_empty() {
-            self.title_txt
-                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
-            self.title_txt
-                .set_block(Block::default().borders(Borders::ALL).title("Title"));
-        } else {
-            self.title_txt
-                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
+            self.title_txt.set_style(active_style);
             self.title_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
+                    .style(active_style)
+                    .title("Title"),
+            );
+        } else {
+            self.title_txt.set_style(invalid_style);
+            self.title_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(invalid_style)
                     .title(format!("Title : {}", self.title_err_msg)),
             );
         }
 
         if self.date_err_msg.is_empty() {
-            self.date_txt
-                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
-            self.date_txt
-                .set_block(Block::default().borders(Borders::ALL).title("Date"));
-        } else {
-            self.date_txt
-                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
+            self.date_txt.set_style(active_style);
             self.date_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
+                    .style(active_style)
+                    .title("Date"),
+            );
+        } else {
+            self.date_txt.set_style(invalid_style);
+            self.date_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(invalid_style)
                     .title(format!("Date : {}", self.date_err_msg)),
             );
         }
@@ -210,16 +219,19 @@ impl<'a> EntryPopup<'a> {
             } else {
                 "Tags"
             };
-            self.tags_txt
-                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
-            self.tags_txt
-                .set_block(Block::default().borders(Borders::ALL).title(title));
-        } else {
-            self.tags_txt
-                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
+            self.tags_txt.set_style(active_style);
             self.tags_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
+                    .style(active_style)
+                    .title(title),
+            );
+        } else {
+            self.tags_txt.set_style(invalid_style);
+            self.tags_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(invalid_style)
                     .title(format!("Tags : {}", self.date_err_msg)),
             );
         }
