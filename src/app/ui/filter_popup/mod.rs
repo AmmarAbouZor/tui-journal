@@ -151,7 +151,7 @@ impl<'a> FilterPopup<'a> {
         title_area: Rect,
         content_area: Rect,
     ) {
-        let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
+        let active_cursor_style = Style::default().bg(ACTIVE_BORDER_COLOR).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         let mut title_txt_block = Block::default().title("Title").borders(Borders::ALL);
