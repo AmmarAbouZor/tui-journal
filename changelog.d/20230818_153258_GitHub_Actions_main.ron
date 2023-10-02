@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "Add installation instructions for Alpine Linux",
-    ],
-  },
-)
