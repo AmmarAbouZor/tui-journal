@@ -25,7 +25,7 @@ directories = "5.0.0"
 simplelog = "0.12.1"
 textwrap = "0.16.0"
 thiserror = "1.0.48"
-toml = "0.7.8"
+toml = "0.8.0"
 sqlx = {version = "0.7.1", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 
