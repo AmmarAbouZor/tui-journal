@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Changed": [
-      "Migrate to Ratatui & Update Crossterm to 27",
-    ],
-  },
-)

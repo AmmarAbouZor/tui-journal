@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Fixed": [
-      "Attache built binaries to the release",
-    ],
-  },
-)
