@@ -159,16 +159,21 @@ impl<'a> ExportPopup<'a> {
         frame.render_widget(journal_paragraph, chunks[0]);
 
         if self.path_err_msg.is_empty() {
-            self.path_txt
-                .set_style(Style::default().fg(ACTIVE_CONTROL_COLOR));
-            self.path_txt
-                .set_block(Block::default().borders(Borders::ALL).title("Path"));
-        } else {
-            self.path_txt
-                .set_style(Style::default().fg(INVALID_CONTROL_COLOR));
+            let active_color = Style::default().fg(ACTIVE_CONTROL_COLOR);
+            self.path_txt.set_style(active_color);
             self.path_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
+                    .style(active_color)
+                    .title("Path"),
+            );
+        } else {
+            let invalide_style = Style::default().fg(INVALID_CONTROL_COLOR);
+            self.path_txt.set_style(invalide_style);
+            self.path_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(invalide_style)
                     .title(format!("Path : {}", self.path_err_msg)),
             );
         }
