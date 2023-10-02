@@ -3,7 +3,7 @@ use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, Tabs, Wrap},
     Frame,
 };
@@ -48,15 +48,15 @@ impl KeybindingsTabs {
         }
     }
 
-    fn get_headers<'a>() -> Vec<Spans<'a>> {
+    fn get_headers<'a>() -> Vec<Line<'a>> {
         let highlight_style = Style::default()
             .fg(TAB_LETTER_HIGHLIGHT_COLOR)
             .add_modifier(Modifier::BOLD);
 
         vec![
-            Spans::from(vec![Span::styled("G", highlight_style), Span::raw("lobal")]),
-            Spans::from(vec![Span::styled("E", highlight_style), Span::raw("ditor")]),
-            Spans::from(vec![
+            Line::from(vec![Span::styled("G", highlight_style), Span::raw("lobal")]),
+            Line::from(vec![Span::styled("E", highlight_style), Span::raw("ditor")]),
+            Line::from(vec![
                 Span::styled("M", highlight_style),
                 Span::raw("ulti-Select"),
             ]),

@@ -4,7 +4,7 @@ use ratatui::{
     backend::Backend,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
 };
@@ -69,17 +69,17 @@ impl<'a> EntriesList {
                     foreground_color
                 };
 
-                let mut spans: Vec<Spans> = title_lines
+                let mut spans: Vec<Line> = title_lines
                     .iter()
                     .map(|line| {
-                        Spans::from(Span::styled(
+                        Line::from(Span::styled(
                             line.to_string(),
                             Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
                         ))
                     })
                     .collect();
 
-                spans.push(Spans::from(Span::styled(
+                spans.push(Line::from(Span::styled(
                     format!(
                         "{},{},{}",
                         entry.date.day(),
@@ -102,7 +102,7 @@ impl<'a> EntriesList {
                     tag_line
                         .into_iter()
                         .map(|line| {
-                            Spans::from(Span::styled(
+                            Line::from(Span::styled(
                                 line.to_string(),
                                 Style::default()
                                     .fg(Color::LightCyan)
