@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use tui::widgets::TableState;
+use ratatui::widgets::TableState;
 
 use crate::app::{
     keymap::{get_multi_select_keymaps, Input},

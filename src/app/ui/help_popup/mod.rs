@@ -1,5 +1,5 @@
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},

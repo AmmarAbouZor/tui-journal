@@ -1,5 +1,5 @@
 use backend::DataProvider;
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Alignment, Rect},
     style::Style,

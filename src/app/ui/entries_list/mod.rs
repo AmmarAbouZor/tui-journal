@@ -1,11 +1,13 @@
 use chrono::Datelike;
 
-use tui::backend::Backend;
-use tui::layout::{Alignment, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
-use tui::Frame;
+use ratatui::{
+    backend::Backend,
+    layout::{Alignment, Rect},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    Frame,
+};
 
 use backend::DataProvider;
 

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use crossterm::event::{Event, EventStream};
-use tui::{backend::Backend, Terminal};
+use ratatui::{backend::Backend, Terminal};
 
 use crate::app::{App, UIComponents};
 use crate::cli::PendingCliCommand;
