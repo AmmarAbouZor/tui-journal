@@ -20,7 +20,7 @@ log = "0.4.20"
 chrono = { version = "0.4.31", features = ["serde"] }
 async-trait = "0.1.73"
 clap = { version = "4.4.5", features = ["derive"] }
-crossterm = {version =  "0.25", features = ["event-stream"]}
+crossterm = {version =  "0.27.0", features = ["event-stream"]}
 directories = "5.0.0"
 simplelog = "0.12.1"
 textwrap = "0.16.0"
@@ -29,18 +29,13 @@ toml = "0.8.0"
 sqlx = {version = "0.7.1", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 
-# TODO: follow issue link: https://github.com/rhysd/tui-textarea/issues/19 and reapplay the migration
-tui = "0.19"
-tui-textarea = "0.2"
 scopeguard = "1.2.0"
 git2 = { version = "0.18.1", default-features = false }
 rayon = "1.8.0"
 fuzzy-matcher = "0.3.7"
 path-absolutize = "3.1.1"
-# Textarea crate supports ratatui but it doesn't provide a new version on crates.io to support it
-# crossterm = "0.26"
-# tui = { version = "0.20", package = "ratatui" }
-# tui-textarea = { git = "https://github.com/rhysd/tui-textarea", version = "0.2", features = ["ratatui-crossterm"], default-features=false}
+tui-textarea = { version = "0.2.2", features = ["ratatui-crossterm"], default-features=false}
+ratatui = { version = "0.23.0", features = ["all-widgets"]}
 
 [features]
 default = ["json", "sqlite"]

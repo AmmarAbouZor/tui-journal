@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use crossterm::event::{KeyCode, KeyModifiers};
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},

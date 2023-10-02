@@ -24,7 +24,7 @@ use super::{
 };
 use anyhow::Result;
 
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout},
     style::Color,

@@ -1,11 +1,13 @@
 use chrono::Datelike;
 
-use tui::backend::Backend;
-use tui::layout::{Alignment, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap};
-use tui::Frame;
+use ratatui::{
+    backend::Backend,
+    layout::{Alignment, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    Frame,
+};
 
 use backend::DataProvider;
 
@@ -67,17 +69,17 @@ impl<'a> EntriesList {
                     foreground_color
                 };
 
-                let mut spans: Vec<Spans> = title_lines
+                let mut spans: Vec<Line> = title_lines
                     .iter()
                     .map(|line| {
-                        Spans::from(Span::styled(
+                        Line::from(Span::styled(
                             line.to_string(),
                             Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
                         ))
                     })
                     .collect();
 
-                spans.push(Spans::from(Span::styled(
+                spans.push(Line::from(Span::styled(
                     format!(
                         "{},{},{}",
                         entry.date.day(),
@@ -100,7 +102,7 @@ impl<'a> EntriesList {
                     tag_line
                         .into_iter()
                         .map(|line| {
-                            Spans::from(Span::styled(
+                            Line::from(Span::styled(
                                 line.to_string(),
                                 Style::default()
                                     .fg(Color::LightCyan)
