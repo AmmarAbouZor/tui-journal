@@ -50,7 +50,7 @@ jobs:
       run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
 
     - name: release
-      if: matrix.os == 'ubuntu-latest'
+      if: ${{success() && matrix.os == 'ubuntu-latest'}}
       uses: softprops/action-gh-release@v0.1.15
       with:
         generate_release_notes: true
