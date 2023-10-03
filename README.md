@@ -86,6 +86,8 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
       
 ## Installation
 
+Grab the most recent pre-built binaries for your platform from the [Releases page](https://github.com/AmmarAbouZor/tui-journal/releases), or utilize the available package managers.
+
 ### Arch Linux
 
 On Arch Linux, you can install TUI-Journal by using [pacman](https://wiki.archlinux.org/title/Pacman):

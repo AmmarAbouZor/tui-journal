@@ -46,14 +46,14 @@ jobs:
 
     - name: tag_name
       id: tag_name
-      if: matrix.os == 'ubuntu-latest'
+      shell: bash
       run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
 
     - name: release
-      if: ${{success() && matrix.os == 'ubuntu-latest'}}
+      if: success()
       uses: softprops/action-gh-release@v0.1.15
       with:
-        generate_release_notes: true
+        generate_release_notes: ${{ matrix.os == 'ubuntu-latest' }}
         tag_name: v${{ steps.tag_name.outputs.version }}
         files: |
           ./release/*.tar.gz
