@@ -2,7 +2,7 @@
   references: {},
   changes: {
     "Fixed": [
-      "Release Job now wait until all other jobs are successfully done\nthen it creates the release to ensure that all binaries are included in it",
+      "Release GitHub Action creates binaries for Linux, MacOs and Widnows",
     ],
   },
 )
