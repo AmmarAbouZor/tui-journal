@@ -4,7 +4,10 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, Tabs, Wrap},
+    widgets::{
+        Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Table, Tabs, Wrap,
+    },
     Frame,
 };
 
@@ -188,11 +191,19 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
     area: Rect,
     table: &mut T,
 ) {
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(5), Constraint::Length(2)].as_ref())
+        .split(area);
+
+    let area = chunks[0];
+
     let header_cells = ["Key", "Command", "Description"]
         .into_iter()
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
     let header = Row::new(header_cells).height(1).bottom_margin(1);
 
+    let mut max_height = 0;
     let rows = table.get_bindings_map().iter().map(|(command, keys)| {
         let keys: Vec<_> = keys.iter().map(|input| input.to_string()).collect();
         let mut keys_text = keys.join(", ");
@@ -217,6 +228,8 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
             .max(description.lines().count())
             .max(keys_text.lines().count()) as u16;
 
+        max_height = height.max(max_height);
+
         let cells = vec![
             Cell::from(keys_text).style(Style::default().add_modifier(Modifier::ITALIC)),
             Cell::from(name),
@@ -225,6 +238,8 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
 
         Row::new(cells).height(height)
     });
+
+    let rows_len = rows.len();
 
     let keymaps_table = Table::new(rows)
         .header(header)
@@ -240,7 +255,23 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
             Constraint::Percentage(DESCRIPTION_PERC),
         ]);
 
-    frame.render_stateful_widget(keymaps_table, area, table.get_state_mut());
+    let table_state = table.get_state_mut();
+
+    frame.render_stateful_widget(keymaps_table, area, table_state);
+
+    let scroll_area = chunks[1];
+    let mut state = ScrollbarState::default()
+        .content_length(rows_len as u16)
+        .viewport_content_length(rows_len as u16 / max_height)
+        .position(table_state.selected().unwrap_or(0) as u16);
+
+    let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+        .begin_symbol(None)
+        .end_symbol(None)
+        .track_symbol(None)
+        .thumb_symbol("▐");
+
+    frame.render_stateful_widget(scrollbar, scroll_area, &mut state)
 }
 
 pub fn render_editor_hint<B: Backend>(frame: &mut Frame<B>, area: Rect) {
