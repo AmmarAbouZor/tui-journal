@@ -198,7 +198,8 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
     let header = Row::new(header_cells).height(1).bottom_margin(1);
 
-    let mut max_height = 0;
+    // 4 are the header and borders lines
+    let mut lines_count = 4;
     let rows = table.get_bindings_map().iter().map(|(command, keys)| {
         let keys: Vec<_> = keys.iter().map(|input| input.to_string()).collect();
         let mut keys_text = keys.join(", ");
@@ -223,7 +224,7 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
             .max(description.lines().count())
             .max(keys_text.lines().count()) as u16;
 
-        max_height = height.max(max_height);
+        lines_count += height;
 
         let cells = vec![
             Cell::from(keys_text).style(Style::default().add_modifier(Modifier::ITALIC)),
@@ -234,7 +235,7 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
         Row::new(cells).height(height)
     });
 
-    let rows_len = rows.len();
+    let items_len = rows.len() as u16;
 
     let keymaps_table = Table::new(rows)
         .header(header)
@@ -254,10 +255,27 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
 
     frame.render_stateful_widget(keymaps_table, area, table_state);
 
+    let has_scrollbar = lines_count > area.height;
+
+    if has_scrollbar {
+        render_scrollbar(
+            frame,
+            area,
+            table_state.selected().unwrap_or(0) as u16,
+            items_len,
+        );
+    }
+}
+
+fn render_scrollbar<B: Backend>(frame: &mut Frame<B>, area: Rect, pos: u16, items_count: u16) {
+    const VIEWPORT_ADJUST: u16 = 13;
+
+    let viewport_len = area.height.saturating_sub(VIEWPORT_ADJUST);
+
     let mut state = ScrollbarState::default()
-        .content_length(rows_len as u16)
-        .viewport_content_length(rows_len as u16 / max_height)
-        .position(table_state.selected().unwrap_or(0) as u16);
+        .content_length(items_count)
+        .viewport_content_length(viewport_len)
+        .position(pos);
 
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
         .begin_symbol(Some("▲"))
