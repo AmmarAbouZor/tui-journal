@@ -125,6 +125,6 @@ fn log_help() -> String {
         "Specifies a file to use for logging\n(default file: {})",
         get_default_path()
             .map(|path| path.to_string_lossy().to_string())
-            .unwrap_or(String::new())
+            .unwrap_or_default()
     )
 }
