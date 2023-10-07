@@ -3,9 +3,14 @@ use chrono::Datelike;
 use ratatui::{
     backend::Backend,
     layout::{Alignment, Rect},
+    prelude::Margin,
     style::{Color, Modifier, Style},
+    symbols,
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{
+        Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Wrap,
+    },
     Frame,
 };
 
@@ -48,6 +53,8 @@ impl<'a> EntriesList {
             (INACTIVE_CONTROL_COLOR, Color::LightBlue)
         };
 
+        let mut lines_count = 0;
+
         let items: Vec<ListItem> = app
             .get_active_entries()
             .map(|entry| {
@@ -62,6 +69,9 @@ impl<'a> EntriesList {
 
                 // Text wrapping
                 let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGINE);
+
+                // tilte lines
+                lines_count += title_lines.len();
 
                 let fg_color = if highlight_selected {
                     SELECTED_FOREGROUND_COLOR
@@ -91,6 +101,9 @@ impl<'a> EntriesList {
                         .remove_modifier(Modifier::BOLD),
                 )));
 
+                // date line
+                lines_count += 1;
+
                 if !entry.tags.is_empty() {
                     let tags: Vec<String> = entry.tags.iter().map(String::from).collect();
                     let tag_line = tags.join(" | ");
@@ -98,6 +111,8 @@ impl<'a> EntriesList {
                     // Text wrapping
                     let tag_line =
                         textwrap::wrap(&tag_line, area.width as usize - LIST_INNER_MARGINE);
+
+                    lines_count += tag_line.len();
 
                     tag_line
                         .into_iter()
@@ -116,6 +131,8 @@ impl<'a> EntriesList {
             })
             .collect();
 
+        let items_count = items.len();
+
         let list = List::new(items)
             .block(self.get_list_block(app.filter.is_some()))
             .highlight_style(
@@ -127,6 +144,47 @@ impl<'a> EntriesList {
             .highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut self.state);
+
+        let lines_count = lines_count as u16;
+
+        if lines_count > area.height {
+            self.render_scrollbar(
+                frame,
+                area,
+                self.state.selected().unwrap_or(0) as u16,
+                items_count as u16,
+            );
+        }
+    }
+
+    fn render_scrollbar<B: Backend>(
+        &mut self,
+        frame: &mut Frame<B>,
+        area: Rect,
+        pos: u16,
+        items_count: u16,
+    ) {
+        const VIEWPORT_ADJUST: u16 = 13;
+
+        let viewport_len = area.height.saturating_sub(VIEWPORT_ADJUST);
+
+        let mut state = ScrollbarState::default()
+            .content_length(items_count)
+            .viewport_content_length(viewport_len)
+            .position(pos);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("▲"))
+            .end_symbol(Some("▼"))
+            .track_symbol(Some(symbols::line::VERTICAL))
+            .thumb_symbol(symbols::block::FULL);
+
+        let scroll_area = area.inner(&Margin {
+            horizontal: 0,
+            vertical: 1,
+        });
+
+        frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
     fn render_place_holder<B: Backend>(
