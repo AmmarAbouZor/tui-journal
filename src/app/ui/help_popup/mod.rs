@@ -2,7 +2,9 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
+    prelude::Margin,
     style::{Color, Modifier, Style},
+    symbols,
     text::{Line, Span},
     widgets::{
         Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
@@ -191,13 +193,6 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
     area: Rect,
     table: &mut T,
 ) {
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(5), Constraint::Length(2)].as_ref())
-        .split(area);
-
-    let area = chunks[0];
-
     let header_cells = ["Key", "Command", "Description"]
         .into_iter()
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
@@ -259,19 +254,23 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
 
     frame.render_stateful_widget(keymaps_table, area, table_state);
 
-    let scroll_area = chunks[1];
     let mut state = ScrollbarState::default()
         .content_length(rows_len as u16)
         .viewport_content_length(rows_len as u16 / max_height)
         .position(table_state.selected().unwrap_or(0) as u16);
 
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
-        .begin_symbol(None)
-        .end_symbol(None)
-        .track_symbol(None)
-        .thumb_symbol("▐");
+        .begin_symbol(Some("▲"))
+        .end_symbol(Some("▼"))
+        .track_symbol(Some(symbols::line::VERTICAL))
+        .thumb_symbol(symbols::block::FULL);
 
-    frame.render_stateful_widget(scrollbar, scroll_area, &mut state)
+    let scroll_area = area.inner(&Margin {
+        horizontal: 0,
+        vertical: 1,
+    });
+
+    frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
 }
 
 pub fn render_editor_hint<B: Backend>(frame: &mut Frame<B>, area: Rect) {
