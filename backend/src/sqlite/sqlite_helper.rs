@@ -24,7 +24,7 @@ impl From<EntryIntermediate> for Entry {
             tags: value
                 .tags
                 .map(|tags| tags.split_terminator(',').map(String::from).collect())
-                .unwrap_or(Vec::new()),
+                .unwrap_or_default(),
         }
     }
 }
