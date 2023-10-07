@@ -131,7 +131,7 @@ impl<'a> EntriesList {
             })
             .collect();
 
-        let items_count = items.len();
+        let items_count = items.len() as u16;
 
         let list = List::new(items)
             .block(self.get_list_block(app.filter.is_some()))
@@ -147,12 +147,15 @@ impl<'a> EntriesList {
 
         let lines_count = lines_count as u16;
 
-        if lines_count > area.height {
+        if lines_count > area.height - 2 {
+            let avg_item_height = lines_count / items_count;
+
             self.render_scrollbar(
                 frame,
                 area,
                 self.state.selected().unwrap_or(0) as u16,
-                items_count as u16,
+                items_count,
+                avg_item_height,
             );
         }
     }
@@ -163,10 +166,10 @@ impl<'a> EntriesList {
         area: Rect,
         pos: u16,
         items_count: u16,
+        avg_item_height: u16,
     ) {
-        const VIEWPORT_ADJUST: u16 = 13;
-
-        let viewport_len = area.height.saturating_sub(VIEWPORT_ADJUST);
+        const VIEWPORT_ADJUST: u16 = 4;
+        let viewport_len = (area.height / avg_item_height).saturating_sub(VIEWPORT_ADJUST);
 
         let mut state = ScrollbarState::default()
             .content_length(items_count)
