@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Fixed": [
-      "Release GitHub Action creates binaries for Linux, MacOs and Widnows",
-    ],
-  },
-)
