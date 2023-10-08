@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "Scrollbar for keybindings Overview Popup",
-    ],
-  },
-)
