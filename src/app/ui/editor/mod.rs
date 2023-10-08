@@ -2,8 +2,10 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifi
 use ratatui::{
     backend::Backend,
     layout::Rect,
+    prelude::Margin,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders},
+    symbols,
+    widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState},
     Frame,
 };
 
@@ -241,6 +243,38 @@ impl<'a> Editor<'a> {
         );
 
         frame.render_widget(self.text_area.widget(), area);
+
+        self.render_scrollbar(frame, area);
+    }
+
+    pub fn render_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
+    where
+        B: Backend,
+    {
+        let lines_count = self.text_area.lines().len() as u16;
+
+        if lines_count <= area.height - 2 {
+            return;
+        }
+
+        let (row, _) = self.text_area.cursor();
+
+        let mut state = ScrollbarState::default()
+            .content_length(lines_count)
+            .position(row as u16);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("▲"))
+            .end_symbol(Some("▼"))
+            .track_symbol(Some(symbols::line::VERTICAL))
+            .thumb_symbol(symbols::block::FULL);
+
+        let scroll_area = area.inner(&Margin {
+            horizontal: 0,
+            vertical: 1,
+        });
+
+        frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
     pub fn set_active(&mut self, active: bool) {
