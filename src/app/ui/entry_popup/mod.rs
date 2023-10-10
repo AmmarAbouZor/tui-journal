@@ -23,8 +23,8 @@ use super::{
 mod tags;
 
 const FOOTER_TEXT: &str =
-    "Enter: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-m>: Open tags";
-const FOOTER_MARGINE: u16 = 8;
+    "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Open tags";
+const FOOTER_MARGINE: u16 = 15;
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
@@ -119,8 +119,10 @@ impl<'a> EntryPopup<'a> {
     pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
         let mut area = centered_rect_exact_height(70, 14, area);
 
-        if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
-            area.height += 1;
+        const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGINE;
+
+        if area.width < FOOTER_LEN {
+            area.height += FOOTER_LEN / area.width;
         }
 
         let block = Block::default()
