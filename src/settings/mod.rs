@@ -67,6 +67,10 @@ impl Settings {
 
         let settings_path = get_settings_path()?;
 
+        if let Some(parent) = settings_path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+
         tokio::fs::write(settings_path, toml)
             .await
             .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
