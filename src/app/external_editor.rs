@@ -22,6 +22,7 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
 
     let editor_raw = settings
         .external_editor
+        .command
         .as_ref()
         .cloned()
         .or_else(|| get_git_editor().ok())
