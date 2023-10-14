@@ -7,8 +7,8 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use settings::Settings;
 use ratatui::{backend::CrosstermBackend, Terminal};
+use settings::Settings;
 
 mod app;
 mod cli;

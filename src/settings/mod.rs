@@ -1,15 +1,18 @@
-use std::path::PathBuf;
+use std::{convert::Infallible, fmt, marker::PhantomData, path::PathBuf, str::FromStr};
 
-use anyhow::{anyhow, Context, Ok};
+use anyhow::{anyhow, Context};
 use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
-use serde::{Deserialize, Serialize};
+use serde::{
+    de::{self, MapAccess, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
 
-use self::export::ExportSettings;
 #[cfg(feature = "json")]
 use self::json_backend::{get_default_json_path, JsonBackend};
 #[cfg(feature = "sqlite")]
 use self::sqlite_backend::{get_default_sqlite_path, SqliteBackend};
+use self::{export::ExportSettings, external_editor::ExternalEditor};
 
 #[cfg(feature = "json")]
 pub mod json_backend;
@@ -17,6 +20,7 @@ pub mod json_backend;
 pub mod sqlite_backend;
 
 mod export;
+mod external_editor;
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Settings {
@@ -24,8 +28,8 @@ pub struct Settings {
     pub export: ExportSettings,
     #[serde(default)]
     pub backend_type: Option<BackendType>,
-    #[serde(default)]
-    pub external_editor: Option<String>,
+    #[serde(default, deserialize_with = "string_or_struct")]
+    pub external_editor: ExternalEditor,
     #[cfg(feature = "json")]
     #[serde(default)]
     pub json_backend: JsonBackend,
@@ -74,11 +78,11 @@ impl Settings {
         self.complete_missing_options()?;
 
         toml::to_string(&self)
-            .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))
+            .map_err(|err| anyhow!("Settings couldn't be serialized\nError info: {}", err))
     }
 
     pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
-        // This check is to ensure that all added fields to settings struct are conisdered here
+        // This check is to ensure that all added fields to settings struct are considered here
         #[cfg(all(debug_assertions, feature = "sqlite", feature = "json"))]
         let Settings {
             backend_type: _,
@@ -126,4 +130,50 @@ fn get_default_data_dir() -> anyhow::Result<PathBuf> {
                 .join("tui-journal")
         })
         .context("Default entries directory path couldn't be retrieved")
+}
+
+/// This function is copied from serde documentations for the use case when the data can be string
+/// or a struct
+fn string_or_struct<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: Deserialize<'de> + FromStr<Err = Infallible>,
+    D: Deserializer<'de>,
+{
+    // This is a Visitor that forwards string types to T's `FromStr` impl and
+    // forwards map types to T's `Deserialize` impl. The `PhantomData` is to
+    // keep the compiler from complaining about T being an unused generic type
+    // parameter. We need T in order to know the Value type for the Visitor
+    // impl.
+    struct StringOrStruct<T>(PhantomData<fn() -> T>);
+
+    impl<'de, T> Visitor<'de> for StringOrStruct<T>
+    where
+        T: Deserialize<'de> + FromStr<Err = Infallible>,
+    {
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("string or map")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<T, E>
+        where
+            E: de::Error,
+        {
+            Ok(FromStr::from_str(value).unwrap())
+        }
+
+        fn visit_map<M>(self, map: M) -> Result<T, M::Error>
+        where
+            M: MapAccess<'de>,
+        {
+            // `MapAccessDeserializer` is a wrapper that turns a `MapAccess`
+            // into a `Deserializer`, allowing it to be used as the input to T's
+            // `Deserialize` implementation. T then deserializes itself using
+            // the entries from the map visitor.
+            Deserialize::deserialize(de::value::MapAccessDeserializer::new(map))
+        }
+    }
+
+    deserializer.deserialize_any(StringOrStruct(PhantomData))
 }

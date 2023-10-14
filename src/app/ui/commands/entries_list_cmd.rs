@@ -308,6 +308,10 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
             let new_content = fs::read_to_string(&file_path).await?;
             ui_components.editor.set_entry_content(&new_content, app);
             ui_components.change_active_control(ControlType::EntriesList);
+
+            if app.settings.external_editor.auto_save {
+                exec_save_entry_content(ui_components, app).await?;
+            }
         }
     }
 

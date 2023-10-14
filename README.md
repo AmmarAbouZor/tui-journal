@@ -60,7 +60,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Store your entries in either a plain text file using the JSON format or a SQLite database.
 - Intuitive, responsive and user-friendly text-based user interface (TUI).
 - Create, edit, and delete entries easily.
-- Edit journal content with the built-in editor or use your favourite terminal text editor from withing the app.
+- Edit journal content with the built-in editor or use your favourite terminal text editor from within the app.
 - Add custom tags to the journals and use them in the built-in filter.
 - Fuzzy Finder: Locate your desired journal with lightning-fast speed.
 - Search functions for journals title and content in the built-in filter.
@@ -78,7 +78,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [x]  Database back-end using SQLite.
 - [ ]  RESTful back-end server with a client in the app.
 #### Application:
-- [x]  Edit journals content with external text editor from withing the app.
+- [x]  Edit journals content with external text editor from within the app.
 - [x]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
 - [ ]  Load entries as chunks for better performance.
@@ -199,13 +199,20 @@ Here is a sample of the settings in the `config.toml` file:
 
 ```toml
 backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqlite.
-# Set the external terminal editor to use from withing the app.
-# If the value isn't set the app will try to retrieve the editor from git global configurations then It'll try with the environment varialbes VISUAL, EDITOR then it'll fallback to vi.  
-external_editor = "nvim"
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.
+
+[external_editor]
+# Set the external terminal editor to use from within the app.
+# If the value isn't set the app will try to retrieve the editor from git global configurations then It'll try with the environment variables VISUAL, EDITOR then it'll fallback to vi.  
+command = "nvim"
+# Enabling this save the journal content automatically after closing the external editor
+auto_save = false
+
+# Note: external_editor can still be configured in one line to set the command. In that case, the default values for the other fields will be used
+# external_editor = "nvim"
 
 [json_backend]
 file_path = "<Documents-folder>/tui-journal/entries.json"
