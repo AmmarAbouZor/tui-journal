@@ -78,11 +78,11 @@ impl Settings {
         self.complete_missing_options()?;
 
         toml::to_string(&self)
-            .map_err(|err| anyhow!("Settings couldn't be srialized\nError info: {}", err))
+            .map_err(|err| anyhow!("Settings couldn't be serialized\nError info: {}", err))
     }
 
     pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
-        // This check is to ensure that all added fields to settings struct are conisdered here
+        // This check is to ensure that all added fields to settings struct are considered here
         #[cfg(all(debug_assertions, feature = "sqlite", feature = "json"))]
         let Settings {
             backend_type: _,
