@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Fixed": [
+      "Release notes will be always generated in release GitHub action",
+    ],
+  },
+)
