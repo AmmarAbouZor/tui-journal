@@ -8,6 +8,28 @@
       references: {},
       version: (
         major: 0,
+        minor: 4,
+        patch: 0,
+      ),
+      released: "2023-10-14T13:31:02.923857748Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Fixed": [
+            "- Optimizations for size calculation for the popup size to fit the\r\n  footer on almost each terminal size\r\n- Correcting the keybindings in the footer text",
+            "Write configurations CLI argument creates needed directories",
+          ],
+          "Added": [
+            "Autosave Option for  External Editor",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 3,
         patch: 3,
       ),
@@ -17,8 +39,8 @@
         references: {},
         changes: {
           "Added": [
-            "Scrollbar to Journals Editor",
             "Scrollbar for keybindings Overview Popup",
+            "Scrollbar to Journals Editor",
             "Scrollbar to Journals\' list",
           ],
           "Fixed": [
@@ -39,13 +61,13 @@
       changes: (
         references: {},
         changes: {
-          "Changed": [
-            "Migrate to Ratatui & Update Crossterm to 27",
-          ],
           "Added": [
+            "Add installation instructions for Alpine Linux",
             "Unit Tests for UI Functions",
             "Unit Tests for the main App Logic",
-            "Add installation instructions for Alpine Linux",
+          ],
+          "Changed": [
+            "Migrate to Ratatui & Update Crossterm to 27",
           ],
           "Fixed": [
             "Attache built binaries to the release",
@@ -66,13 +88,13 @@
       changes: (
         references: {},
         changes: {
+          "Changed": [
+            "Optimization for the app main loop",
+            "Release GitHub Action",
+            "Replace panic with compile_error in build script",
+          ],
           "Fixed": [
             "Fix SQLite connection string path on Windows",
-          ],
-          "Changed": [
-            "Replace panic with compile_error in build script",
-            "Release GitHub Action",
-            "Optimization for the app main loop",
           ],
         },
       ),
@@ -89,17 +111,17 @@
       changes: (
         references: {},
         changes: {
+          "Added": [
+            "Add package name to CHANGELOG assembly workflow",
+            "Fuzzy Finder Demo",
+            "Fuzzy Finder for Journals",
+          ],
           "Changed": [
             "Call Docker images of linters directly",
           ],
-          "Added": [
-            "Fuzzy Finder Demo",
-            "Fuzzy Finder for Journals",
-            "Add package name to CHANGELOG assembly workflow",
-          ],
           "Fixed": [
-            "Prevent release generation in forks",
             "Fix Release action using MakeFile",
+            "Prevent release generation in forks",
           ],
         },
       ),
@@ -116,19 +138,19 @@
       changes: (
         references: {},
         changes: {
-          "Changed": [
-            "Improvements On Release Action Pipeline",
-            "Add Filter Keybindings To Main Footer",
-            "Update app Preview in README",
-            "Keep journals list in focus after closing the external editor",
-          ],
           "Added": [
             "Create Cleanup Cache GitHub Action",
-            "Select-Tags Popup in Create/Edit Journals Prompt",
-            "Wiki Documentation",
-            "Tags (Categories) for journal + Filter Function",
-            "automatic version increment and CFF self-maintenance",
             "Search Functions in Filter",
+            "Select-Tags Popup in Create/Edit Journals Prompt",
+            "Tags (Categories) for journal + Filter Function",
+            "Wiki Documentation",
+            "automatic version increment and CFF self-maintenance",
+          ],
+          "Changed": [
+            "Add Filter Keybindings To Main Footer",
+            "Improvements On Release Action Pipeline",
+            "Keep journals list in focus after closing the external editor",
+            "Update app Preview in README",
           ],
         },
       ),
@@ -146,34 +168,34 @@
         references: {},
         changes: {
           "Added": [
-            "Export Import functions for multiple journals",
-            "configure CHANGELOG maintenance utilities",
             "CITATION.cff",
             "Edit current journal content in external editor",
-            "Release CD action",
+            "Export Import functions for multiple journals",
             "Export current journal\'s content",
             "Multi-selection for journals",
+            "Release CD action",
             "Tabs and scrolling to help popup",
+            "configure CHANGELOG maintenance utilities",
           ],
           "Changed": [
-            "bump baptiste0928/cargo-install to v2.1.0",
-            "improve GHA linting speed dramatically",
+            "Add NetBSD",
+            "Add section to install the dependency  OpenSSL development package on Linux",
+            "CI Improvements",
             "Enhance render loop",
             "Help popup improvements",
-            "CI Improvements",
-            "[Documentation] Create README Badges",
-            "settings Fixes & improvements",
-            "Add section to install the dependency  OpenSSL development package on Linux",
-            "Add NetBSD",
             "Make creating new entry more user-friendly postponing the validation at initialisation",
             "Option to Use Git Configured Editor as External editor",
+            "[Documentation] Create README Badges",
+            "bump baptiste0928/cargo-install to v2.1.0",
+            "improve GHA linting speed dramatically",
+            "settings Fixes & improvements",
           ],
           "Fixed": [
+            "Editor will be cleared after deleting entries if there are no entries left",
             "Export journal file extension",
             "Setting back-end path from CLI",
-            "Editor will be cleared after deleting entries if there are no entries left",
-            "bugs in fragment creation",
             "Synchronizing problems with sqlite back-end",
+            "bugs in fragment creation",
           ],
         },
       ),
