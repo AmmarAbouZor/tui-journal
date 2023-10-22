@@ -244,10 +244,11 @@ impl<'a> Editor<'a> {
 
         frame.render_widget(self.text_area.widget(), area);
 
-        self.render_scrollbar(frame, area);
+        self.render_vertical_scrollbar(frame, area);
+        self.render_horizontal_scrollbar(frame, area);
     }
 
-    pub fn render_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
+    pub fn render_vertical_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
     where
         B: Backend,
     {
@@ -272,6 +273,42 @@ impl<'a> Editor<'a> {
         let scroll_area = area.inner(&Margin {
             horizontal: 0,
             vertical: 1,
+        });
+
+        frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
+    }
+
+    pub fn render_horizontal_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
+    where
+        B: Backend,
+    {
+        let max_width = self
+            .text_area
+            .lines()
+            .iter()
+            .map(|line| line.len())
+            .max()
+            .unwrap_or_default() as u16;
+
+        if max_width <= area.width - 2 {
+            return;
+        }
+
+        let (_, col) = self.text_area.cursor();
+
+        let mut state = ScrollbarState::default()
+            .content_length(max_width)
+            .position(col as u16);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::HorizontalBottom)
+            .begin_symbol(Some("◄"))
+            .end_symbol(Some("►"))
+            .track_symbol(Some(symbols::line::HORIZONTAL))
+            .thumb_symbol("🬋");
+
+        let scroll_area = area.inner(&Margin {
+            horizontal: 1,
+            vertical: 0,
         });
 
         frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
