@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Changed": [
+      "Upgrade Crates Ratatui & Tui-Textarea with breaking changes",
+    ],
+  },
+)
