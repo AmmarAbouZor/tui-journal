@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -85,7 +84,7 @@ impl<'a> FilterPopup<'a> {
         filter_popup
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let area = centered_rect(70, 80, area);
 
         let block = Block::default().borders(Borders::ALL).title("Filter");
@@ -126,7 +125,7 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_relations<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_relations(&mut self, frame: &mut Frame, area: Rect) {
         let relation_text = match self.relation {
             CriteriaRelation::And => "Journals must meet all criteria",
             CriteriaRelation::Or => "Journals must meet any of the criteria",
@@ -145,12 +144,7 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_text_boxes<B: Backend>(
-        &mut self,
-        frame: &mut Frame<B>,
-        title_area: Rect,
-        content_area: Rect,
-    ) {
+    fn render_text_boxes(&mut self, frame: &mut Frame, title_area: Rect, content_area: Rect) {
         let active_cursor_style = Style::default().bg(ACTIVE_BORDER_COLOR).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
@@ -186,7 +180,7 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_tags_list<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .tags
             .iter()
@@ -217,7 +211,7 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_tags_place_holder<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_tags_place_holder(&mut self, frame: &mut Frame, area: Rect) {
         let place_holder_text = String::from("\nNo journals with tags provided");
 
         let place_holder = Paragraph::new(place_holder_text)
@@ -242,7 +236,7 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_footer<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_footer(&mut self, frame: &mut Frame, area: Rect) {
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: false })

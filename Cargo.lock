@@ -969,6 +969,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
+name = "lru"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1efa59af2ddfad1854ae27d75009d538d0998b4b2fd47083e743ac1a10e46c60"
+dependencies = [
+ "hashbrown 0.14.0",
+]
+
+[[package]]
 name = "md-5"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1345,6 +1354,24 @@ dependencies = [
  "crossterm",
  "indoc",
  "itertools 0.11.0",
+ "paste",
+ "strum",
+ "unicode-segmentation",
+ "unicode-width",
+]
+
+[[package]]
+name = "ratatui"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ebc917cfb527a566c37ecb94c7e3fd098353516fb4eb6bea17015ade0182425"
+dependencies = [
+ "bitflags 2.3.3",
+ "cassowary",
+ "crossterm",
+ "indoc",
+ "itertools 0.11.0",
+ "lru",
  "paste",
  "strum",
  "time",
@@ -2187,7 +2214,7 @@ dependencies = [
  "git2",
  "log",
  "path-absolutize",
- "ratatui",
+ "ratatui 0.24.0",
  "rayon",
  "scopeguard",
  "serde",
@@ -2208,7 +2235,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8aa3edc9087c29f51e753c6eebb7740e3140a519feb08f89443e5fd16a69b91"
 dependencies = [
  "crossterm",
- "ratatui",
+ "ratatui 0.23.0",
  "unicode-width",
 ]
 

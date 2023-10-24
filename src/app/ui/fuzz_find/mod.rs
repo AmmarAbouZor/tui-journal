@@ -62,7 +62,7 @@ impl<'a> FuzzFindPopup<'a> {
         }
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let area = centered_rect(60, 60, area);
 
         let block = Block::default()
@@ -99,7 +99,7 @@ impl<'a> FuzzFindPopup<'a> {
     }
 
     #[inline]
-    fn render_entries_list<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_entries_list(&mut self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .filtered_entries
             .iter()
@@ -143,7 +143,7 @@ impl<'a> FuzzFindPopup<'a> {
     }
 
     #[inline]
-    fn render_footer<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_footer(&mut self, frame: &mut Frame, area: Rect) {
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: false })

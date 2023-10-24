@@ -117,10 +117,9 @@ impl<'a, 'b> UIComponents<'a> {
         self.editor.set_current_entry(entry_id, app);
     }
 
-    pub fn render_ui<D, B>(&mut self, f: &mut Frame<B>, app: &'b App<D>)
+    pub fn render_ui<D>(&mut self, f: &mut Frame, app: &'b App<D>)
     where
         D: DataProvider,
-        B: Backend,
     {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -141,10 +140,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.render_popup(f);
     }
 
-    pub fn render_popup<B>(&mut self, f: &mut Frame<B>)
-    where
-        B: Backend,
-    {
+    pub fn render_popup(&mut self, f: &mut Frame) {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup {
                 Popup::Help(help_popup) => help_popup.render_widget(f, f.size()),

@@ -1,7 +1,6 @@
 use chrono::Datelike;
 
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Rect},
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -41,12 +40,7 @@ impl<'a> EntriesList {
         }
     }
 
-    fn render_list<B: Backend, D: DataProvider>(
-        &mut self,
-        frame: &mut Frame<B>,
-        app: &App<D>,
-        area: Rect,
-    ) {
+    fn render_list<D: DataProvider>(&mut self, frame: &mut Frame, app: &App<D>, area: Rect) {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
@@ -160,9 +154,9 @@ impl<'a> EntriesList {
         }
     }
 
-    fn render_scrollbar<B: Backend>(
+    fn render_scrollbar(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
         pos: u16,
         items_count: u16,
@@ -190,9 +184,9 @@ impl<'a> EntriesList {
         frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
-    fn render_place_holder<B: Backend>(
+    fn render_place_holder(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
         list_keymaps: &[Keymap],
         has_filter: bool,
@@ -243,9 +237,9 @@ impl<'a> EntriesList {
             .border_style(border_style)
     }
 
-    pub fn render_widget<B: Backend, D: DataProvider>(
+    pub fn render_widget<D: DataProvider>(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
         app: &App<D>,
         list_keymaps: &[Keymap],

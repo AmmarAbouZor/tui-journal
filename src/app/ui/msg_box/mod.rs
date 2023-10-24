@@ -1,6 +1,5 @@
 use crossterm::event::KeyCode;
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::Span,
@@ -57,7 +56,7 @@ impl MsgBox {
         Self { msg_type, actions }
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let area = centered_rect_exact_height(55, 8, area);
 
         let (title, color, text) = match &self.msg_type {
