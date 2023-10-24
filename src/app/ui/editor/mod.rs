@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -195,10 +194,7 @@ impl<'a> Editor<'a> {
         }
     }
 
-    pub fn render_widget<B>(&mut self, frame: &mut Frame<B>, area: Rect)
-    where
-        B: Backend,
-    {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut title = "Content".to_owned();
         if self.is_active {
             let mode_caption = if self.is_insert_mode() {
@@ -248,13 +244,10 @@ impl<'a> Editor<'a> {
         self.render_horizontal_scrollbar(frame, area);
     }
 
-    pub fn render_vertical_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
-    where
-        B: Backend,
-    {
-        let lines_count = self.text_area.lines().len() as u16;
+    pub fn render_vertical_scrollbar(&mut self, frame: &mut Frame, area: Rect) {
+        let lines_count = self.text_area.lines().len();
 
-        if lines_count <= area.height - 2 {
+        if lines_count as u16 <= area.height - 2 {
             return;
         }
 
@@ -262,7 +255,7 @@ impl<'a> Editor<'a> {
 
         let mut state = ScrollbarState::default()
             .content_length(lines_count)
-            .position(row as u16);
+            .position(row);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(Some("▲"))
@@ -278,19 +271,16 @@ impl<'a> Editor<'a> {
         frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
-    pub fn render_horizontal_scrollbar<B>(&mut self, frame: &mut Frame<B>, area: Rect)
-    where
-        B: Backend,
-    {
+    pub fn render_horizontal_scrollbar(&mut self, frame: &mut Frame, area: Rect) {
         let max_width = self
             .text_area
             .lines()
             .iter()
             .map(|line| line.len())
             .max()
-            .unwrap_or_default() as u16;
+            .unwrap_or_default();
 
-        if max_width <= area.width - 2 {
+        if max_width as u16 <= area.width - 2 {
             return;
         }
 
@@ -298,7 +288,7 @@ impl<'a> Editor<'a> {
 
         let mut state = ScrollbarState::default()
             .content_length(max_width)
-            .position(col as u16);
+            .position(col);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::HorizontalBottom)
             .begin_symbol(Some("◄"))

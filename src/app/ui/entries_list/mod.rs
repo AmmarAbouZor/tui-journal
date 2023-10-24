@@ -1,7 +1,6 @@
 use chrono::Datelike;
 
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Rect},
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -41,12 +40,7 @@ impl<'a> EntriesList {
         }
     }
 
-    fn render_list<B: Backend, D: DataProvider>(
-        &mut self,
-        frame: &mut Frame<B>,
-        app: &App<D>,
-        area: Rect,
-    ) {
+    fn render_list<D: DataProvider>(&mut self, frame: &mut Frame, app: &App<D>, area: Rect) {
         let (foreground_color, highlight_bg) = if self.is_active {
             (ACTIVE_CONTROL_COLOR, Color::LightGreen)
         } else {
@@ -131,7 +125,7 @@ impl<'a> EntriesList {
             })
             .collect();
 
-        let items_count = items.len() as u16;
+        let items_count = items.len();
 
         let list = List::new(items)
             .block(self.get_list_block(app.filter.is_some()))
@@ -145,35 +139,35 @@ impl<'a> EntriesList {
 
         frame.render_stateful_widget(list, area, &mut self.state);
 
-        let lines_count = lines_count as u16;
+        let lines_count = lines_count;
 
-        if lines_count > area.height - 2 {
+        if lines_count > area.height as usize - 2 {
             let avg_item_height = lines_count / items_count;
 
             self.render_scrollbar(
                 frame,
                 area,
-                self.state.selected().unwrap_or(0) as u16,
+                self.state.selected().unwrap_or(0),
                 items_count,
                 avg_item_height,
             );
         }
     }
 
-    fn render_scrollbar<B: Backend>(
+    fn render_scrollbar(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
-        pos: u16,
-        items_count: u16,
-        avg_item_height: u16,
+        pos: usize,
+        items_count: usize,
+        avg_item_height: usize,
     ) {
         const VIEWPORT_ADJUST: u16 = 4;
-        let viewport_len = (area.height / avg_item_height).saturating_sub(VIEWPORT_ADJUST);
+        let viewport_len = (area.height / avg_item_height as u16).saturating_sub(VIEWPORT_ADJUST);
 
         let mut state = ScrollbarState::default()
             .content_length(items_count)
-            .viewport_content_length(viewport_len)
+            .viewport_content_length(viewport_len as usize)
             .position(pos);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
@@ -190,9 +184,9 @@ impl<'a> EntriesList {
         frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
-    fn render_place_holder<B: Backend>(
+    fn render_place_holder(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
         list_keymaps: &[Keymap],
         has_filter: bool,
@@ -243,9 +237,9 @@ impl<'a> EntriesList {
             .border_style(border_style)
     }
 
-    pub fn render_widget<B: Backend, D: DataProvider>(
+    pub fn render_widget<D: DataProvider>(
         &mut self,
-        frame: &mut Frame<B>,
+        frame: &mut Frame,
         area: Rect,
         app: &App<D>,
         list_keymaps: &[Keymap],

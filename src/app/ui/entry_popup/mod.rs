@@ -2,7 +2,6 @@ use anyhow::Ok;
 use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
@@ -116,7 +115,7 @@ impl<'a> EntryPopup<'a> {
         entry_pupop
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut area = centered_rect_exact_height(70, 14, area);
 
         const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGINE;

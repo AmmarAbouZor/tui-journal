@@ -3,7 +3,6 @@ use std::{env, path::PathBuf};
 use backend::{DataProvider, Entry};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
@@ -121,7 +120,7 @@ impl<'a> ExportPopup<'a> {
         self.entry_id.is_none()
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut area = centered_rect_exact_height(70, 11, area);
 
         if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {

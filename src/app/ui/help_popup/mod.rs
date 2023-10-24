@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -109,7 +108,7 @@ impl HelpPopup {
         }
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let area = centered_rect(90, 80, area);
         let block = Block::default().title("Help").borders(Borders::ALL);
         frame.render_widget(Clear, area);
@@ -188,11 +187,7 @@ impl HelpPopup {
     }
 }
 
-fn render_keybindings<B: Backend, T: KeybindingsTable>(
-    frame: &mut Frame<B>,
-    area: Rect,
-    table: &mut T,
-) {
+fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table: &mut T) {
     let header_cells = ["Key", "Command", "Description"]
         .into_iter()
         .map(|header| Cell::from(header).style(Style::default().fg(Color::LightBlue)));
@@ -235,7 +230,7 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
         Row::new(cells).height(height)
     });
 
-    let items_len = rows.len() as u16;
+    let items_len = rows.len();
 
     let keymaps_table = Table::new(rows)
         .header(header)
@@ -258,23 +253,18 @@ fn render_keybindings<B: Backend, T: KeybindingsTable>(
     let has_scrollbar = lines_count > area.height;
 
     if has_scrollbar {
-        render_scrollbar(
-            frame,
-            area,
-            table_state.selected().unwrap_or(0) as u16,
-            items_len,
-        );
+        render_scrollbar(frame, area, table_state.selected().unwrap_or(0), items_len);
     }
 }
 
-fn render_scrollbar<B: Backend>(frame: &mut Frame<B>, area: Rect, pos: u16, items_count: u16) {
+fn render_scrollbar(frame: &mut Frame, area: Rect, pos: usize, items_count: usize) {
     const VIEWPORT_ADJUST: u16 = 13;
 
     let viewport_len = area.height.saturating_sub(VIEWPORT_ADJUST);
 
     let mut state = ScrollbarState::default()
         .content_length(items_count)
-        .viewport_content_length(viewport_len)
+        .viewport_content_length(viewport_len as usize)
         .position(pos);
 
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
@@ -291,7 +281,7 @@ fn render_scrollbar<B: Backend>(frame: &mut Frame<B>, area: Rect, pos: u16, item
     frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
 }
 
-pub fn render_editor_hint<B: Backend>(frame: &mut Frame<B>, area: Rect) {
+pub fn render_editor_hint(frame: &mut Frame, area: Rect) {
     let paragraph = Paragraph::new(EDITOR_HINT_TEXT)
         .block(
             Block::default()

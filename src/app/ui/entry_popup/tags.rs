@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -62,7 +61,7 @@ impl TagsPopup {
         tags_popup
     }
 
-    pub fn render_widget<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut area = centered_rect(70, 100, area);
         area.y += 1;
         area.height -= 2;
@@ -106,7 +105,7 @@ impl TagsPopup {
         frame.render_widget(footer, chunks[1]);
     }
 
-    fn render_tags_list<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .tags
             .iter()
@@ -135,7 +134,7 @@ impl TagsPopup {
         frame.render_stateful_widget(list, area, &mut self.state);
     }
 
-    fn render_tags_place_holder<B: Backend>(&mut self, frame: &mut Frame<B>, area: Rect) {
+    fn render_tags_place_holder(&mut self, frame: &mut Frame, area: Rect) {
         let place_holder_text = String::from("\nNo journals with tags provided");
 
         let place_holder = Paragraph::new(place_holder_text)

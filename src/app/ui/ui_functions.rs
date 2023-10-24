@@ -1,5 +1,4 @@
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
     Frame,
@@ -86,7 +85,7 @@ pub fn centered_rect_exact_dimensions(width: u16, height: u16, r: Rect) -> Rect 
         .split(popup_layout[1])[1]
 }
 
-pub fn render_message_centered<B: Backend>(frame: &mut Frame<B>, message: &str) {
+pub fn render_message_centered(frame: &mut Frame, message: &str) {
     const TEXT_MARGIN: u16 = 4;
     const HEIGHT_MARGIN: u16 = 2;
 

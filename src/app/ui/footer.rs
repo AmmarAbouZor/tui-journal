@@ -1,6 +1,5 @@
 use backend::DataProvider;
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Rect},
     style::Style,
     widgets::{Block, Borders, Paragraph, Wrap},
@@ -13,8 +12,8 @@ use super::{ControlType, UICommand, UIComponents};
 
 const SEPARATOR: &str = " | ";
 
-pub fn render_footer<B: Backend, D: DataProvider>(
-    frame: &mut Frame<B>,
+pub fn render_footer<D: DataProvider>(
+    frame: &mut Frame,
     area: Rect,
     ui_components: &UIComponents,
     app: &App<D>,
