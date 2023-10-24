@@ -25,7 +25,6 @@ use super::{
 use anyhow::Result;
 
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Direction, Layout},
     style::Color,
     Frame,

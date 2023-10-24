@@ -125,7 +125,7 @@ impl<'a> EntriesList {
             })
             .collect();
 
-        let items_count = items.len() as u16;
+        let items_count = items.len();
 
         let list = List::new(items)
             .block(self.get_list_block(app.filter.is_some()))
@@ -139,15 +139,15 @@ impl<'a> EntriesList {
 
         frame.render_stateful_widget(list, area, &mut self.state);
 
-        let lines_count = lines_count as u16;
+        let lines_count = lines_count;
 
-        if lines_count > area.height - 2 {
+        if lines_count > area.height as usize - 2 {
             let avg_item_height = lines_count / items_count;
 
             self.render_scrollbar(
                 frame,
                 area,
-                self.state.selected().unwrap_or(0) as u16,
+                self.state.selected().unwrap_or(0),
                 items_count,
                 avg_item_height,
             );
@@ -158,16 +158,16 @@ impl<'a> EntriesList {
         &mut self,
         frame: &mut Frame,
         area: Rect,
-        pos: u16,
-        items_count: u16,
-        avg_item_height: u16,
+        pos: usize,
+        items_count: usize,
+        avg_item_height: usize,
     ) {
         const VIEWPORT_ADJUST: u16 = 4;
-        let viewport_len = (area.height / avg_item_height).saturating_sub(VIEWPORT_ADJUST);
+        let viewport_len = (area.height / avg_item_height as u16).saturating_sub(VIEWPORT_ADJUST);
 
         let mut state = ScrollbarState::default()
             .content_length(items_count)
-            .viewport_content_length(viewport_len)
+            .viewport_content_length(viewport_len as usize)
             .position(pos);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)

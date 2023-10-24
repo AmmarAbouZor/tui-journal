@@ -245,9 +245,9 @@ impl<'a> Editor<'a> {
     }
 
     pub fn render_vertical_scrollbar(&mut self, frame: &mut Frame, area: Rect) {
-        let lines_count = self.text_area.lines().len() as u16;
+        let lines_count = self.text_area.lines().len();
 
-        if lines_count <= area.height - 2 {
+        if lines_count as u16 <= area.height - 2 {
             return;
         }
 
@@ -255,7 +255,7 @@ impl<'a> Editor<'a> {
 
         let mut state = ScrollbarState::default()
             .content_length(lines_count)
-            .position(row as u16);
+            .position(row);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(Some("▲"))
@@ -278,9 +278,9 @@ impl<'a> Editor<'a> {
             .iter()
             .map(|line| line.len())
             .max()
-            .unwrap_or_default() as u16;
+            .unwrap_or_default();
 
-        if max_width <= area.width - 2 {
+        if max_width as u16 <= area.width - 2 {
             return;
         }
 
@@ -288,7 +288,7 @@ impl<'a> Editor<'a> {
 
         let mut state = ScrollbarState::default()
             .content_length(max_width)
-            .position(col as u16);
+            .position(col);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::HorizontalBottom)
             .begin_symbol(Some("◄"))

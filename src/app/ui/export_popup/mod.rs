@@ -3,7 +3,6 @@ use std::{env, path::PathBuf};
 use backend::{DataProvider, Entry};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     widgets::{Block, Borders, Clear, Paragraph, Wrap},

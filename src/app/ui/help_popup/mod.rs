@@ -1,6 +1,5 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -231,7 +230,7 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
         Row::new(cells).height(height)
     });
 
-    let items_len = rows.len() as u16;
+    let items_len = rows.len();
 
     let keymaps_table = Table::new(rows)
         .header(header)
@@ -254,23 +253,18 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
     let has_scrollbar = lines_count > area.height;
 
     if has_scrollbar {
-        render_scrollbar(
-            frame,
-            area,
-            table_state.selected().unwrap_or(0) as u16,
-            items_len,
-        );
+        render_scrollbar(frame, area, table_state.selected().unwrap_or(0), items_len);
     }
 }
 
-fn render_scrollbar(frame: &mut Frame, area: Rect, pos: u16, items_count: u16) {
+fn render_scrollbar(frame: &mut Frame, area: Rect, pos: usize, items_count: usize) {
     const VIEWPORT_ADJUST: u16 = 13;
 
     let viewport_len = area.height.saturating_sub(VIEWPORT_ADJUST);
 
     let mut state = ScrollbarState::default()
         .content_length(items_count)
-        .viewport_content_length(viewport_len)
+        .viewport_content_length(viewport_len as usize)
         .position(pos);
 
     let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
