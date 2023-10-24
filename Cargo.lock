@@ -1345,23 +1345,6 @@ dependencies = [
 
 [[package]]
 name = "ratatui"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e2e4cd95294a85c3b4446e63ef054eea43e0205b1fd60120c16b74ff7ff96ad"
-dependencies = [
- "bitflags 2.3.3",
- "cassowary",
- "crossterm",
- "indoc",
- "itertools 0.11.0",
- "paste",
- "strum",
- "unicode-segmentation",
- "unicode-width",
-]
-
-[[package]]
-name = "ratatui"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ebc917cfb527a566c37ecb94c7e3fd098353516fb4eb6bea17015ade0182425"
@@ -2214,7 +2197,7 @@ dependencies = [
  "git2",
  "log",
  "path-absolutize",
- "ratatui 0.24.0",
+ "ratatui",
  "rayon",
  "scopeguard",
  "serde",
@@ -2235,7 +2218,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8aa3edc9087c29f51e753c6eebb7740e3140a519feb08f89443e5fd16a69b91"
 dependencies = [
  "crossterm",
- "ratatui 0.23.0",
+ "ratatui",
  "unicode-width",
 ]
 
