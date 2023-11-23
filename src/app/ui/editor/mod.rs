@@ -21,6 +21,7 @@ use super::INACTIVE_CONTROL_COLOR;
 pub enum EditorMode {
     Normal,
     Insert,
+    Visual,
 }
 
 pub struct Editor<'a> {
@@ -58,6 +59,11 @@ impl<'a> Editor<'a> {
     #[inline]
     pub fn is_insert_mode(&self) -> bool {
         self.mode == EditorMode::Insert
+    }
+
+    #[inline]
+    pub fn is_visual_mode(&self) -> bool {
+        self.mode == EditorMode::Visual
     }
 
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
@@ -110,7 +116,23 @@ impl<'a> Editor<'a> {
     fn handle_vim_motions(&mut self, input: &Input) {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
+        //TODO: Check if it make sense to handle normal and visual mode together
         match (input.key_code, has_control) {
+            (KeyCode::Char('v'), false) => {
+                let new_mode = match self.mode {
+                    EditorMode::Normal => EditorMode::Visual,
+                    EditorMode::Visual => EditorMode::Normal,
+                    EditorMode::Insert => {
+                        unreachable!("Vim motions can't be activated in insert mode")
+                    }
+                };
+                self.set_editor_mode(new_mode);
+            }
+            (KeyCode::Esc, false) => {
+                if self.is_visual_mode() {
+                    self.set_editor_mode(EditorMode::Normal);
+                }
+            }
             (KeyCode::Char('h'), false) => {
                 self.text_area.move_cursor(CursorMove::Back);
             }
@@ -192,6 +214,20 @@ impl<'a> Editor<'a> {
             }
             _ => {}
         }
+    }
+
+    pub fn set_editor_mode(&mut self, mode: EditorMode) {
+        match (self.mode, mode) {
+            (EditorMode::Normal, EditorMode::Visual) => {
+                self.text_area.start_selection();
+            }
+            (EditorMode::Visual, EditorMode::Normal | EditorMode::Insert) => {
+                self.text_area.cancel_selection();
+            }
+            _ => {}
+        }
+
+        self.mode = mode;
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
