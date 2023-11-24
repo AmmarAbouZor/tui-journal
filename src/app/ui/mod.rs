@@ -162,11 +162,14 @@ impl<'a, 'b> UIComponents<'a> {
             return self.handle_popup_input(input, app).await;
         }
 
-        if self.editor.is_insert_mode() {
+        if self.editor.is_prioritized() {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 return key.command.clone().execute(self, app).await;
             }
-            return self.editor.handle_input(input, app);
+            let handle_result = self.editor.handle_input_prioritized(input, app)?;
+            if matches!(handle_result, HandleInputReturnType::Handled) {
+                return Ok(handle_result);
+            }
         }
 
         if self.entries_list.multi_select_mode {

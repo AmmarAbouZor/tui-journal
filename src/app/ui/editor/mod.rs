@@ -66,6 +66,11 @@ impl<'a> Editor<'a> {
         self.mode == EditorMode::Visual
     }
 
+    #[inline]
+    pub fn is_prioritized(&self) -> bool {
+        matches!(self.mode, EditorMode::Insert | EditorMode::Visual)
+    }
+
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
         let text_area = match entry_id {
             Some(id) => {
@@ -88,15 +93,11 @@ impl<'a> Editor<'a> {
         self.refresh_has_unsaved(app);
     }
 
-    pub fn handle_input<D: DataProvider>(
+    pub fn handle_input_prioritized<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
-        if app.get_current_entry().is_none() {
-            return Ok(HandleInputReturnType::Handled);
-        }
-
         if self.is_insert_mode() {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
@@ -104,7 +105,25 @@ impl<'a> Editor<'a> {
                 self.is_dirty = true;
                 self.refresh_has_unsaved(app);
             }
-        } else if is_default_navigation(input) {
+
+            return Ok(HandleInputReturnType::Handled);
+        }
+
+        Ok(HandleInputReturnType::NotFound)
+    }
+
+    pub fn handle_input<D: DataProvider>(
+        &mut self,
+        input: &Input,
+        app: &App<D>,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        debug_assert!(!self.is_insert_mode());
+
+        if app.get_current_entry().is_none() {
+            return Ok(HandleInputReturnType::Handled);
+        }
+
+        if is_default_navigation(input) {
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
         } else {
@@ -116,23 +135,7 @@ impl<'a> Editor<'a> {
     fn handle_vim_motions(&mut self, input: &Input) {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
-        //TODO: Check if it make sense to handle normal and visual mode together
         match (input.key_code, has_control) {
-            (KeyCode::Char('v'), false) => {
-                let new_mode = match self.mode {
-                    EditorMode::Normal => EditorMode::Visual,
-                    EditorMode::Visual => EditorMode::Normal,
-                    EditorMode::Insert => {
-                        unreachable!("Vim motions can't be activated in insert mode")
-                    }
-                };
-                self.set_editor_mode(new_mode);
-            }
-            (KeyCode::Esc, false) => {
-                if self.is_visual_mode() {
-                    self.set_editor_mode(EditorMode::Normal);
-                }
-            }
             (KeyCode::Char('h'), false) => {
                 self.text_area.move_cursor(CursorMove::Back);
             }
@@ -214,6 +217,10 @@ impl<'a> Editor<'a> {
             }
             _ => {}
         }
+    }
+
+    pub fn get_editor_mode(&self) -> EditorMode {
+        self.mode
     }
 
     pub fn set_editor_mode(&mut self, mode: EditorMode) {
@@ -352,6 +359,10 @@ impl<'a> Editor<'a> {
     }
 
     pub fn set_active(&mut self, active: bool) {
+        if !active && self.is_visual_mode() {
+            self.set_editor_mode(EditorMode::Normal);
+        }
+
         self.is_active = active;
     }
 

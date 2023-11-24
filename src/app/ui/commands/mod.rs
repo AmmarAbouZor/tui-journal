@@ -28,7 +28,7 @@ pub enum UICommand {
     EditCurrentEntry,
     DeleteCurrentEntry,
     StartEditEntryContent,
-    FinishEditEntryContent,
+    BackEditorNormalMode,
     SaveEntryContent,
     DiscardChangesEntryContent,
     ReloadAll,
@@ -45,6 +45,7 @@ pub enum UICommand {
     ShowFilter,
     ResetFilter,
     ShowFuzzyFind,
+    ToggleEditorVisualMode,
 }
 
 #[derive(Debug, Clone)]
@@ -96,8 +97,8 @@ impl UICommand {
                 "Edit journal content",
                 "Start editing current journal entry content in editor",
             ),
-            UICommand::FinishEditEntryContent => {
-                CommandInfo::new("End edit mode", "Exit edit mode in editor")
+            UICommand::BackEditorNormalMode => {
+                CommandInfo::new("Back to Editor Normal Mode", "Exit editor special modes (insert, visual) and go back to normal mode")
             }
             UICommand::SaveEntryContent => {
                 CommandInfo::new("Save", "Save changes on journal content")
@@ -157,6 +158,11 @@ impl UICommand {
                 "Fuzzy find",
                 "Open fuzzy find popup for journals",
             ),
+            UICommand::ToggleEditorVisualMode => CommandInfo::new(
+                "Toggle Editor Visual Mode",
+                "Toggle Editor Visual(Select) Mode",
+            ),
+
         }
     }
 
@@ -176,7 +182,7 @@ impl UICommand {
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
             UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
-            UICommand::FinishEditEntryContent => exec_finish_editing(ui_components),
+            UICommand::BackEditorNormalMode => exec_back_editor_to_normal_mode(ui_components),
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app).await,
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
             UICommand::ReloadAll => exec_reload_all(ui_components, app).await,
@@ -195,6 +201,7 @@ impl UICommand {
             UICommand::ShowFilter => exec_show_filter(ui_components, app),
             UICommand::ResetFilter => exec_reset_filter(app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
+            UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
         }
     }
 
@@ -226,7 +233,7 @@ impl UICommand {
                 continue_delete_current_entry(app, msg_box_result).await
             }
             UICommand::StartEditEntryContent => not_implemented(),
-            UICommand::FinishEditEntryContent => not_implemented(),
+            UICommand::BackEditorNormalMode => not_implemented(),
             UICommand::SaveEntryContent => not_implemented(),
             UICommand::DiscardChangesEntryContent => {
                 continue_discard_content(ui_components, app, msg_box_result)
@@ -255,6 +262,7 @@ impl UICommand {
             UICommand::ShowFuzzyFind => {
                 continue_fuzzy_find(ui_components, app, msg_box_result).await
             }
+            UICommand::ToggleEditorVisualMode => not_implemented(),
         }
     }
 }
