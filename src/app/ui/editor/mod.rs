@@ -13,9 +13,9 @@ use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
-use super::ACTIVE_CONTROL_COLOR;
 use super::EDITOR_MODE_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
+use super::{ACTIVE_CONTROL_COLOR, VISUAL_MODE_COLOR};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditorMode {
@@ -97,7 +97,7 @@ impl<'a> Editor<'a> {
             return Ok(HandleInputReturnType::Handled);
         }
 
-        if self.mode == EditorMode::Insert {
+        if self.is_insert_mode() {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
@@ -233,10 +233,10 @@ impl<'a> Editor<'a> {
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut title = "Content".to_owned();
         if self.is_active {
-            let mode_caption = if self.is_insert_mode() {
-                " - EDIT"
-            } else {
-                " - NORMAL"
+            let mode_caption = match self.mode {
+                EditorMode::Normal => " - NORMAL",
+                EditorMode::Insert => " - EDIT",
+                EditorMode::Visual => " - Visual",
             };
             title.push_str(mode_caption);
         }
@@ -244,27 +244,35 @@ impl<'a> Editor<'a> {
             title.push_str(" *");
         }
 
+        let text_block_style = match (self.mode, self.is_active) {
+            (EditorMode::Insert, _) => Style::default()
+                .fg(EDITOR_MODE_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Visual, _) => Style::default()
+                .fg(VISUAL_MODE_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Normal, true) => Style::default()
+                .fg(ACTIVE_CONTROL_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Normal, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+        };
+
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(match (self.is_active, self.is_insert_mode()) {
-                    (_, true) => Style::default()
-                        .fg(EDITOR_MODE_COLOR)
-                        .add_modifier(Modifier::BOLD),
-                    (true, false) => Style::default()
-                        .fg(ACTIVE_CONTROL_COLOR)
-                        .add_modifier(Modifier::BOLD),
-                    (false, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
-                })
+                .style(text_block_style)
                 .title(title),
         );
 
-        self.text_area
-            .set_cursor_style(match (self.is_insert_mode(), self.is_active) {
-                (_, false) => Style::default(),
-                (true, true) => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
-                (false, true) => Style::default().bg(Color::White).fg(Color::Black),
-            });
+        let mut cursor_style = Style::default();
+        if self.is_active {
+            cursor_style = match self.mode {
+                EditorMode::Normal => cursor_style.bg(Color::White).fg(Color::Black),
+                EditorMode::Insert => cursor_style.bg(EDITOR_MODE_COLOR).fg(Color::Black),
+                EditorMode::Visual => cursor_style.bg(VISUAL_MODE_COLOR).fg(Color::Black),
+            };
+        }
+        self.text_area.set_cursor_style(cursor_style);
 
         self.text_area.set_cursor_line_style(Style::default());
 
@@ -273,6 +281,9 @@ impl<'a> Editor<'a> {
                 .fg(Color::Reset)
                 .remove_modifier(Modifier::BOLD),
         );
+
+        self.text_area
+            .set_selection_style(Style::default().bg(Color::White).fg(Color::Black));
 
         frame.render_widget(self.text_area.widget(), area);
 
