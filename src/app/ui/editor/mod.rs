@@ -26,7 +26,7 @@ pub enum EditorMode {
 
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
-    pub mode: EditorMode,
+    mode: EditorMode,
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,

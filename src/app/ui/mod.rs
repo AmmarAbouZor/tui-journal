@@ -346,7 +346,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.change_active_control(ControlType::EntryContentTxt);
 
         assert!(!self.editor.is_insert_mode());
-        self.editor.mode = EditorMode::Insert;
+        self.editor.set_editor_mode(EditorMode::Insert);
         Ok(HandleInputReturnType::Handled)
     }
 
