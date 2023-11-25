@@ -13,19 +13,20 @@ use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
-use super::ACTIVE_CONTROL_COLOR;
 use super::EDITOR_MODE_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
+use super::{ACTIVE_CONTROL_COLOR, VISUAL_MODE_COLOR};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditorMode {
     Normal,
     Insert,
+    Visual,
 }
 
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
-    pub mode: EditorMode,
+    mode: EditorMode,
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,
@@ -60,6 +61,16 @@ impl<'a> Editor<'a> {
         self.mode == EditorMode::Insert
     }
 
+    #[inline]
+    pub fn is_visual_mode(&self) -> bool {
+        self.mode == EditorMode::Visual
+    }
+
+    #[inline]
+    pub fn is_prioritized(&self) -> bool {
+        matches!(self.mode, EditorMode::Insert | EditorMode::Visual)
+    }
+
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &App<D>) {
         let text_area = match entry_id {
             Some(id) => {
@@ -82,29 +93,73 @@ impl<'a> Editor<'a> {
         self.refresh_has_unsaved(app);
     }
 
-    pub fn handle_input<D: DataProvider>(
+    pub fn handle_input_prioritized<D: DataProvider>(
         &mut self,
         input: &Input,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
-        if app.get_current_entry().is_none() {
-            return Ok(HandleInputReturnType::Handled);
-        }
-
-        if self.mode == EditorMode::Insert {
+        if self.is_insert_mode() {
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
                 self.is_dirty = true;
                 self.refresh_has_unsaved(app);
             }
-        } else if is_default_navigation(input) {
+
+            return Ok(HandleInputReturnType::Handled);
+        }
+
+        Ok(HandleInputReturnType::NotFound)
+    }
+
+    pub fn handle_input<D: DataProvider>(
+        &mut self,
+        input: &Input,
+        app: &App<D>,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        debug_assert!(!self.is_insert_mode());
+
+        if app.get_current_entry().is_none() {
+            return Ok(HandleInputReturnType::Handled);
+        }
+
+        if is_default_navigation(input) {
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
-        } else {
+        } else if !self.is_visual_mode() || !self.handle_input_visual_only(input) {
             self.handle_vim_motions(input);
         }
+
+        // Check if the input led the editor to leave the visual mode and make the corresponding UI changes
+        if !self.text_area.is_selecting() && self.is_visual_mode() {
+            self.set_editor_mode(EditorMode::Normal);
+        }
         Ok(HandleInputReturnType::Handled)
+    }
+
+    /// Handles input specialized for visual mode only like cut and copy
+    fn handle_input_visual_only(&mut self, input: &Input) -> bool {
+        if !input.modifiers.is_empty() {
+            return false;
+        }
+
+        match input.key_code {
+            KeyCode::Char('d') => {
+                self.text_area.cut();
+                true
+            }
+            KeyCode::Char('y') => {
+                self.text_area.copy();
+                self.set_editor_mode(EditorMode::Normal);
+                true
+            }
+            KeyCode::Char('c') => {
+                self.text_area.cut();
+                self.set_editor_mode(EditorMode::Insert);
+                true
+            }
+            _ => false,
+        }
     }
 
     fn handle_vim_motions(&mut self, input: &Input) {
@@ -194,13 +249,31 @@ impl<'a> Editor<'a> {
         }
     }
 
+    pub fn get_editor_mode(&self) -> EditorMode {
+        self.mode
+    }
+
+    pub fn set_editor_mode(&mut self, mode: EditorMode) {
+        match (self.mode, mode) {
+            (EditorMode::Normal, EditorMode::Visual) => {
+                self.text_area.start_selection();
+            }
+            (EditorMode::Visual, EditorMode::Normal | EditorMode::Insert) => {
+                self.text_area.cancel_selection();
+            }
+            _ => {}
+        }
+
+        self.mode = mode;
+    }
+
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut title = "Content".to_owned();
         if self.is_active {
-            let mode_caption = if self.is_insert_mode() {
-                " - EDIT"
-            } else {
-                " - NORMAL"
+            let mode_caption = match self.mode {
+                EditorMode::Normal => " - NORMAL",
+                EditorMode::Insert => " - EDIT",
+                EditorMode::Visual => " - Visual",
             };
             title.push_str(mode_caption);
         }
@@ -208,27 +281,35 @@ impl<'a> Editor<'a> {
             title.push_str(" *");
         }
 
+        let text_block_style = match (self.mode, self.is_active) {
+            (EditorMode::Insert, _) => Style::default()
+                .fg(EDITOR_MODE_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Visual, _) => Style::default()
+                .fg(VISUAL_MODE_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Normal, true) => Style::default()
+                .fg(ACTIVE_CONTROL_COLOR)
+                .add_modifier(Modifier::BOLD),
+            (EditorMode::Normal, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+        };
+
         self.text_area.set_block(
             Block::default()
                 .borders(Borders::ALL)
-                .style(match (self.is_active, self.is_insert_mode()) {
-                    (_, true) => Style::default()
-                        .fg(EDITOR_MODE_COLOR)
-                        .add_modifier(Modifier::BOLD),
-                    (true, false) => Style::default()
-                        .fg(ACTIVE_CONTROL_COLOR)
-                        .add_modifier(Modifier::BOLD),
-                    (false, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
-                })
+                .style(text_block_style)
                 .title(title),
         );
 
-        self.text_area
-            .set_cursor_style(match (self.is_insert_mode(), self.is_active) {
-                (_, false) => Style::default(),
-                (true, true) => Style::default().bg(EDITOR_MODE_COLOR).fg(Color::Black),
-                (false, true) => Style::default().bg(Color::White).fg(Color::Black),
-            });
+        let mut cursor_style = Style::default();
+        if self.is_active {
+            cursor_style = match self.mode {
+                EditorMode::Normal => cursor_style.bg(Color::White).fg(Color::Black),
+                EditorMode::Insert => cursor_style.bg(EDITOR_MODE_COLOR).fg(Color::Black),
+                EditorMode::Visual => cursor_style.bg(VISUAL_MODE_COLOR).fg(Color::Black),
+            };
+        }
+        self.text_area.set_cursor_style(cursor_style);
 
         self.text_area.set_cursor_line_style(Style::default());
 
@@ -237,6 +318,9 @@ impl<'a> Editor<'a> {
                 .fg(Color::Reset)
                 .remove_modifier(Modifier::BOLD),
         );
+
+        self.text_area
+            .set_selection_style(Style::default().bg(Color::White).fg(Color::Black));
 
         frame.render_widget(self.text_area.widget(), area);
 
@@ -305,6 +389,10 @@ impl<'a> Editor<'a> {
     }
 
     pub fn set_active(&mut self, active: bool) {
+        if !active && self.is_visual_mode() {
+            self.set_editor_mode(EditorMode::Normal);
+        }
+
         self.is_active = active;
     }
 

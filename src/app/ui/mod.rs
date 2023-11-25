@@ -49,6 +49,7 @@ pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
 pub const EDITOR_MODE_COLOR: Color = Color::LightGreen;
 pub const INVALID_CONTROL_COLOR: Color = Color::LightRed;
+pub const VISUAL_MODE_COLOR: Color = Color::Blue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -161,11 +162,14 @@ impl<'a, 'b> UIComponents<'a> {
             return self.handle_popup_input(input, app).await;
         }
 
-        if self.editor.is_insert_mode() {
+        if self.editor.is_prioritized() {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
                 return key.command.clone().execute(self, app).await;
             }
-            return self.editor.handle_input(input, app);
+            let handle_result = self.editor.handle_input_prioritized(input, app)?;
+            if matches!(handle_result, HandleInputReturnType::Handled) {
+                return Ok(handle_result);
+            }
         }
 
         if self.entries_list.multi_select_mode {
@@ -345,7 +349,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.change_active_control(ControlType::EntryContentTxt);
 
         assert!(!self.editor.is_insert_mode());
-        self.editor.mode = EditorMode::Insert;
+        self.editor.set_editor_mode(EditorMode::Insert);
         Ok(HandleInputReturnType::Handled)
     }
 

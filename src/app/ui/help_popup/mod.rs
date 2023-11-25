@@ -28,13 +28,14 @@ mod multi_select_bindings;
 const KEY_PERC: u16 = 18;
 const NAME_PERC: u16 = 27;
 const DESCRIPTION_PERC: u16 = 100 - NAME_PERC - KEY_PERC;
-const MARGINE: u16 = 8;
+const MARGIN: u16 = 8;
 
 const TAB_LETTER_HIGHLIGHT_COLOR: Color = Color::LightGreen;
 
 const EDITOR_HINT_TEXT: &str = r"The Editor has two modes:
  - Normal-Mode: In this mode VIM keybindings are used to navigate the text and to enter edit mode via (i, I, a , A, o, O).
- - Edit-Mode: In this mode Emacs keybindings are used to edit and navigate the text.";
+ - Edit-Mode: In this mode Emacs keybindings are used to edit and navigate the text.
+ - Visual-Mode: Like the visual mode in VIM to select, delete and yank text with extra vim keybindings (d, y, c)";
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum KeybindingsTabs {
@@ -205,9 +206,9 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
         } = command.get_info();
 
         // Text wrapping
-        let keys_width = (area.width - MARGINE) * KEY_PERC / 100;
+        let keys_width = (area.width - MARGIN) * KEY_PERC / 100;
         let name_width = area.width * NAME_PERC / 100;
-        let description_width = (area.width - MARGINE) * DESCRIPTION_PERC / 100;
+        let description_width = (area.width - MARGIN) * DESCRIPTION_PERC / 100;
 
         keys_text = textwrap::fill(keys_text.as_str(), keys_width as usize);
         name = textwrap::fill(name.as_str(), name_width as usize);

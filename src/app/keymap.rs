@@ -216,15 +216,19 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
         ),
         Keymap::new(
             Input::new(KeyCode::Esc, KeyModifiers::NONE),
-            UICommand::FinishEditEntryContent,
+            UICommand::BackEditorNormalMode,
         ),
         Keymap::new(
             Input::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
-            UICommand::FinishEditEntryContent,
+            UICommand::BackEditorNormalMode,
         ),
         Keymap::new(
             Input::new(KeyCode::Char('['), KeyModifiers::CONTROL),
-            UICommand::FinishEditEntryContent,
+            UICommand::BackEditorNormalMode,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
+            UICommand::ToggleEditorVisualMode,
         ),
     ]
 }

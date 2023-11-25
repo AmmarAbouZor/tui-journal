@@ -43,7 +43,7 @@ fn get_editor_mode_text(ui_components: &UIComponents) -> String {
     let exit_editor_mode_keymap: Vec<_> = ui_components
         .editor_keymaps
         .iter()
-        .filter(|keymap| keymap.command == UICommand::FinishEditEntryContent)
+        .filter(|keymap| keymap.command == UICommand::BackEditorNormalMode)
         .collect();
 
     format!(

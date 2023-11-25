@@ -66,6 +66,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Search functions for journals title and content in the built-in filter.
 - Control many journals at once via the multi-select mode
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
+- Utilize Editor's Visual Mode for VIM-style text selection, copying, and deletion.
 - Export and Import journals between different back-end files.
 - Export the current journal's content to a predefined export path or the current directory 
 - See the keybindings from inside the app
