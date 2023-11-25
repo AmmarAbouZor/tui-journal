@@ -129,6 +129,11 @@ impl<'a> Editor<'a> {
         } else {
             self.handle_vim_motions(input);
         }
+
+        // Check if the input led the editor to leave the visual mode and make the corresponding UI changes
+        if !self.text_area.is_selecting() && self.is_visual_mode() {
+            self.set_editor_mode(EditorMode::Normal);
+        }
         Ok(HandleInputReturnType::Handled)
     }
 
