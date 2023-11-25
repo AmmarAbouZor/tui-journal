@@ -126,7 +126,7 @@ impl<'a> Editor<'a> {
         if is_default_navigation(input) {
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
-        } else {
+        } else if !self.is_visual_mode() || !self.handle_input_visual_only(input) {
             self.handle_vim_motions(input);
         }
 
@@ -135,6 +135,31 @@ impl<'a> Editor<'a> {
             self.set_editor_mode(EditorMode::Normal);
         }
         Ok(HandleInputReturnType::Handled)
+    }
+
+    /// Handles input specialized for visual mode only like cut and copy
+    fn handle_input_visual_only(&mut self, input: &Input) -> bool {
+        if !input.modifiers.is_empty() {
+            return false;
+        }
+
+        match input.key_code {
+            KeyCode::Char('d') => {
+                self.text_area.cut();
+                true
+            }
+            KeyCode::Char('y') => {
+                self.text_area.copy();
+                self.set_editor_mode(EditorMode::Normal);
+                true
+            }
+            KeyCode::Char('c') => {
+                self.text_area.cut();
+                self.set_editor_mode(EditorMode::Insert);
+                true
+            }
+            _ => false,
+        }
     }
 
     fn handle_vim_motions(&mut self, input: &Input) {
