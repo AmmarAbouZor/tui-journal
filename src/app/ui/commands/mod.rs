@@ -116,7 +116,7 @@ impl UICommand {
             ),
             UICommand::EnterMultiSelectMode => CommandInfo::new(
                 "Enter journals multi selection mode",
-                "Enter multi selection mode for journals to work with multi journals at once",
+                "Enter multi selection mode for journals when journals list is in focus to work with multi journals at once",
             ),
             UICommand::LeaveMultiSelectMode => CommandInfo::new(
                 "Leave journals multi selection mode",
@@ -160,7 +160,7 @@ impl UICommand {
             ),
             UICommand::ToggleEditorVisualMode => CommandInfo::new(
                 "Toggle Editor Visual Mode",
-                "Toggle Editor Visual(Select) Mode",
+                "Toggle Editor Visual(Select) Mode when editor is in focus",
             ),
 
         }
