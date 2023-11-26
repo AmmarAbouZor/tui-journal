@@ -8,6 +8,31 @@
       references: {},
       version: (
         major: 0,
+        minor: 5,
+        patch: 0,
+      ),
+      released: "2023-11-26T13:07:58.282458357Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Horizontal Scrollbar to the Editor",
+            "Visual Mode to Built-in Editor",
+          ],
+          "Changed": [
+            "Upgrade Crates Ratatui & Tui-Textarea with breaking changes",
+          ],
+          "Fixed": [
+            "Release notes will be always generated in release GitHub action",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 4,
         patch: 0,
       ),
@@ -16,12 +41,12 @@
       changes: (
         references: {},
         changes: {
+          "Added": [
+            "Autosave Option for  External Editor",
+          ],
           "Fixed": [
             "- Optimizations for size calculation for the popup size to fit the\r\n  footer on almost each terminal size\r\n- Correcting the keybindings in the footer text",
             "Write configurations CLI argument creates needed directories",
-          ],
-          "Added": [
-            "Autosave Option for  External Editor",
           ],
         },
       ),
