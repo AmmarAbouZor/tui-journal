@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Added": [
-      "Navigation between journals popup inputs via arrow keys",
-    ],
-  },
-)
