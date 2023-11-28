@@ -164,7 +164,10 @@ impl<'a, 'b> UIComponents<'a> {
 
         if self.editor.is_prioritized() {
             if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                return key.command.clone().execute(self, app).await;
+                let command_result = key.command.clone().execute(self, app).await?;
+                if matches!(command_result, HandleInputReturnType::Handled) {
+                    return Ok(command_result);
+                }
             }
             let handle_result = self.editor.handle_input_prioritized(input, app)?;
             if matches!(handle_result, HandleInputReturnType::Handled) {
