@@ -305,7 +305,7 @@ impl<'a> EntryPopup<'a> {
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
         if self.tags_popup.is_some() {
-            self.handle_popup_input(input);
+            self.handle_tags_popup_input(input);
 
             return Ok(EntryPopupInputReturn::KeepPupup);
         }
@@ -316,11 +316,19 @@ impl<'a> EntryPopup<'a> {
             KeyCode::Esc => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Char('c') if has_ctrl => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Enter => self.handle_confirm(app).await,
-            KeyCode::Tab => {
+            KeyCode::Tab | KeyCode::Down => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
                     ActiveText::Date => ActiveText::Tags,
                     ActiveText::Tags => ActiveText::Title,
+                };
+                Ok(EntryPopupInputReturn::KeepPupup)
+            }
+            KeyCode::Up => {
+                self.active_txt = match self.active_txt {
+                    ActiveText::Title => ActiveText::Tags,
+                    ActiveText::Date => ActiveText::Title,
+                    ActiveText::Tags => ActiveText::Date,
                 };
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
@@ -361,7 +369,7 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
-    pub fn handle_popup_input(&mut self, input: &Input) {
+    pub fn handle_tags_popup_input(&mut self, input: &Input) {
         let tags_popup = self
             .tags_popup
             .as_mut()
