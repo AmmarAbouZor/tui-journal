@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Fixed": [
-      "Letter V can\'t be typed in built-in editor insert mode",
-    ],
-  },
-)

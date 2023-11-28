@@ -9,6 +9,27 @@
       version: (
         major: 0,
         minor: 5,
+        patch: 1,
+      ),
+      released: "2023-11-28T19:57:47.819849239Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Fixed": [
+            "Letter V can\'t be typed in built-in editor insert mode",
+          ],
+          "Added": [
+            "Navigation between journals popup inputs via arrow keys",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 5,
         patch: 0,
       ),
       released: "2023-11-26T13:07:58.282458357Z",
