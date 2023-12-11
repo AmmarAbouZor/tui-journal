@@ -1,8 +1,10 @@
 use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
 
+use anyhow::anyhow;
 use backend::DataProvider;
+use copypasta::{ClipboardContext, ClipboardProvider};
 
-use super::CmdResult;
+use super::{ClipboardOperation, CmdResult};
 
 pub fn exec_back_editor_to_normal_mode(ui_components: &mut UIComponents) -> CmdResult {
     if ui_components.active_control == ControlType::EntryContentTxt
@@ -76,13 +78,85 @@ pub fn exec_toggle_editor_visual_mode(ui_components: &mut UIComponents) -> CmdRe
 }
 
 pub fn exec_copy_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    todo!()
+    //TODO: Refactor and remove redundant code
+    let copied_text = ui_components
+        .editor
+        .get_selected_text(ClipboardOperation::Copy)?;
+
+    let mut ctx = ClipboardContext::new().map_err(|err| {
+        anyhow!(
+            "Error while copy to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    ctx.set_contents(copied_text).map_err(|err| {
+        anyhow!(
+            "Error while copy to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    // On Wayland we need to call the context after setting it.
+    #[cfg(target_os = "linux")]
+    let _ = ctx.get_contents().map_err(|err| {
+        anyhow!(
+            "Error while copy to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    todo!()
+    //TODO: Refactor and remove redundant code
+    let cutted_text = ui_components
+        .editor
+        .get_selected_text(ClipboardOperation::Cut)?;
+    let mut ctx = ClipboardContext::new().map_err(|err| {
+        anyhow!(
+            "Error while cut selected text to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    ctx.set_contents(cutted_text).map_err(|err| {
+        anyhow!(
+            "Error while cut selected text to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    // On Wayland we need to call the context after setting it.
+    #[cfg(target_os = "linux")]
+    let _ = ctx.get_contents().map_err(|err| {
+        anyhow!(
+            "Error while cut selected text to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    Ok(HandleInputReturnType::Handled)
 }
 
 pub fn exec_paste_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    todo!()
+    //TODO: Refactor and remove redundant code
+    let mut ctx = ClipboardContext::new().map_err(|err| {
+        anyhow!(
+            "Error while copy to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    let content = ctx.get_contents().map_err(|err| {
+        anyhow!(
+            "Error while copy to operation system clipboard.\nError Details: {}",
+            err.to_string()
+        )
+    })?;
+
+    ui_components.editor.paste_text(&content)?;
+
+    Ok(HandleInputReturnType::Handled)
 }

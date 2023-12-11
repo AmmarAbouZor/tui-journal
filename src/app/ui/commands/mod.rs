@@ -16,6 +16,13 @@ mod multi_select_cmd;
 
 type CmdResult = anyhow::Result<HandleInputReturnType>;
 
+#[derive(Debug, Clone, Copy)]
+pub enum ClipboardOperation {
+    Copy,
+    Cut,
+    Paste,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UICommand {
     Quit,
