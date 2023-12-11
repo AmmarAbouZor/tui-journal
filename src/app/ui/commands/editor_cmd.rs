@@ -74,3 +74,15 @@ pub fn exec_toggle_editor_visual_mode(ui_components: &mut UIComponents) -> CmdRe
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_copy_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    todo!()
+}
+
+pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    todo!()
+}
+
+pub fn exec_paste_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    todo!()
+}
