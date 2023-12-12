@@ -1,8 +1,8 @@
 use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
 
 use anyhow::anyhow;
+use arboard::Clipboard;
 use backend::DataProvider;
-use copypasta::{ClipboardContext, ClipboardProvider};
 
 use super::{ClipboardOperation, CmdResult};
 
@@ -83,23 +83,14 @@ pub fn exec_copy_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
         .editor
         .get_selected_text(ClipboardOperation::Copy)?;
 
-    let mut ctx = ClipboardContext::new().map_err(|err| {
+    let mut clipboard = Clipboard::new().map_err(|err| {
         anyhow!(
             "Error while copy to operation system clipboard.\nError Details: {}",
             err.to_string()
         )
     })?;
 
-    ctx.set_contents(copied_text).map_err(|err| {
-        anyhow!(
-            "Error while copy to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
-
-    // On Wayland we need to call the context after setting it.
-    #[cfg(target_os = "linux")]
-    let _ = ctx.get_contents().map_err(|err| {
+    clipboard.set_text(copied_text).map_err(|err| {
         anyhow!(
             "Error while copy to operation system clipboard.\nError Details: {}",
             err.to_string()
@@ -114,23 +105,14 @@ pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
     let cutted_text = ui_components
         .editor
         .get_selected_text(ClipboardOperation::Cut)?;
-    let mut ctx = ClipboardContext::new().map_err(|err| {
+    let mut clipboard = Clipboard::new().map_err(|err| {
         anyhow!(
             "Error while cut selected text to operation system clipboard.\nError Details: {}",
             err.to_string()
         )
     })?;
 
-    ctx.set_contents(cutted_text).map_err(|err| {
-        anyhow!(
-            "Error while cut selected text to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
-
-    // On Wayland we need to call the context after setting it.
-    #[cfg(target_os = "linux")]
-    let _ = ctx.get_contents().map_err(|err| {
+    clipboard.set_text(cutted_text).map_err(|err| {
         anyhow!(
             "Error while cut selected text to operation system clipboard.\nError Details: {}",
             err.to_string()
@@ -142,14 +124,14 @@ pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
 
 pub fn exec_paste_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
     //TODO: Refactor and remove redundant code
-    let mut ctx = ClipboardContext::new().map_err(|err| {
+    let mut clipboard = Clipboard::new().map_err(|err| {
         anyhow!(
             "Error while copy to operation system clipboard.\nError Details: {}",
             err.to_string()
         )
     })?;
 
-    let content = ctx.get_contents().map_err(|err| {
+    let content = clipboard.get_text().map_err(|err| {
         anyhow!(
             "Error while copy to operation system clipboard.\nError Details: {}",
             err.to_string()
