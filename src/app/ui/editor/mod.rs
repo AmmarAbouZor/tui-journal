@@ -135,6 +135,10 @@ impl<'a> Editor<'a> {
         if !self.text_area.is_selecting() && self.is_visual_mode() {
             self.set_editor_mode(EditorMode::Normal);
         }
+
+        self.is_dirty = true;
+        self.refresh_has_unsaved(app);
+
         Ok(HandleInputReturnType::Handled)
     }
 
@@ -433,14 +437,18 @@ impl<'a> Editor<'a> {
     }
 
     pub fn get_selected_text(&mut self, operation: ClipboardOperation) -> anyhow::Result<String> {
-        // TODO: Set content changed
         if !self.is_visual_mode() {
             bail!("Editor isn't in visual mode");
         }
 
         match operation {
             ClipboardOperation::Copy => self.text_area.copy(),
-            ClipboardOperation::Cut => _ = self.text_area.cut(),
+            ClipboardOperation::Cut => {
+                if self.text_area.cut() {
+                    self.is_dirty = true;
+                    self.has_unsaved = true;
+                }
+            }
             ClipboardOperation::Paste => {
                 unreachable!("Paste operation can't be used to get text from editor")
             }
@@ -451,10 +459,15 @@ impl<'a> Editor<'a> {
     }
 
     pub fn paste_text(&mut self, text: &str) -> anyhow::Result<()> {
-        // TODO: Set content changed
+        if text.is_empty() {
+            return Ok(());
+        }
+
         if !self.text_area.insert_str(text) {
             bail!("Text can't be pasted into editor")
         }
+        self.is_dirty = true;
+        self.has_unsaved = true;
         Ok(())
     }
 }
