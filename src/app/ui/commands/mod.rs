@@ -176,15 +176,15 @@ impl UICommand {
             ),
             UICommand::CopyOsClipboard => CommandInfo::new(
                 "Copy to OS clipboard",
-                "Copy selection to operation system clipboard",
+                "Copy selection to operation system clipboard while in editor visual mode",
             ),
             UICommand::CutOsClipboard => CommandInfo::new(
                 "Cut to OS clipboard",
-                "Cut selection to operation system clipboard",
+                "Cut selection to operation system clipboard while in editor visual mode",
             ),
             UICommand::PasteOsClipboard => CommandInfo::new(
                 "Paste OS clipboard Content",
-                "Paste OS clipboard content",
+                "Paste the operation system clipboard content to in the editor",
             ),
 
         }
