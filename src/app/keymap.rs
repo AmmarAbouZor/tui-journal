@@ -230,6 +230,18 @@ pub(crate) fn get_editor_mode_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('v'), KeyModifiers::NONE),
             UICommand::ToggleEditorVisualMode,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('x'), KeyModifiers::CONTROL),
+            UICommand::CutOsClipboard,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('v'), KeyModifiers::CONTROL),
+            UICommand::CopyOsClipboard,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('p'), KeyModifiers::CONTROL),
+            UICommand::PasteOsClipboard,
+        ),
     ]
 }
 

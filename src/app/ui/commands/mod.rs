@@ -16,6 +16,15 @@ mod multi_select_cmd;
 
 type CmdResult = anyhow::Result<HandleInputReturnType>;
 
+#[derive(Debug, Clone, Copy)]
+pub enum ClipboardOperation {
+    Copy,
+    Cut,
+    // I didn't use it yet but it's an option from clipboard operation and shouldn't be deleted
+    #[allow(dead_code)]
+    Paste,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UICommand {
     Quit,
@@ -46,6 +55,9 @@ pub enum UICommand {
     ResetFilter,
     ShowFuzzyFind,
     ToggleEditorVisualMode,
+    CopyOsClipboard,
+    CutOsClipboard,
+    PasteOsClipboard,
 }
 
 #[derive(Debug, Clone)]
@@ -162,6 +174,18 @@ impl UICommand {
                 "Toggle Editor Visual Mode",
                 "Toggle Editor Visual(Select) Mode when editor is in focus",
             ),
+            UICommand::CopyOsClipboard => CommandInfo::new(
+                "Copy to OS clipboard",
+                "Copy selection to operation system clipboard while in editor visual mode",
+            ),
+            UICommand::CutOsClipboard => CommandInfo::new(
+                "Cut to OS clipboard",
+                "Cut selection to operation system clipboard while in editor visual mode",
+            ),
+            UICommand::PasteOsClipboard => CommandInfo::new(
+                "Paste OS clipboard Content",
+                "Paste the operation system clipboard content to in the editor",
+            ),
 
         }
     }
@@ -202,6 +226,9 @@ impl UICommand {
             UICommand::ResetFilter => exec_reset_filter(app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
             UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
+            UICommand::CopyOsClipboard => exec_copy_os_clipboard(ui_components),
+            UICommand::CutOsClipboard => exec_cut_os_clipboard(ui_components),
+            UICommand::PasteOsClipboard => exec_paste_os_clipboard(ui_components),
         }
     }
 
@@ -263,6 +290,9 @@ impl UICommand {
                 continue_fuzzy_find(ui_components, app, msg_box_result).await
             }
             UICommand::ToggleEditorVisualMode => not_implemented(),
+            UICommand::CopyOsClipboard => not_implemented(),
+            UICommand::CutOsClipboard => not_implemented(),
+            UICommand::PasteOsClipboard => not_implemented(),
         }
     }
 }

@@ -69,6 +69,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Utilize Editor's Visual Mode for VIM-style text selection, copying, and deletion.
 - Export and Import journals between different back-end files.
 - Export the current journal's content to a predefined export path or the current directory 
+- Transfer text between the built-in editor and the system clipboard using Cut, Copy, and Paste.
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
 

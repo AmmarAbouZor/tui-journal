@@ -1,3 +1,4 @@
+use anyhow::bail;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use ratatui::{
     layout::Rect,
@@ -13,8 +14,8 @@ use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
-use super::EDITOR_MODE_COLOR;
 use super::INACTIVE_CONTROL_COLOR;
+use super::{commands::ClipboardOperation, EDITOR_MODE_COLOR};
 use super::{ACTIVE_CONTROL_COLOR, VISUAL_MODE_COLOR};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -134,6 +135,10 @@ impl<'a> Editor<'a> {
         if !self.text_area.is_selecting() && self.is_visual_mode() {
             self.set_editor_mode(EditorMode::Normal);
         }
+
+        self.is_dirty = true;
+        self.refresh_has_unsaved(app);
+
         Ok(HandleInputReturnType::Handled)
     }
 
@@ -429,6 +434,41 @@ impl<'a> Editor<'a> {
         self.text_area = text_area;
 
         self.refresh_has_unsaved(app);
+    }
+
+    pub fn get_selected_text(&mut self, operation: ClipboardOperation) -> anyhow::Result<String> {
+        if !self.is_visual_mode() {
+            bail!("Editor isn't in visual mode");
+        }
+
+        match operation {
+            ClipboardOperation::Copy => self.text_area.copy(),
+            ClipboardOperation::Cut => {
+                if self.text_area.cut() {
+                    self.is_dirty = true;
+                    self.has_unsaved = true;
+                }
+            }
+            ClipboardOperation::Paste => {
+                unreachable!("Paste operation can't be used to get text from editor")
+            }
+        }
+
+        self.text_area.copy();
+        Ok(self.text_area.yank_text())
+    }
+
+    pub fn paste_text(&mut self, text: &str) -> anyhow::Result<()> {
+        if text.is_empty() {
+            return Ok(());
+        }
+
+        if !self.text_area.insert_str(text) {
+            bail!("Text can't be pasted into editor")
+        }
+        self.is_dirty = true;
+        self.has_unsaved = true;
+        Ok(())
     }
 }
 

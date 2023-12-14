@@ -1,8 +1,10 @@
 use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
 
+use anyhow::anyhow;
+use arboard::Clipboard;
 use backend::DataProvider;
 
-use super::CmdResult;
+use super::{ClipboardOperation, CmdResult};
 
 pub fn exec_back_editor_to_normal_mode(ui_components: &mut UIComponents) -> CmdResult {
     if ui_components.active_control == ControlType::EntryContentTxt
@@ -71,6 +73,46 @@ pub fn exec_toggle_editor_visual_mode(ui_components: &mut UIComponents) -> CmdRe
         EditorMode::Visual => ui_components.editor.set_editor_mode(EditorMode::Normal),
         EditorMode::Insert => return Ok(HandleInputReturnType::NotFound),
     }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_copy_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    send_from_editor_to_os_clipboard(ui_components, ClipboardOperation::Copy)
+}
+
+fn send_from_editor_to_os_clipboard(
+    ui_components: &mut UIComponents,
+    operation: ClipboardOperation,
+) -> CmdResult {
+    let selected_text = ui_components.editor.get_selected_text(operation)?;
+
+    let mut clipboard = Clipboard::new().map_err(map_clipboard_error)?;
+
+    clipboard
+        .set_text(selected_text)
+        .map_err(map_clipboard_error)?;
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+fn map_clipboard_error(err: arboard::Error) -> anyhow::Error {
+    anyhow!(
+        "Error while communicating with the operation system clipboard.\nError Details: {}",
+        err.to_string()
+    )
+}
+
+pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    send_from_editor_to_os_clipboard(ui_components, ClipboardOperation::Cut)
+}
+
+pub fn exec_paste_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
+    let mut clipboard = Clipboard::new().map_err(map_clipboard_error)?;
+
+    let content = clipboard.get_text().map_err(map_clipboard_error)?;
+
+    ui_components.editor.paste_text(&content)?;
 
     Ok(HandleInputReturnType::Handled)
 }
