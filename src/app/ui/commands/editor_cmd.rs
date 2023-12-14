@@ -78,65 +78,39 @@ pub fn exec_toggle_editor_visual_mode(ui_components: &mut UIComponents) -> CmdRe
 }
 
 pub fn exec_copy_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    //TODO: Refactor and remove redundant code
-    let copied_text = ui_components
-        .editor
-        .get_selected_text(ClipboardOperation::Copy)?;
+    send_from_editor_to_os_clipboard(ui_components, ClipboardOperation::Copy)
+}
 
-    let mut clipboard = Clipboard::new().map_err(|err| {
-        anyhow!(
-            "Error while copy to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
+fn send_from_editor_to_os_clipboard(
+    ui_components: &mut UIComponents,
+    operation: ClipboardOperation,
+) -> CmdResult {
+    let selected_text = ui_components.editor.get_selected_text(operation)?;
 
-    clipboard.set_text(copied_text).map_err(|err| {
-        anyhow!(
-            "Error while copy to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
+    let mut clipboard = Clipboard::new().map_err(map_clipboard_error)?;
+
+    clipboard
+        .set_text(selected_text)
+        .map_err(map_clipboard_error)?;
 
     Ok(HandleInputReturnType::Handled)
+}
+
+fn map_clipboard_error(err: arboard::Error) -> anyhow::Error {
+    anyhow!(
+        "Error while communicating with the operation system clipboard.\nError Details: {}",
+        err.to_string()
+    )
 }
 
 pub fn exec_cut_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    //TODO: Refactor and remove redundant code
-    let cutted_text = ui_components
-        .editor
-        .get_selected_text(ClipboardOperation::Cut)?;
-    let mut clipboard = Clipboard::new().map_err(|err| {
-        anyhow!(
-            "Error while cut selected text to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
-
-    clipboard.set_text(cutted_text).map_err(|err| {
-        anyhow!(
-            "Error while cut selected text to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
-
-    Ok(HandleInputReturnType::Handled)
+    send_from_editor_to_os_clipboard(ui_components, ClipboardOperation::Cut)
 }
 
 pub fn exec_paste_os_clipboard(ui_components: &mut UIComponents) -> CmdResult {
-    //TODO: Refactor and remove redundant code
-    let mut clipboard = Clipboard::new().map_err(|err| {
-        anyhow!(
-            "Error while copy to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
+    let mut clipboard = Clipboard::new().map_err(map_clipboard_error)?;
 
-    let content = clipboard.get_text().map_err(|err| {
-        anyhow!(
-            "Error while copy to operation system clipboard.\nError Details: {}",
-            err.to_string()
-        )
-    })?;
+    let content = clipboard.get_text().map_err(map_clipboard_error)?;
 
     ui_components.editor.paste_text(&content)?;
 

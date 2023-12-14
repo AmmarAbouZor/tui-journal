@@ -20,6 +20,8 @@ type CmdResult = anyhow::Result<HandleInputReturnType>;
 pub enum ClipboardOperation {
     Copy,
     Cut,
+    // I didn't use it yet but it's an option from clipboard operation and shouldn't be deleted
+    #[allow(dead_code)]
     Paste,
 }
 
