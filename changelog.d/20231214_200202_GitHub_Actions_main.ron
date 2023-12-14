@@ -1,0 +1,8 @@
+(
+  references: {},
+  changes: {
+    "Added": [
+      "Support to Copy, Cut and Paste text between Built-in Editor and OS Clipboard",
+    ],
+  },
+)
