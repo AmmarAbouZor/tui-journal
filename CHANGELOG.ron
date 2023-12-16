@@ -8,6 +8,24 @@
       references: {},
       version: (
         major: 0,
+        minor: 6,
+        patch: 0,
+      ),
+      released: "2023-12-16T19:21:36.914576942Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Support to Copy, Cut and Paste text between Built-in Editor and OS Clipboard",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 5,
         patch: 1,
       ),
@@ -16,11 +34,11 @@
       changes: (
         references: {},
         changes: {
-          "Fixed": [
-            "Letter V can\'t be typed in built-in editor insert mode",
-          ],
           "Added": [
             "Navigation between journals popup inputs via arrow keys",
+          ],
+          "Fixed": [
+            "Letter V can\'t be typed in built-in editor insert mode",
           ],
         },
       ),
