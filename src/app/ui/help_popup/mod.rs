@@ -235,7 +235,7 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
 
     let keymaps_table = Table::new(
         rows,
-        &[
+        [
             Constraint::Percentage(KEY_PERC),
             Constraint::Percentage(NAME_PERC),
             Constraint::Percentage(DESCRIPTION_PERC),
