@@ -233,19 +233,21 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
 
     let items_len = rows.len();
 
-    let keymaps_table = Table::new(rows)
-        .header(header)
-        .block(
-            Block::default()
-                .title(table.get_title().to_owned())
-                .borders(Borders::ALL),
-        )
-        .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
-        .widths(&[
+    let keymaps_table = Table::new(
+        rows,
+        [
             Constraint::Percentage(KEY_PERC),
             Constraint::Percentage(NAME_PERC),
             Constraint::Percentage(DESCRIPTION_PERC),
-        ]);
+        ],
+    )
+    .header(header)
+    .block(
+        Block::default()
+            .title(table.get_title().to_owned())
+            .borders(Borders::ALL),
+    )
+    .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
     let table_state = table.get_state_mut();
 
