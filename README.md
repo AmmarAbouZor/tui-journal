@@ -118,6 +118,8 @@ pkgin install tui-journal
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
 
+The minimum required Rust version is `1.75.0` 
+
 #### Linux Dependencies:
 
 Make sure the OpenSSL development package is installed on your system.
