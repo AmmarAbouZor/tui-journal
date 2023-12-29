@@ -30,7 +30,18 @@ pub trait DataProvider {
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
     async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
     async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO>;
-    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()>;
+    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
+        debug_assert_eq!(
+            TRANSFER_DATA_VERSION, entries_dto.version,
+            "Version mismatches check if there is a need to do a converting to the data"
+        );
+
+        for entry_darft in entries_dto.entries {
+            self.add_entry(entry_darft).await?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
