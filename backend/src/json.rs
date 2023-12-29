@@ -14,7 +14,6 @@ impl JsonDataProvide {
     }
 }
 
-#[async_trait]
 impl DataProvider for JsonDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         if !self.file_path.try_exists()? {

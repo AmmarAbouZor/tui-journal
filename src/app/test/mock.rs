@@ -1,6 +1,5 @@
 use std::sync::RwLock;
 
-use async_trait::async_trait;
 use backend::ModifyEntryError;
 
 use super::*;
@@ -32,7 +31,6 @@ impl MockDataProvider {
     }
 }
 
-#[async_trait]
 impl DataProvider for MockDataProvider {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         self.early_return()?;

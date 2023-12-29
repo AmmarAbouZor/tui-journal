@@ -1,7 +1,5 @@
 use chrono::{DateTime, Utc};
 
-use async_trait::async_trait;
-
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "json")]
@@ -24,7 +22,8 @@ pub enum ModifyEntryError {
     DataError(#[from] anyhow::Error),
 }
 
-#[async_trait]
+// The warning can be suppressed since this will be used with the code base of this app only
+#[allow(async_fn_in_trait)]
 pub trait DataProvider {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;

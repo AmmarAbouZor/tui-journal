@@ -60,7 +60,6 @@ impl SqliteDataProvide {
     }
 }
 
-#[async_trait]
 impl DataProvider for SqliteDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         let entries: Vec<EntryIntermediate> = sqlx::query_as(
