@@ -95,10 +95,11 @@ where
         match handle_input(event, &mut app, &mut ui_components).await {
             Ok(result) => {
                 match result {
-                    HandleInputReturnType::Handled | HandleInputReturnType::NotFound => {
+                    HandleInputReturnType::Handled => {
                         ui_components.update_current_entry(&mut app);
                         draw_ui(terminal, &mut app, &mut ui_components)?;
                     }
+                    HandleInputReturnType::NotFound => {}
                     HandleInputReturnType::ExitApp => return Ok(()),
                 };
             }
