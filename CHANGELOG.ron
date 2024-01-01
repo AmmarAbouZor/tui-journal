@@ -9,6 +9,27 @@
       version: (
         major: 0,
         minor: 6,
+        patch: 1,
+      ),
+      released: "2024-01-01T11:44:46.668154806Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Update Ratatui to 0.25 + Update dependencies \r\n\r\n- Ratatui has been updated in the app and in textarea to version 0.25.\r\n- Small code changes has been done due to breaking changes.\r\n- Cargo lock has been updated so we don\'t have references to old\r\n  versions there.",
+          ],
+          "Fixed": [
+            "Ignore key events of types other than press",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 6,
         patch: 0,
       ),
       released: "2023-12-16T19:21:36.914576942Z",

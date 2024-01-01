@@ -1,8 +1,0 @@
-(
-  references: {},
-  changes: {
-    "Fixed": [
-      "Ignore key events of types other than press",
-    ],
-  },
-)
