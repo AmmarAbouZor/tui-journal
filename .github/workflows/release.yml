@@ -30,6 +30,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Latest Rust
+        run: |
+          rustup update --no-self-update ${{ env.RUST_CHANNEL }}
+          rustup default ${{ env.RUST_CHANNEL }}
+
     - name: Install Linux dependencies
       if: matrix.dependencies
       run: apt update && apt install -y ${{ matrix.dependencies }}
