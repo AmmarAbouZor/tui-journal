@@ -428,3 +428,8 @@ pub async fn continue_fuzzy_find<'a, D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_toggle_full_screen_mode(ui_components: &mut UIComponents) -> CmdResult {
+    ui_components.fullscreen = !ui_components.fullscreen;
+    Ok(HandleInputReturnType::Handled)
+}
