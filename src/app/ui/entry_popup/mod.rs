@@ -416,7 +416,8 @@ impl<'a> EntryPopup<'a> {
             app.update_current_entry(title, date, tags).await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {
-            let entry_id = app.add_entry(title, date, tags).await?;
+            //TODO: Add priority
+            let entry_id = app.add_entry(title, date, tags, None).await?;
             Ok(EntryPopupInputReturn::AddEntry(entry_id))
         }
     }

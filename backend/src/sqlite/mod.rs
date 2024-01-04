@@ -63,7 +63,7 @@ impl SqliteDataProvide {
 impl DataProvider for SqliteDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         let entries: Vec<EntryIntermediate> = sqlx::query_as(
-            r"SELECT entries.id, entries.title, entries.date, entries.content, GROUP_CONCAT(tags.tag) AS tags
+            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
             LEFT JOIN tags ON entries.id = tags.entry_id
             GROUP BY entries.id
@@ -83,13 +83,14 @@ impl DataProvider for SqliteDataProvide {
 
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         let row = sqlx::query(
-            r"INSERT INTO entries (title, date, content)
-            VALUES($1, $2, $3)
+            r"INSERT INTO entries (title, date, content, priority)
+            VALUES($1, $2, $3, $4)
             RETURNING id",
         )
         .bind(&entry.title)
         .bind(entry.date)
         .bind(&entry.content)
+        .bind(entry.priority)
         .fetch_one(&self.pool)
         .await
         .map_err(|err| {
@@ -135,12 +136,14 @@ impl DataProvider for SqliteDataProvide {
             r"UPDATE entries
             Set title = $1,
                 date = $2,
-                content = $3
-            WHERE id = $4",
+                content = $3,
+                priority = $4
+            WHERE id = $5",
         )
         .bind(&entry.title)
         .bind(entry.date)
         .bind(&entry.content)
+        .bind(entry.priority)
         .bind(entry.id)
         .execute(&self.pool)
         .await
@@ -201,7 +204,7 @@ impl DataProvider for SqliteDataProvide {
             .join(", ");
 
         let sql = format!(
-            r"SELECT entries.id, entries.title, entries.date, entries.content, GROUP_CONCAT(tags.tag) AS tags
+            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
             LEFT JOIN tags ON entries.id = tags.entry_id
             WHERE entries.id IN ({})

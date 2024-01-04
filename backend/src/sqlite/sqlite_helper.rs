@@ -10,6 +10,7 @@ pub(crate) struct EntryIntermediate {
     pub date: DateTime<Utc>,
     pub title: String,
     pub content: String,
+    pub priority: Option<u32>,
     /// Tags as a string with commas as separator for the tags
     pub tags: Option<String>,
 }
@@ -21,6 +22,7 @@ impl From<EntryIntermediate> for Entry {
             date: value.date,
             title: value.title,
             content: value.content,
+            priority: value.priority,
             tags: value
                 .tags
                 .map(|tags| tags.split_terminator(',').map(String::from).collect())

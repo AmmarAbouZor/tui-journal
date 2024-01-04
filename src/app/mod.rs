@@ -102,12 +102,13 @@ where
         title: String,
         date: DateTime<Utc>,
         tags: Vec<String>,
+        priority: Option<u32>,
     ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
         let entry = self
             .data_provide
-            .add_entry(EntryDraft::new(date, title, tags))
+            .add_entry(EntryDraft::new(date, title, tags, priority))
             .await?;
         let entry_id = entry.id;
 

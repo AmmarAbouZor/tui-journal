@@ -16,6 +16,7 @@ fn get_default_entries() -> Vec<Entry> {
             String::from("Title 1"),
             String::from("Content 1"),
             vec![String::from("Tag 1"), String::from("Tag 2")],
+            None,
         ),
         Entry::new(
             1,
@@ -23,6 +24,7 @@ fn get_default_entries() -> Vec<Entry> {
             String::from("Title 2"),
             String::from("Content 2"),
             vec![],
+            Some(1),
         ),
     ]
 }
@@ -60,7 +62,7 @@ async fn test_data_provider_errors() {
     assert!(app.get_entry(0).is_none());
     assert!(app.get_all_tags().is_empty());
     assert!(app
-        .add_entry("title".into(), Utc::now(), Vec::new())
+        .add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
         .await
         .is_err());
     assert!(app.delete_entry(0).await.is_err());
@@ -88,7 +90,7 @@ async fn test_add_entry() {
     let title = String::from("Added Title");
     let date = Utc::now();
 
-    app.add_entry(title.clone(), date.clone(), vec![tag.clone()])
+    app.add_entry(title.clone(), date.clone(), vec![tag.clone()], Some(1))
         .await
         .unwrap();
 
@@ -97,6 +99,7 @@ async fn test_add_entry() {
     assert_eq!(added_entry.title, title);
     assert_eq!(added_entry.date, date);
     assert_eq!(added_entry.tags, vec![tag]);
+    assert_eq!(added_entry.priority, Some(1));
     assert_eq!(app.get_all_tags().len(), 3);
 }
 
