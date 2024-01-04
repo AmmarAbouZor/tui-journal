@@ -14,7 +14,6 @@ impl JsonDataProvide {
     }
 }
 
-#[async_trait]
 impl DataProvider for JsonDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         if !self.file_path.try_exists()? {
@@ -103,19 +102,6 @@ impl DataProvider for JsonDataProvide {
             .collect();
 
         Ok(EntriesDTO::new(entries))
-    }
-
-    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
-        debug_assert_eq!(
-            TRANSFER_DATA_VERSION, entries_dto.version,
-            "Version mismatches check if there is a need to do a converting to the data"
-        );
-
-        for entry_darft in entries_dto.entries {
-            self.add_entry(entry_darft).await?;
-        }
-
-        Ok(())
     }
 }
 
