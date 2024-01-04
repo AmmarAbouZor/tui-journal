@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use crossterm::event::{Event, EventStream};
+use crossterm::event::{Event, EventStream, KeyEventKind};
 use ratatui::{backend::Backend, Terminal};
 
 use crate::app::{App, UIComponents};
@@ -95,10 +95,11 @@ where
         match handle_input(event, &mut app, &mut ui_components).await {
             Ok(result) => {
                 match result {
-                    HandleInputReturnType::Handled | HandleInputReturnType::NotFound => {
+                    HandleInputReturnType::Handled => {
                         ui_components.update_current_entry(&mut app);
                         draw_ui(terminal, &mut app, &mut ui_components)?;
                     }
+                    HandleInputReturnType::NotFound => {}
                     HandleInputReturnType::ExitApp => return Ok(()),
                 };
             }
@@ -152,9 +153,13 @@ async fn handle_input<'a, D: DataProvider>(
     ui_components: &mut UIComponents<'a>,
 ) -> Result<HandleInputReturnType> {
     if let Event::Key(key) = event {
-        let input = Input::from(&key);
-
-        ui_components.handle_input(&input, app).await
+        match key.kind {
+            KeyEventKind::Press => {
+                let input = Input::from(&key);
+                ui_components.handle_input(&input, app).await
+            }
+            KeyEventKind::Repeat | KeyEventKind::Release => Ok(HandleInputReturnType::NotFound),
+        }
     } else {
         Ok(HandleInputReturnType::NotFound)
     }

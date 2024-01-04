@@ -32,6 +32,8 @@ jobs:
           crate: aeruginous
 
       - run: |
+          aeruginous comment-changes \
+            -b -d : -f ron -k -o changelog.d/ -S "$(cat .version)"
           aeruginous increment-version \
             -v "$(cat .version)" \
             -r ${{ inputs.release }} \
@@ -40,7 +42,6 @@ jobs:
             -e CITATION.cff \
             -e Cargo.lock \
             -e Cargo.toml
-          aeruginous cff-release-today CITATION.cff
           aeruginous ronlog release -i changelog.d/ -v "$(cat .version)"
 
       - uses: peter-evans/create-pull-request@v5.0.2

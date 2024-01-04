@@ -1,6 +1,6 @@
 [package]
 name = "tui-journal"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 authors = ["Ammar Abou Zor"]
 license = "MIT"
@@ -12,18 +12,18 @@ keywords = ["tui", "terminal-app", "journal", "cli", "ui"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.78"
 tokio = { version = "1.35.0", features = ["full"] }
 serde = { version = "1.0.192", features = ["derive"]}
-serde_json = "1.0.108"
+serde_json = "1.0.109"
 log = "0.4.20"
 chrono = { version = "0.4.31", features = ["serde"] }
-clap = { version = "4.4.11", features = ["derive"] }
+clap = { version = "4.4.12", features = ["derive"] }
 crossterm = {version =  "0.27.0", features = ["event-stream"]}
 directories = "5.0.0"
 simplelog = "0.12.1"
 textwrap = "0.16.0"
-thiserror = "1.0.52"
+thiserror = "1.0.53"
 toml = "0.8.8"
 sqlx = {version = "0.7.2", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
