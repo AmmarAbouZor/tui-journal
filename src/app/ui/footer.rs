@@ -91,6 +91,15 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
         }
     }
 
+    if ui_components.fullscreen {
+        let full_screen_keymap: Vec<_> = ui_components
+            .global_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::ToggleFullScreenMode)
+            .collect();
+        footer_parts.push(get_keymap_text(full_screen_keymap));
+    }
+
     let help_keymap: Vec<_> = ui_components
         .global_keymaps
         .iter()
