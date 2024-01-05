@@ -29,11 +29,13 @@ pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
     date_txt: TextArea<'a>,
     tags_txt: TextArea<'a>,
+    priority_txt: TextArea<'a>,
     is_edit_entry: bool,
     active_txt: ActiveText,
     title_err_msg: String,
     date_err_msg: String,
     tags_err_msg: String,
+    priority_err_msg: String,
     tags_popup: Option<TagsPopup>,
 }
 
@@ -42,6 +44,7 @@ enum ActiveText {
     Title,
     Date,
     Tags,
+    Priority,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -66,16 +69,19 @@ impl<'a> EntryPopup<'a> {
         )]);
 
         let tags_txt = TextArea::default();
+        let priority_txt = TextArea::default();
 
         Self {
             title_txt,
             date_txt,
             tags_txt,
+            priority_txt,
             is_edit_entry: false,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            priority_err_msg: String::default(),
             tags_popup: None,
         }
     }
@@ -96,27 +102,32 @@ impl<'a> EntryPopup<'a> {
         let mut tags_txt = TextArea::new(vec![tags]);
         tags_txt.move_cursor(CursorMove::End);
 
+        let prio = entry.priority.map(|pr| pr.to_string()).unwrap_or_default();
+
+        let mut priority_txt = TextArea::new(vec![prio]);
+        priority_txt.move_cursor(CursorMove::End);
+
         let mut entry_pupop = Self {
             title_txt,
             date_txt,
             tags_txt,
+            priority_txt,
             is_edit_entry: true,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            priority_err_msg: String::default(),
             tags_popup: None,
         };
 
-        entry_pupop.validate_title();
-        entry_pupop.validat_date();
-        entry_pupop.validat_tags();
+        entry_pupop.validate_all();
 
         entry_pupop
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
-        let mut area = centered_rect_exact_height(70, 14, area);
+        let mut area = centered_rect_exact_height(70, 17, area);
 
         const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGINE;
 
@@ -144,6 +155,7 @@ impl<'a> EntryPopup<'a> {
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
+                    Constraint::Length(3),
                     Constraint::Min(1),
                 ]
                 .as_ref(),
@@ -153,6 +165,7 @@ impl<'a> EntryPopup<'a> {
         self.title_txt.set_cursor_line_style(Style::default());
         self.date_txt.set_cursor_line_style(Style::default());
         self.tags_txt.set_cursor_line_style(Style::default());
+        self.priority_txt.set_cursor_line_style(Style::default());
 
         let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
@@ -162,16 +175,25 @@ impl<'a> EntryPopup<'a> {
                 self.title_txt.set_cursor_style(active_cursor_style);
                 self.date_txt.set_cursor_style(deactivate_cursor_style);
                 self.tags_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
             }
             ActiveText::Date => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.date_txt.set_cursor_style(active_cursor_style);
                 self.tags_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
             }
             ActiveText::Tags => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.date_txt.set_cursor_style(deactivate_cursor_style);
                 self.tags_txt.set_cursor_style(active_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
+            }
+            ActiveText::Priority => {
+                self.title_txt.set_cursor_style(deactivate_cursor_style);
+                self.date_txt.set_cursor_style(deactivate_cursor_style);
+                self.tags_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(active_cursor_style);
             }
         };
 
@@ -237,9 +259,28 @@ impl<'a> EntryPopup<'a> {
             );
         }
 
+        if self.priority_err_msg.is_empty() {
+            self.priority_txt.set_style(active_style);
+            self.priority_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(active_style)
+                    .title("Priority"),
+            );
+        } else {
+            self.priority_txt.set_style(invalid_style);
+            self.priority_txt.set_block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .style(invalid_style)
+                    .title(format!("Priority : {}", self.priority_err_msg)),
+            );
+        }
+
         frame.render_widget(self.title_txt.widget(), chunks[0]);
         frame.render_widget(self.date_txt.widget(), chunks[1]);
         frame.render_widget(self.tags_txt.widget(), chunks[2]);
+        frame.render_widget(self.priority_txt.widget(), chunks[3]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
@@ -250,7 +291,7 @@ impl<'a> EntryPopup<'a> {
                     .style(Style::default()),
             );
 
-        frame.render_widget(footer, chunks[3]);
+        frame.render_widget(footer, chunks[4]);
 
         if let Some(tags_popup) = self.tags_popup.as_mut() {
             tags_popup.render_widget(frame, area)
@@ -261,12 +302,14 @@ impl<'a> EntryPopup<'a> {
         self.title_err_msg.is_empty()
             && self.date_err_msg.is_empty()
             && self.tags_err_msg.is_empty()
+            && self.priority_err_msg.is_empty()
     }
 
     pub fn validate_all(&mut self) {
         self.validate_title();
         self.validat_date();
         self.validat_tags();
+        self.validate_priority();
     }
 
     fn validate_title(&mut self) {
@@ -299,6 +342,15 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
+    fn validate_priority(&mut self) {
+        let prio_text = self.priority_txt.lines().first().unwrap();
+        if !prio_text.is_empty() && prio_text.parse::<u32>().is_err() {
+            self.priority_err_msg = String::from("Priority must be a positive number");
+        } else {
+            self.priority_err_msg.clear();
+        }
+    }
+
     pub async fn handle_input<D: DataProvider>(
         &mut self,
         input: &Input,
@@ -320,15 +372,17 @@ impl<'a> EntryPopup<'a> {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
                     ActiveText::Date => ActiveText::Tags,
-                    ActiveText::Tags => ActiveText::Title,
+                    ActiveText::Tags => ActiveText::Priority,
+                    ActiveText::Priority => ActiveText::Title,
                 };
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
             KeyCode::Up => {
                 self.active_txt = match self.active_txt {
-                    ActiveText::Title => ActiveText::Tags,
+                    ActiveText::Title => ActiveText::Priority,
                     ActiveText::Date => ActiveText::Title,
                     ActiveText::Tags => ActiveText::Date,
+                    ActiveText::Priority => ActiveText::Tags,
                 };
                 Ok(EntryPopupInputReturn::KeepPupup)
             }
@@ -361,6 +415,11 @@ impl<'a> EntryPopup<'a> {
                     ActiveText::Tags => {
                         if self.tags_txt.input(KeyEvent::from(input)) {
                             self.validat_tags();
+                        }
+                    }
+                    ActiveText::Priority => {
+                        if self.priority_txt.input(KeyEvent::from(input)) {
+                            self.validate_priority();
                         }
                     }
                 }
@@ -412,12 +471,17 @@ impl<'a> EntryPopup<'a> {
                 .expect("Tags TextBox have one line"),
         );
 
+        let priority = match self.priority_txt.lines().first().unwrap() {
+            num if num.is_empty() => None,
+            num => Some(num.parse().expect("Priority must be validated before")),
+        };
+
         if self.is_edit_entry {
-            app.update_current_entry(title, date, tags).await?;
+            app.update_current_entry(title, date, tags, priority)
+                .await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {
-            //TODO: Add priority
-            let entry_id = app.add_entry(title, date, tags, None).await?;
+            let entry_id = app.add_entry(title, date, tags, priority).await?;
             Ok(EntryPopupInputReturn::AddEntry(entry_id))
         }
     }

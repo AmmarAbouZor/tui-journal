@@ -126,6 +126,7 @@ where
         title: String,
         date: DateTime<Utc>,
         tags: Vec<String>,
+        priority: Option<u32>,
     ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
 
@@ -138,6 +139,7 @@ where
         entry.title = title;
         entry.date = date;
         entry.tags = tags;
+        entry.priority = priority;
 
         let clone = entry.clone();
 
