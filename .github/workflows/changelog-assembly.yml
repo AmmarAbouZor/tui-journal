@@ -33,7 +33,7 @@ jobs:
 
       - run: |
           aeruginous comment-changes \
-            -b -d : -f ron -k -o changelog.d/ -S "v$(cat .version)"
+            -b -d : -f ron -k -o changelog.d/ -T "v$(cat .version)"
           aeruginous increment-version \
             -v "$(cat .version)" \
             -r ${{ inputs.release }} \
