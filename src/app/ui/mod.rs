@@ -8,7 +8,7 @@ use self::{
     entry_popup::{EntryPopup, EntryPopupInputReturn},
     export_popup::ExportPopup,
     filter_popup::FilterPopup,
-    footer::render_footer,
+    footer::{get_footer_heigh, render_footer},
     fuzz_find::FuzzFindPopup,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
@@ -123,9 +123,11 @@ impl<'a, 'b> UIComponents<'a> {
     where
         D: DataProvider,
     {
+        let footer_height = get_footer_heigh(f.size().width, self, app);
+
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(2), Constraint::Length(1)].as_ref())
+            .constraints([Constraint::Min(2), Constraint::Length(footer_height)].as_ref())
             .split(f.size());
 
         render_footer(f, chunks[1], self, app);
