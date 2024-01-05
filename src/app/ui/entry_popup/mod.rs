@@ -23,7 +23,7 @@ mod tags;
 
 const FOOTER_TEXT: &str =
     "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Open tags";
-const FOOTER_MARGINE: u16 = 15;
+const FOOTER_MARGIN: u16 = 15;
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
@@ -49,7 +49,7 @@ enum ActiveText {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum EntryPopupInputReturn {
-    KeepPupup,
+    KeepPopup,
     Cancel,
     AddEntry(u32),
     UpdateCurrentEntry,
@@ -107,7 +107,7 @@ impl<'a> EntryPopup<'a> {
         let mut priority_txt = TextArea::new(vec![prio]);
         priority_txt.move_cursor(CursorMove::End);
 
-        let mut entry_pupop = Self {
+        let mut entry_popup = Self {
             title_txt,
             date_txt,
             tags_txt,
@@ -121,15 +121,15 @@ impl<'a> EntryPopup<'a> {
             tags_popup: None,
         };
 
-        entry_pupop.validate_all();
+        entry_popup.validate_all();
 
-        entry_pupop
+        entry_popup
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
         let mut area = centered_rect_exact_height(70, 17, area);
 
-        const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGINE;
+        const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGIN;
 
         if area.width < FOOTER_LEN {
             area.height += FOOTER_LEN / area.width;
@@ -307,8 +307,8 @@ impl<'a> EntryPopup<'a> {
 
     pub fn validate_all(&mut self) {
         self.validate_title();
-        self.validat_date();
-        self.validat_tags();
+        self.validate_date();
+        self.validate_tags();
         self.validate_priority();
     }
 
@@ -320,7 +320,7 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
-    fn validat_date(&mut self) {
+    fn validate_date(&mut self) {
         if let Err(err) = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y") {
             self.date_err_msg = err.to_string();
         } else {
@@ -328,7 +328,7 @@ impl<'a> EntryPopup<'a> {
         }
     }
 
-    fn validat_tags(&mut self) {
+    fn validate_tags(&mut self) {
         let tags = text_to_tags(
             self.tags_txt
                 .lines()
@@ -359,7 +359,7 @@ impl<'a> EntryPopup<'a> {
         if self.tags_popup.is_some() {
             self.handle_tags_popup_input(input);
 
-            return Ok(EntryPopupInputReturn::KeepPupup);
+            return Ok(EntryPopupInputReturn::KeepPopup);
         }
 
         let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
@@ -375,7 +375,7 @@ impl<'a> EntryPopup<'a> {
                     ActiveText::Tags => ActiveText::Priority,
                     ActiveText::Priority => ActiveText::Title,
                 };
-                Ok(EntryPopupInputReturn::KeepPupup)
+                Ok(EntryPopupInputReturn::KeepPopup)
             }
             KeyCode::Up => {
                 self.active_txt = match self.active_txt {
@@ -384,7 +384,7 @@ impl<'a> EntryPopup<'a> {
                     ActiveText::Tags => ActiveText::Date,
                     ActiveText::Priority => ActiveText::Tags,
                 };
-                Ok(EntryPopupInputReturn::KeepPupup)
+                Ok(EntryPopupInputReturn::KeepPopup)
             }
             KeyCode::Char(' ') | KeyCode::Char('t') if has_ctrl => {
                 debug_assert!(self.tags_popup.is_none());
@@ -394,11 +394,11 @@ impl<'a> EntryPopup<'a> {
                     .tags_txt
                     .lines()
                     .first()
-                    .expect("Tags textbox has one line");
+                    .expect("Tags text box has one line");
 
                 self.tags_popup = Some(TagsPopup::new(tags_text, tags));
 
-                Ok(EntryPopupInputReturn::KeepPupup)
+                Ok(EntryPopupInputReturn::KeepPopup)
             }
             _ => {
                 match self.active_txt {
@@ -409,12 +409,12 @@ impl<'a> EntryPopup<'a> {
                     }
                     ActiveText::Date => {
                         if self.date_txt.input(KeyEvent::from(input)) {
-                            self.validat_date();
+                            self.validate_date();
                         }
                     }
                     ActiveText::Tags => {
                         if self.tags_txt.input(KeyEvent::from(input)) {
-                            self.validat_tags();
+                            self.validate_tags();
                         }
                     }
                     ActiveText::Priority => {
@@ -423,7 +423,7 @@ impl<'a> EntryPopup<'a> {
                         }
                     }
                 }
-                Ok(EntryPopupInputReturn::KeepPupup)
+                Ok(EntryPopupInputReturn::KeepPopup)
             }
         }
     }
@@ -453,7 +453,7 @@ impl<'a> EntryPopup<'a> {
         // Validation
         self.validate_all();
         if !self.is_input_valid() {
-            return Ok(EntryPopupInputReturn::KeepPupup);
+            return Ok(EntryPopupInputReturn::KeepPopup);
         }
 
         let title = self.title_txt.lines()[0].to_owned();

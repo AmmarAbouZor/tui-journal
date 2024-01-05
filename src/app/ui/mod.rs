@@ -224,7 +224,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Entry(entry_popup) => {
                     let close_popup = match entry_popup.handle_input(input, app).await? {
                         EntryPopupInputReturn::Cancel => true,
-                        EntryPopupInputReturn::KeepPupup => false,
+                        EntryPopupInputReturn::KeepPopup => false,
                         EntryPopupInputReturn::AddEntry(entry_id) => {
                             self.set_current_entry(Some(entry_id), app);
                             true
