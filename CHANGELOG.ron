@@ -8,6 +8,35 @@
       references: {},
       version: (
         major: 0,
+        minor: 7,
+        patch: 0,
+      ),
+      released: "2024-01-05T22:30:44.217266031Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Add full screen mode to main app view",
+          ],
+          "Changed": [
+            "Aeruginous CHANGELOG fragment creation logic (#279)",
+            "Main Footer Height is calculated dynamically",
+            "Use native rust support for async traits",
+          ],
+          "Fixed": [
+            "App will be redrawn on non-handled input",
+            "CHANGELOG creation logic",
+            "Call to Aeruginous",
+            "Commit fetch depth in CHANGELOG assembly",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 6,
         patch: 1,
       ),
