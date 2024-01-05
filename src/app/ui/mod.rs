@@ -76,6 +76,7 @@ pub struct UIComponents<'a> {
     popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
     pending_command: Option<UICommand>,
+    fullscreen: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -100,6 +101,7 @@ impl<'a, 'b> UIComponents<'a> {
             popup_stack: Vec::new(),
             active_control,
             pending_command: None,
+            fullscreen: false,
         }
     }
 
@@ -127,15 +129,25 @@ impl<'a, 'b> UIComponents<'a> {
             .split(f.size());
 
         render_footer(f, chunks[1], self, app);
-
-        let entries_chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-            .split(chunks[0]);
-
-        self.entries_list
-            .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
-        self.editor.render_widget(f, entries_chunks[1]);
+        if self.fullscreen {
+            match self.active_control {
+                ControlType::EntriesList => {
+                    self.entries_list
+                        .render_widget(f, chunks[0], app, &self.entries_list_keymaps);
+                }
+                ControlType::EntryContentTxt => {
+                    self.editor.render_widget(f, chunks[0]);
+                }
+            }
+        } else {
+            let entries_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
+                .split(chunks[0]);
+            self.entries_list
+                .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
+            self.editor.render_widget(f, entries_chunks[1]);
+        }
 
         self.render_popup(f);
     }

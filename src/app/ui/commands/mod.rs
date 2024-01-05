@@ -55,6 +55,7 @@ pub enum UICommand {
     ResetFilter,
     ShowFuzzyFind,
     ToggleEditorVisualMode,
+    ToggleFullScreenMode,
     CopyOsClipboard,
     CutOsClipboard,
     PasteOsClipboard,
@@ -174,6 +175,10 @@ impl UICommand {
                 "Toggle Editor Visual Mode",
                 "Toggle Editor Visual(Select) Mode when editor is in focus",
             ),
+            UICommand::ToggleFullScreenMode => CommandInfo::new(
+                "Toggle Full Screen Mode",
+                "Maximize the currently selected view",
+            ),
             UICommand::CopyOsClipboard => CommandInfo::new(
                 "Copy to OS clipboard",
                 "Copy selection to operation system clipboard while in editor visual mode",
@@ -226,6 +231,7 @@ impl UICommand {
             UICommand::ResetFilter => exec_reset_filter(app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
             UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
+            UICommand::ToggleFullScreenMode => exec_toggle_full_screen_mode(ui_components),
             UICommand::CopyOsClipboard => exec_copy_os_clipboard(ui_components),
             UICommand::CutOsClipboard => exec_cut_os_clipboard(ui_components),
             UICommand::PasteOsClipboard => exec_paste_os_clipboard(ui_components),
@@ -290,6 +296,7 @@ impl UICommand {
                 continue_fuzzy_find(ui_components, app, msg_box_result).await
             }
             UICommand::ToggleEditorVisualMode => not_implemented(),
+            UICommand::ToggleFullScreenMode => not_implemented(),
             UICommand::CopyOsClipboard => not_implemented(),
             UICommand::CutOsClipboard => not_implemented(),
             UICommand::PasteOsClipboard => not_implemented(),
