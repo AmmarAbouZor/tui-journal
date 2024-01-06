@@ -14,7 +14,7 @@ use crate::app::{
     keymap::Input,
 };
 
-use super::ui_functions::centered_rect;
+use super::{ui_functions::centered_rect, INVALID_CONTROL_COLOR};
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
 const FOOTER_MARGINE: usize = 8;
@@ -29,6 +29,7 @@ pub struct FilterPopup<'a> {
     title_txt: TextArea<'a>,
     content_txt: TextArea<'a>,
     priority_txt: TextArea<'a>,
+    priority_err_msg: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -85,9 +86,12 @@ impl<'a> FilterPopup<'a> {
             title_txt,
             content_txt,
             priority_txt,
+            priority_err_msg: String::default(),
         };
 
         filter_popup.cycle_next_tag();
+
+        filter_popup.validate_priority();
 
         filter_popup
     }
@@ -161,11 +165,19 @@ impl<'a> FilterPopup<'a> {
         priority_area: Rect,
     ) {
         let active_cursor_style = Style::default().bg(ACTIVE_BORDER_COLOR).fg(Color::Black);
+        let invalid_cursor_style = Style::default().bg(INVALID_CONTROL_COLOR).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         let mut title_txt_block = Block::default().title("Title").borders(Borders::ALL);
         let mut content_txt_block = Block::default().title("Content").borders(Borders::ALL);
-        let mut priority_txt_block = Block::default().title("Priority").borders(Borders::ALL);
+        let mut priority_txt_block = if self.priority_err_msg.is_empty() {
+            Block::default().title("Priority").borders(Borders::ALL)
+        } else {
+            Block::default()
+                .title(format!("Priority : {}", self.priority_err_msg))
+                .borders(Borders::ALL)
+                .style(Style::default().fg(INVALID_CONTROL_COLOR))
+        };
 
         match self.active_control {
             FilterControl::TitleTxt => {
@@ -189,9 +201,13 @@ impl<'a> FilterPopup<'a> {
             FilterControl::PriorityTxt => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.content_txt.set_cursor_style(deactivate_cursor_style);
-                self.priority_txt.set_cursor_style(active_cursor_style);
-                priority_txt_block =
-                    priority_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
+                if self.priority_err_msg.is_empty() {
+                    self.priority_txt.set_cursor_style(active_cursor_style);
+                    priority_txt_block =
+                        priority_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
+                } else {
+                    self.priority_txt.set_cursor_style(invalid_cursor_style);
+                }
             }
         }
 
@@ -294,10 +310,14 @@ impl<'a> FilterPopup<'a> {
                 }
                 _ => {
                     match self.active_control {
-                        FilterControl::TitleTxt => self.title_txt.input(KeyEvent::from(input)),
-                        FilterControl::ContentTxt => self.content_txt.input(KeyEvent::from(input)),
+                        FilterControl::TitleTxt => _ = self.title_txt.input(KeyEvent::from(input)),
+                        FilterControl::ContentTxt => {
+                            _ = self.content_txt.input(KeyEvent::from(input))
+                        }
                         FilterControl::PriorityTxt => {
-                            self.priority_txt.input(KeyEvent::from(input))
+                            if self.priority_txt.input(KeyEvent::from(input)) {
+                                self.validate_priority();
+                            }
                         }
                         FilterControl::TagsList => unreachable!("Tags List is unreachable here"),
                     };
@@ -399,7 +419,25 @@ impl<'a> FilterPopup<'a> {
         }
     }
 
-    fn confirm(&self) -> FilterPopupReturn {
+    fn validate_priority(&mut self) {
+        let prio_text = self.priority_txt.lines().first().unwrap();
+        if !prio_text.is_empty() && prio_text.parse::<u32>().is_err() {
+            self.priority_err_msg = String::from("Priority must be a positive number");
+        } else {
+            self.priority_err_msg.clear();
+        }
+    }
+
+    fn is_valid_input(&self) -> bool {
+        self.priority_err_msg.is_empty()
+    }
+
+    fn confirm(&mut self) -> FilterPopupReturn {
+        self.validate_priority();
+        if !self.is_valid_input() {
+            return FilterPopupReturn::KeepPopup;
+        }
+
         let mut critria: Vec<_> = self
             .selected_tags
             .iter()
@@ -426,7 +464,6 @@ impl<'a> FilterPopup<'a> {
             critria.push(FilterCritrion::Content(content_filter.to_owned()));
         }
 
-        // TODO: Add validation for priority input
         let priority_filter = self
             .priority_txt
             .lines()
