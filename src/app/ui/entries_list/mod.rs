@@ -55,6 +55,7 @@ impl<'a> EntriesList {
                 let highlight_selected =
                     self.multi_select_mode && app.selected_entries.contains(&entry.id);
 
+                // *** Title ***
                 let mut title = entry.title.to_string();
 
                 if highlight_selected {
@@ -83,21 +84,52 @@ impl<'a> EntriesList {
                     })
                     .collect();
 
-                spans.push(Line::from(Span::styled(
-                    format!(
+                // *** Date & Priority ***
+                let date_priority_lines = if let Some(prio) = entry.priority {
+                    let one_liner = format!(
+                        "{},{},{} | Priority: {}",
+                        entry.date.day(),
+                        entry.date.month(),
+                        entry.date.year(),
+                        prio
+                    );
+
+                    if one_liner.len() > area.width as usize - LIST_INNER_MARGINE {
+                        vec![
+                            format!(
+                                "{},{},{}",
+                                entry.date.day(),
+                                entry.date.month(),
+                                entry.date.year()
+                            ),
+                            format!("Priority: {prio}"),
+                        ]
+                    } else {
+                        vec![one_liner]
+                    }
+                } else {
+                    vec![format!(
                         "{},{},{}",
                         entry.date.day(),
                         entry.date.month(),
                         entry.date.year()
-                    ),
-                    Style::default()
-                        .fg(Color::LightBlue)
-                        .remove_modifier(Modifier::BOLD),
-                )));
+                    )]
+                };
 
-                // date line
-                lines_count += 1;
+                let date_lines = date_priority_lines.iter().map(|line| {
+                    Line::from(Span::styled(
+                        line.to_string(),
+                        Style::default()
+                            .fg(Color::LightBlue)
+                            .remove_modifier(Modifier::BOLD),
+                    ))
+                });
+                spans.extend(date_lines);
 
+                // date & priority lines
+                lines_count += date_priority_lines.len();
+
+                // *** Tags ***
                 if !entry.tags.is_empty() {
                     let tags: Vec<String> = entry.tags.iter().map(String::from).collect();
                     let tag_line = tags.join(" | ");
