@@ -99,7 +99,11 @@ where
                         ui_components.update_current_entry(&mut app);
                         draw_ui(terminal, &mut app, &mut ui_components)?;
                     }
-                    HandleInputReturnType::NotFound => {}
+                    HandleInputReturnType::NotFound => {
+                        // UI should be drawn even if the input isn't handled in the app logic to
+                        // catch events like resize, Font resize, Mouse activation...
+                        draw_ui(terminal, &mut app, &mut ui_components)?;
+                    }
                     HandleInputReturnType::ExitApp => return Ok(()),
                 };
             }

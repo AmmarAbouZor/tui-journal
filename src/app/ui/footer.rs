@@ -12,21 +12,22 @@ use super::{ControlType, UICommand, UIComponents};
 
 const SEPARATOR: &str = " | ";
 
+pub fn get_footer_heigh<D: DataProvider>(
+    width: u16,
+    ui_components: &UIComponents,
+    app: &App<D>,
+) -> u16 {
+    let footer_text = get_footer_text(ui_components, app);
+    footer_text.len() as u16 / width + 1
+}
+
 pub fn render_footer<D: DataProvider>(
     frame: &mut Frame,
     area: Rect,
     ui_components: &UIComponents,
     app: &App<D>,
 ) {
-    let (edior_mode, multi_select_mode) = (
-        ui_components.editor.is_insert_mode(),
-        ui_components.entries_list.multi_select_mode,
-    );
-    let footer_text = match (edior_mode, multi_select_mode) {
-        (true, false) => get_editor_mode_text(ui_components),
-        (false, true) => get_multi_select_text(ui_components),
-        _ => get_standard_text(ui_components, app),
-    };
+    let footer_text = get_footer_text(ui_components, app);
     let footer = Paragraph::new(footer_text)
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: false })
@@ -37,6 +38,18 @@ pub fn render_footer<D: DataProvider>(
         );
 
     frame.render_widget(footer, area);
+}
+
+fn get_footer_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>) -> String {
+    let (edior_mode, multi_select_mode) = (
+        ui_components.editor.is_insert_mode(),
+        ui_components.entries_list.multi_select_mode,
+    );
+    match (edior_mode, multi_select_mode) {
+        (true, false) => get_editor_mode_text(ui_components),
+        (false, true) => get_multi_select_text(ui_components),
+        _ => get_standard_text(ui_components, app),
+    }
 }
 
 fn get_editor_mode_text(ui_components: &UIComponents) -> String {
@@ -89,6 +102,15 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
 
             footer_parts.push(get_keymap_text(reset_filter_keymap));
         }
+    }
+
+    if ui_components.fullscreen {
+        let full_screen_keymap: Vec<_> = ui_components
+            .global_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::ToggleFullScreenMode)
+            .collect();
+        footer_parts.push(get_keymap_text(full_screen_keymap));
     }
 
     let help_keymap: Vec<_> = ui_components
