@@ -279,8 +279,8 @@ impl<'a> EntryPopup<'a> {
 
         frame.render_widget(self.title_txt.widget(), chunks[0]);
         frame.render_widget(self.date_txt.widget(), chunks[1]);
-        frame.render_widget(self.tags_txt.widget(), chunks[2]);
-        frame.render_widget(self.priority_txt.widget(), chunks[3]);
+        frame.render_widget(self.priority_txt.widget(), chunks[2]);
+        frame.render_widget(self.tags_txt.widget(), chunks[3]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
@@ -371,18 +371,18 @@ impl<'a> EntryPopup<'a> {
             KeyCode::Tab | KeyCode::Down => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
-                    ActiveText::Date => ActiveText::Tags,
-                    ActiveText::Tags => ActiveText::Priority,
-                    ActiveText::Priority => ActiveText::Title,
+                    ActiveText::Date => ActiveText::Priority,
+                    ActiveText::Priority => ActiveText::Tags,
+                    ActiveText::Tags => ActiveText::Title,
                 };
                 Ok(EntryPopupInputReturn::KeepPopup)
             }
             KeyCode::Up => {
                 self.active_txt = match self.active_txt {
-                    ActiveText::Title => ActiveText::Priority,
+                    ActiveText::Title => ActiveText::Tags,
                     ActiveText::Date => ActiveText::Title,
-                    ActiveText::Tags => ActiveText::Date,
-                    ActiveText::Priority => ActiveText::Tags,
+                    ActiveText::Priority => ActiveText::Date,
+                    ActiveText::Tags => ActiveText::Priority,
                 };
                 Ok(EntryPopupInputReturn::KeepPopup)
             }
