@@ -21,7 +21,7 @@ use crate::app::App;
 use super::INACTIVE_CONTROL_COLOR;
 use super::{UICommand, ACTIVE_CONTROL_COLOR};
 
-const LIST_INNER_MARGINE: usize = 5;
+const LIST_INNER_MARGIN: usize = 5;
 const SELECTED_FOREGROUND_COLOR: Color = Color::Yellow;
 
 #[derive(Debug)]
@@ -63,7 +63,7 @@ impl<'a> EntriesList {
                 }
 
                 // Text wrapping
-                let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGINE);
+                let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGIN);
 
                 // tilte lines
                 lines_count += title_lines.len();
@@ -94,7 +94,7 @@ impl<'a> EntriesList {
                         prio
                     );
 
-                    if one_liner.len() > area.width as usize - LIST_INNER_MARGINE {
+                    if one_liner.len() > area.width as usize - LIST_INNER_MARGIN {
                         vec![
                             format!(
                                 "{},{},{}",
@@ -136,7 +136,7 @@ impl<'a> EntriesList {
 
                     // Text wrapping
                     let tag_line =
-                        textwrap::wrap(&tag_line, area.width as usize - LIST_INNER_MARGINE);
+                        textwrap::wrap(&tag_line, area.width as usize - LIST_INNER_MARGIN);
 
                     lines_count += tag_line.len();
 
