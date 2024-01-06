@@ -1,0 +1,2 @@
+ALTER TABLE entries
+Add COLUMN priority INTEGER DEFAULT NULL;

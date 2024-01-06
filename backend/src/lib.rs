@@ -52,6 +52,8 @@ pub struct Entry {
     pub content: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub priority: Option<u32>,
 }
 
 impl Entry {
@@ -62,6 +64,7 @@ impl Entry {
         title: String,
         content: String,
         tags: Vec<String>,
+        priority: Option<u32>,
     ) -> Self {
         Self {
             id,
@@ -69,6 +72,7 @@ impl Entry {
             title,
             content,
             tags,
+            priority,
         }
     }
 
@@ -79,6 +83,7 @@ impl Entry {
             title: draft.title,
             content: draft.content,
             tags: draft.tags,
+            priority: draft.priority,
         }
     }
 }
@@ -89,16 +94,23 @@ pub struct EntryDraft {
     pub title: String,
     pub content: String,
     pub tags: Vec<String>,
+    pub priority: Option<u32>,
 }
 
 impl EntryDraft {
-    pub fn new(date: DateTime<Utc>, title: String, tags: Vec<String>) -> Self {
+    pub fn new(
+        date: DateTime<Utc>,
+        title: String,
+        tags: Vec<String>,
+        priority: Option<u32>,
+    ) -> Self {
         let content = String::new();
         Self {
             date,
             title,
             content,
             tags,
+            priority,
         }
     }
 
@@ -108,6 +120,7 @@ impl EntryDraft {
             title: entry.title,
             content: entry.content,
             tags: entry.tags,
+            priority: entry.priority,
         }
     }
 }
