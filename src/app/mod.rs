@@ -26,7 +26,7 @@ pub use runner::HandleInputReturnType;
 
 use crate::settings::Settings;
 
-use self::filter::{Filter, FilterCritrion};
+use self::filter::{Filter, FilterCriterion};
 
 pub struct App<D>
 where
@@ -256,14 +256,14 @@ where
             let all_tags = self.get_all_tags();
             let filter = self.filter.as_mut().unwrap();
 
-            filter.critria.retain(|cr| match cr {
-                FilterCritrion::Tag(tag) => all_tags.contains(tag),
-                FilterCritrion::Title(_) => true,
-                FilterCritrion::Content(_) => true,
-                FilterCritrion::Priority(_) => true,
+            filter.criteria.retain(|cr| match cr {
+                FilterCriterion::Tag(tag) => all_tags.contains(tag),
+                FilterCriterion::Title(_) => true,
+                FilterCriterion::Content(_) => true,
+                FilterCriterion::Priority(_) => true,
             });
 
-            if filter.critria.is_empty() {
+            if filter.criteria.is_empty() {
                 self.filter = None;
             }
         }

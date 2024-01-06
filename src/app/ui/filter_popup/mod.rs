@@ -10,14 +10,14 @@ use ratatui::{
 use tui_textarea::{CursorMove, TextArea};
 
 use crate::app::{
-    filter::{CriteriaRelation, Filter, FilterCritrion},
+    filter::{CriteriaRelation, Filter, FilterCriterion},
     keymap::Input,
 };
 
 use super::{ui_functions::centered_rect, INVALID_CONTROL_COLOR};
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
-const FOOTER_MARGINE: usize = 8;
+const FOOTER_MARGIN: usize = 8;
 const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 
 pub struct FilterPopup<'a> {
@@ -57,13 +57,13 @@ impl<'a> FilterPopup<'a> {
         let mut content_text = String::default();
         let mut priority_text = String::default();
 
-        filter.critria.into_iter().for_each(|cr| match cr {
-            FilterCritrion::Tag(tag) => {
+        filter.criteria.into_iter().for_each(|cr| match cr {
+            FilterCriterion::Tag(tag) => {
                 selected_tags.insert(tag);
             }
-            FilterCritrion::Title(title_search) => title_text = title_search,
-            FilterCritrion::Content(content_search) => content_text = content_search,
-            FilterCritrion::Priority(prio) => priority_text = prio.to_string(),
+            FilterCriterion::Title(title_search) => title_text = title_search,
+            FilterCriterion::Content(content_search) => content_text = content_search,
+            FilterCriterion::Priority(prio) => priority_text = prio.to_string(),
         });
 
         let mut title_txt = TextArea::new(vec![title_text]);
@@ -103,7 +103,7 @@ impl<'a> FilterPopup<'a> {
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
 
-        let footer_height = textwrap::fill(FOOTER_TEXT, (area.width as usize) - FOOTER_MARGINE)
+        let footer_height = textwrap::fill(FOOTER_TEXT, (area.width as usize) - FOOTER_MARGIN)
             .lines()
             .count();
 
@@ -441,7 +441,7 @@ impl<'a> FilterPopup<'a> {
         let mut critria: Vec<_> = self
             .selected_tags
             .iter()
-            .map(|tag| FilterCritrion::Tag(tag.into()))
+            .map(|tag| FilterCriterion::Tag(tag.into()))
             .collect();
 
         let title_filter = self
@@ -451,7 +451,7 @@ impl<'a> FilterPopup<'a> {
             .expect("Title TextBox has one line");
 
         if !title_filter.is_empty() {
-            critria.push(FilterCritrion::Title(title_filter.to_owned()));
+            critria.push(FilterCriterion::Title(title_filter.to_owned()));
         }
 
         let content_filter = self
@@ -461,7 +461,7 @@ impl<'a> FilterPopup<'a> {
             .expect("Content TextBox has one line");
 
         if !content_filter.is_empty() {
-            critria.push(FilterCritrion::Content(content_filter.to_owned()));
+            critria.push(FilterCriterion::Content(content_filter.to_owned()));
         }
 
         let priority_filter = self
@@ -473,7 +473,7 @@ impl<'a> FilterPopup<'a> {
             let prio = priority_filter
                 .parse()
                 .expect("Priority text is validated at this point");
-            critria.push(FilterCritrion::Priority(prio));
+            critria.push(FilterCriterion::Priority(prio));
         }
 
         if critria.is_empty() {
@@ -481,7 +481,7 @@ impl<'a> FilterPopup<'a> {
         } else {
             let filter = Filter {
                 relation: self.relation,
-                critria,
+                criteria: critria,
             };
 
             FilterPopupReturn::Apply(Some(filter))

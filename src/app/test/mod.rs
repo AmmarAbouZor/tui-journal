@@ -139,8 +139,8 @@ async fn test_filter() {
 
     let mut filter = Filter::default();
     filter
-        .critria
-        .push(FilterCritrion::Title(String::from("Title 2")));
+        .criteria
+        .push(FilterCriterion::Title(String::from("Title 2")));
     app.apply_filter(Some(filter));
 
     assert_eq!(app.get_active_entries().count(), 1);
@@ -162,7 +162,7 @@ async fn test_filter_priority() {
     app.current_entry_id = Some(0);
 
     let mut filter = Filter::default();
-    filter.critria.push(FilterCritrion::Priority(1));
+    filter.criteria.push(FilterCriterion::Priority(1));
     app.apply_filter(Some(filter));
 
     assert_eq!(app.get_active_entries().count(), 1);
@@ -180,13 +180,13 @@ async fn test_filter_priority() {
 async fn test_filter_relations() {
     let mut app = create_default_app();
     app.load_entries().await.unwrap();
-    let critria = vec![
-        FilterCritrion::Content("1".into()),
-        FilterCritrion::Content("2".into()),
+    let criteria = vec![
+        FilterCriterion::Content("1".into()),
+        FilterCriterion::Content("2".into()),
     ];
 
     let mut filter = Filter {
-        critria,
+        criteria,
         relation: CriteriaRelation::Or,
     };
 
