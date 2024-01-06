@@ -5,6 +5,7 @@ pub enum FilterCritrion {
     Tag(String),
     Title(String),
     Content(String),
+    Priority(u32),
 }
 
 impl FilterCritrion {
@@ -14,6 +15,7 @@ impl FilterCritrion {
             FilterCritrion::Tag(tag) => entry.tags.contains(tag),
             FilterCritrion::Title(search) => entry.title.contains(search),
             FilterCritrion::Content(search) => entry.content.contains(search),
+            FilterCritrion::Priority(prio) => entry.priority.is_some_and(|pr| pr == *prio),
         }
     }
 }

@@ -155,6 +155,28 @@ async fn test_filter() {
 }
 
 #[tokio::test]
+async fn test_filter_priority() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    app.current_entry_id = Some(0);
+
+    let mut filter = Filter::default();
+    filter.critria.push(FilterCritrion::Priority(1));
+    app.apply_filter(Some(filter));
+
+    assert_eq!(app.get_active_entries().count(), 1);
+    assert!(app.get_current_entry().is_none());
+    let entry = app.get_active_entries().next().unwrap();
+    assert_eq!(entry.id, 1);
+    assert_eq!(entry.priority, Some(1));
+    assert!(app.get_entry(0).is_none());
+
+    app.apply_filter(None);
+    assert_eq!(app.get_active_entries().count(), 2);
+}
+
+#[tokio::test]
 async fn test_filter_relations() {
     let mut app = create_default_app();
     app.load_entries().await.unwrap();

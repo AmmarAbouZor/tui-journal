@@ -28,12 +28,14 @@ pub struct FilterPopup<'a> {
     selected_tags: HashSet<String>,
     title_txt: TextArea<'a>,
     content_txt: TextArea<'a>,
+    priority_txt: TextArea<'a>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum FilterControl {
     TitleTxt,
     ContentTxt,
+    PriorityTxt,
     TagsList,
 }
 
@@ -52,6 +54,7 @@ impl<'a> FilterPopup<'a> {
         let mut selected_tags = HashSet::new();
         let mut title_text = String::default();
         let mut content_text = String::default();
+        let mut priority_text = String::default();
 
         filter.critria.into_iter().for_each(|cr| match cr {
             FilterCritrion::Tag(tag) => {
@@ -59,6 +62,7 @@ impl<'a> FilterPopup<'a> {
             }
             FilterCritrion::Title(title_search) => title_text = title_search,
             FilterCritrion::Content(content_search) => content_text = content_search,
+            FilterCritrion::Priority(prio) => priority_text = prio.to_string(),
         });
 
         let mut title_txt = TextArea::new(vec![title_text]);
@@ -66,6 +70,9 @@ impl<'a> FilterPopup<'a> {
 
         let mut content_txt = TextArea::new(vec![content_text]);
         content_txt.move_cursor(CursorMove::End);
+
+        let mut priority_txt = TextArea::new(vec![priority_text]);
+        priority_txt.move_cursor(CursorMove::End);
 
         let active_control = FilterControl::TitleTxt;
 
@@ -77,6 +84,7 @@ impl<'a> FilterPopup<'a> {
             selected_tags,
             title_txt,
             content_txt,
+            priority_txt,
         };
 
         filter_popup.cycle_next_tag();
@@ -104,6 +112,7 @@ impl<'a> FilterPopup<'a> {
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
+                    Constraint::Length(3),
                     Constraint::Min(4),
                     Constraint::Length(footer_height.try_into().unwrap()),
                 ]
@@ -113,15 +122,15 @@ impl<'a> FilterPopup<'a> {
 
         self.render_relations(frame, chunks[0]);
 
-        self.render_text_boxes(frame, chunks[1], chunks[2]);
+        self.render_text_boxes(frame, chunks[1], chunks[2], chunks[3]);
 
         if self.tags.is_empty() {
-            self.render_tags_place_holder(frame, chunks[3]);
+            self.render_tags_place_holder(frame, chunks[4]);
         } else {
-            self.render_tags_list(frame, chunks[3]);
+            self.render_tags_list(frame, chunks[4]);
         }
 
-        self.render_footer(frame, chunks[4]);
+        self.render_footer(frame, chunks[5]);
     }
 
     #[inline]
@@ -144,39 +153,59 @@ impl<'a> FilterPopup<'a> {
     }
 
     #[inline]
-    fn render_text_boxes(&mut self, frame: &mut Frame, title_area: Rect, content_area: Rect) {
+    fn render_text_boxes(
+        &mut self,
+        frame: &mut Frame,
+        title_area: Rect,
+        content_area: Rect,
+        priority_area: Rect,
+    ) {
         let active_cursor_style = Style::default().bg(ACTIVE_BORDER_COLOR).fg(Color::Black);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         let mut title_txt_block = Block::default().title("Title").borders(Borders::ALL);
         let mut content_txt_block = Block::default().title("Content").borders(Borders::ALL);
+        let mut priority_txt_block = Block::default().title("Priority").borders(Borders::ALL);
 
         match self.active_control {
             FilterControl::TitleTxt => {
                 self.title_txt.set_cursor_style(active_cursor_style);
                 self.content_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
                 title_txt_block = title_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
             }
             FilterControl::ContentTxt => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.content_txt.set_cursor_style(active_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
                 content_txt_block =
                     content_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
             }
             FilterControl::TagsList => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.content_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(deactivate_cursor_style);
+            }
+            FilterControl::PriorityTxt => {
+                self.title_txt.set_cursor_style(deactivate_cursor_style);
+                self.content_txt.set_cursor_style(deactivate_cursor_style);
+                self.priority_txt.set_cursor_style(active_cursor_style);
+                priority_txt_block =
+                    priority_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
             }
         }
 
         self.title_txt.set_cursor_line_style(Style::default());
         self.content_txt.set_cursor_line_style(Style::default());
+        self.priority_txt.set_cursor_line_style(Style::default());
 
         self.title_txt.set_block(title_txt_block);
         self.content_txt.set_block(content_txt_block);
+        self.priority_txt.set_block(priority_txt_block);
 
         frame.render_widget(self.title_txt.widget(), title_area);
         frame.render_widget(self.content_txt.widget(), content_area);
+        frame.render_widget(self.priority_txt.widget(), priority_area);
     }
 
     #[inline]
@@ -267,6 +296,9 @@ impl<'a> FilterPopup<'a> {
                     match self.active_control {
                         FilterControl::TitleTxt => self.title_txt.input(KeyEvent::from(input)),
                         FilterControl::ContentTxt => self.content_txt.input(KeyEvent::from(input)),
+                        FilterControl::PriorityTxt => {
+                            self.priority_txt.input(KeyEvent::from(input))
+                        }
                         FilterControl::TagsList => unreachable!("Tags List is unreachable here"),
                     };
                     FilterPopupReturn::KeepPopup
@@ -303,7 +335,8 @@ impl<'a> FilterPopup<'a> {
     fn cycle_next_control(&mut self) -> FilterPopupReturn {
         self.active_control = match self.active_control {
             FilterControl::TitleTxt => FilterControl::ContentTxt,
-            FilterControl::ContentTxt => FilterControl::TagsList,
+            FilterControl::ContentTxt => FilterControl::PriorityTxt,
+            FilterControl::PriorityTxt => FilterControl::TagsList,
             FilterControl::TagsList => FilterControl::TitleTxt,
         };
 
@@ -391,6 +424,19 @@ impl<'a> FilterPopup<'a> {
 
         if !content_filter.is_empty() {
             critria.push(FilterCritrion::Content(content_filter.to_owned()));
+        }
+
+        // TODO: Add validation for priority input
+        let priority_filter = self
+            .priority_txt
+            .lines()
+            .first()
+            .expect("Priority text box has one line");
+        if !priority_filter.is_empty() {
+            let prio = priority_filter
+                .parse()
+                .expect("Priority text is validated at this point");
+            critria.push(FilterCritrion::Priority(prio));
         }
 
         if critria.is_empty() {

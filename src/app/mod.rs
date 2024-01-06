@@ -260,6 +260,7 @@ where
                 FilterCritrion::Tag(tag) => all_tags.contains(tag),
                 FilterCritrion::Title(_) => true,
                 FilterCritrion::Content(_) => true,
+                FilterCritrion::Priority(_) => true,
             });
 
             if filter.critria.is_empty() {
