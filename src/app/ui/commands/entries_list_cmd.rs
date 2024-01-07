@@ -107,21 +107,24 @@ pub async fn continue_select_next_entry<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_create_entry(ui_components: &mut UIComponents) -> CmdResult {
+pub fn exec_create_entry<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::CreateEntry));
     } else {
-        create_entry(ui_components);
+        create_entry(ui_components, app);
     }
 
     Ok(HandleInputReturnType::Handled)
 }
 
 #[inline]
-pub fn create_entry(ui_components: &mut UIComponents) {
+pub fn create_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &App<D>) {
     ui_components
         .popup_stack
-        .push(Popup::Entry(Box::new(EntryPopup::new_entry())));
+        .push(Popup::Entry(Box::new(EntryPopup::new_entry(&app.settings))));
 }
 
 pub async fn continue_create_entry<'a, D: DataProvider>(
@@ -133,9 +136,9 @@ pub async fn continue_create_entry<'a, D: DataProvider>(
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
             exec_save_entry_content(ui_components, app).await?;
-            create_entry(ui_components);
+            create_entry(ui_components, app);
         }
-        MsgBoxResult::No => create_entry(ui_components),
+        MsgBoxResult::No => create_entry(ui_components, app),
     }
 
     Ok(HandleInputReturnType::Handled)

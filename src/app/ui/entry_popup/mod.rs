@@ -9,7 +9,10 @@ use ratatui::{
 };
 use tui_textarea::{CursorMove, TextArea};
 
-use crate::app::{keymap::Input, App};
+use crate::{
+    app::{keymap::Input, App},
+    settings::Settings,
+};
 
 use backend::{DataProvider, Entry};
 
@@ -56,7 +59,7 @@ pub enum EntryPopupInputReturn {
 }
 
 impl<'a> EntryPopup<'a> {
-    pub fn new_entry() -> Self {
+    pub fn new_entry(settings: &Settings) -> Self {
         let title_txt = TextArea::default();
 
         let date = Local::now();
@@ -69,7 +72,12 @@ impl<'a> EntryPopup<'a> {
         )]);
 
         let tags_txt = TextArea::default();
-        let priority_txt = TextArea::default();
+
+        let priority_txt = if let Some(priority) = settings.default_journal_priority {
+            TextArea::new(vec![priority.to_string()])
+        } else {
+            TextArea::default()
+        };
 
         Self {
             title_txt,
