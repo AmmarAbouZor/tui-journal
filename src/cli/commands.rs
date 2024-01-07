@@ -29,7 +29,7 @@ pub enum CliCommand {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PendingCliCommand {
-    ImportJorunals(PathBuf),
+    ImportJournals(PathBuf),
     AssignPriority(u32),
 }
 
@@ -38,7 +38,7 @@ impl CliCommand {
         match self {
             CliCommand::PrintConfig => exec_print_config(settings).await,
             CliCommand::ImportJournals { file_path: path } => Ok(CliResult::PendingCommand(
-                PendingCliCommand::ImportJorunals(path),
+                PendingCliCommand::ImportJournals(path),
             )),
             CliCommand::AssignPriority { priority } => Ok(CliResult::PendingCommand(
                 PendingCliCommand::AssignPriority(priority),

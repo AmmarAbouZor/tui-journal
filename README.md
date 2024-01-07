@@ -83,7 +83,6 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [x]  Edit journals content with external text editor from within the app.
 - [x]  Filter & Search functionalities.
 - [ ]  Customize themes and keybindings.
-- [ ]  Load entries as chunks for better performance.
 
       
 ## Installation
@@ -181,6 +180,7 @@ Usage: tjournal [OPTIONS] [COMMAND]
 Commands:
   print-config  Print the current settings including the paths for the backend files [aliases: pc]
   import-journals  Import journals from the given transfer JSON file to the current back-end file [aliases: imj]
+  assign-priority  Assign priority for all the entires with empty priority field [aliases: ap]
   help          Print this message or the help of the given subcommand(s)
 
 Options:
