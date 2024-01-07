@@ -229,4 +229,24 @@ impl DataProvider for SqliteDataProvide {
 
         Ok(EntriesDTO::new(entry_drafts))
     }
+
+    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+        let sql = format!(
+            r"UPDATE entries
+            SET priority = '{}'
+            WHERE priority IS NULL;",
+            priority
+        );
+
+        sqlx::query(sql.as_str())
+            .execute(&self.pool)
+            .await
+            .map_err(|err| {
+                log::error!("Assign priority to entries faild. Error info {err}");
+
+                anyhow!(err)
+            })?;
+
+        Ok(())
+    }
 }

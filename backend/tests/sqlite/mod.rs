@@ -111,7 +111,7 @@ async fn update_entry() {
 }
 
 #[tokio::test]
-async fn text_export_import() {
+async fn export_import() {
     let provider_source = create_provider_with_two_entries().await;
 
     let created_ids = [1, 2];
@@ -133,4 +133,16 @@ async fn text_export_import() {
     let dto_dist = provider_dist.get_export_object(&created_ids).await.unwrap();
 
     assert_eq!(dto_source, dto_dist);
+}
+
+#[tokio::test]
+async fn assign_priority() {
+    let provider = create_provider_with_two_entries().await;
+
+    provider.assign_priority_to_entries(3).await.unwrap();
+
+    let entries = provider.load_all_entries().await.unwrap();
+
+    assert_eq!(entries[0].priority, Some(3));
+    assert_eq!(entries[1].priority, Some(1));
 }

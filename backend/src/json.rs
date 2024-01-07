@@ -103,6 +103,19 @@ impl DataProvider for JsonDataProvide {
 
         Ok(EntriesDTO::new(entries))
     }
+
+    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+        let mut entries = self.load_all_entries().await?;
+
+        entries
+            .iter_mut()
+            .filter(|entry| entry.priority.is_none())
+            .for_each(|entry| entry.priority = Some(priority));
+
+        self.write_entries_to_file(&entries).await?;
+
+        Ok(())
+    }
 }
 
 impl JsonDataProvide {
