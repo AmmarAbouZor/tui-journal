@@ -242,7 +242,7 @@ impl DataProvider for SqliteDataProvide {
             .execute(&self.pool)
             .await
             .map_err(|err| {
-                log::error!("Assign priority to entries faild. Error info {err}");
+                log::error!("Assign priority to entries failed. Error info {err}");
 
                 anyhow!(err)
             })?;

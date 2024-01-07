@@ -2,7 +2,7 @@ use backend::*;
 use chrono::{TimeZone, Utc};
 
 async fn create_provider_with_two_entries() -> SqliteDataProvide {
-    let provider = create_prvoider().await;
+    let provider = create_provider().await;
 
     let mut entry_draft_1 = EntryDraft::new(
         Utc::now(),
@@ -26,7 +26,7 @@ async fn create_provider_with_two_entries() -> SqliteDataProvide {
 }
 
 #[inline]
-async fn create_prvoider() -> SqliteDataProvide {
+async fn create_provider() -> SqliteDataProvide {
     SqliteDataProvide::create("sqlite::memory:").await.unwrap()
 }
 
@@ -123,7 +123,7 @@ async fn export_import() {
 
     assert_eq!(dto_source.entries.len(), created_ids.len());
 
-    let provider_dist = create_prvoider().await;
+    let provider_dist = create_provider().await;
 
     provider_dist
         .import_entries(dto_source.clone())

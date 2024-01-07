@@ -36,8 +36,8 @@ pub trait DataProvider {
             "Version mismatches check if there is a need to do a converting to the data"
         );
 
-        for entry_darft in entries_dto.entries {
-            self.add_entry(entry_darft).await?;
+        for entry_draft in entries_dto.entries {
+            self.add_entry(entry_draft).await?;
         }
 
         Ok(())
