@@ -128,6 +128,10 @@ async fn exec_pending_cmd<B: Backend, D: DataProvider>(
 
             app.import_entries(file_path).await?;
         }
+        PendingCliCommand::AssignPriority(priority) => {
+            terminal.draw(|f| render_message_centered(f, "Assigning Priority to Journals..."))?;
+            app.assign_priority_to_entries(priority).await?;
+        }
     }
 
     Ok(())
