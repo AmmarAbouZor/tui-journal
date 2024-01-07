@@ -91,7 +91,7 @@ where
 
     let mut input_stream = EventStream::new();
     while let Some(event) = input_stream.next().await {
-        let event = event.context("Error gettig input stream")?;
+        let event = event.context("Error getting input stream")?;
         match handle_input(event, &mut app, &mut ui_components).await {
             Ok(result) => {
                 match result {
@@ -123,10 +123,14 @@ async fn exec_pending_cmd<B: Backend, D: DataProvider>(
     pending_cmd: PendingCliCommand,
 ) -> anyhow::Result<()> {
     match pending_cmd {
-        PendingCliCommand::ImportJorunals(file_path) => {
+        PendingCliCommand::ImportJournals(file_path) => {
             terminal.draw(|f| render_message_centered(f, "Importing journals..."))?;
 
             app.import_entries(file_path).await?;
+        }
+        PendingCliCommand::AssignPriority(priority) => {
+            terminal.draw(|f| render_message_centered(f, "Assigning Priority to Journals..."))?;
+            app.assign_priority_to_entries(priority).await?;
         }
     }
 

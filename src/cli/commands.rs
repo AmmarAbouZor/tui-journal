@@ -18,11 +18,19 @@ pub enum CliCommand {
         #[arg(short = 'p', long = "path", required = true, value_name = "FILE PATH")]
         file_path: PathBuf,
     },
+    /// Assign priority for all the entires with empty priority field
+    #[clap(visible_alias = "ap")]
+    AssignPriority {
+        /// Priority value (Positive number)
+        #[arg(required = true, value_name = "PRIORITY", index = 1)]
+        priority: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PendingCliCommand {
-    ImportJorunals(PathBuf),
+    ImportJournals(PathBuf),
+    AssignPriority(u32),
 }
 
 impl CliCommand {
@@ -30,7 +38,10 @@ impl CliCommand {
         match self {
             CliCommand::PrintConfig => exec_print_config(settings).await,
             CliCommand::ImportJournals { file_path: path } => Ok(CliResult::PendingCommand(
-                PendingCliCommand::ImportJorunals(path),
+                PendingCliCommand::ImportJournals(path),
+            )),
+            CliCommand::AssignPriority { priority } => Ok(CliResult::PendingCommand(
+                PendingCliCommand::AssignPriority(priority),
             )),
         }
     }

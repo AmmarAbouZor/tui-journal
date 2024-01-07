@@ -36,12 +36,14 @@ pub trait DataProvider {
             "Version mismatches check if there is a need to do a converting to the data"
         );
 
-        for entry_darft in entries_dto.entries {
-            self.add_entry(entry_darft).await?;
+        for entry_draft in entries_dto.entries {
+            self.add_entry(entry_draft).await?;
         }
 
         Ok(())
     }
+    /// Assigns priority to all entries that don't have a priority assigned to
+    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()>;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

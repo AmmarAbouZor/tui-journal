@@ -101,4 +101,8 @@ impl DataProvider for MockDataProvider {
 
         Ok(())
     }
+
+    async fn assign_priority_to_entries(&self, _priority: u32) -> anyhow::Result<()> {
+        unimplemented!("There are not tests for assigning priority on the app level");
+    }
 }

@@ -282,4 +282,13 @@ where
             self.filtered_out_entries.clear();
         }
     }
+
+    /// Assigns priority to all entries that don't have a priority assigned to
+    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+        self.data_provide
+            .assign_priority_to_entries(priority)
+            .await?;
+
+        Ok(())
+    }
 }
