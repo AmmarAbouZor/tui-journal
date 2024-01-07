@@ -202,7 +202,9 @@ The configuration for TUI-Journal can be found in the `config.toml` file located
 Here is a sample of the settings in the `config.toml` file:
 
 ```toml
-backend_type = "Sqlite"   # available options: Json, Sqlite. Default value: Sqlite.
+backend_type = "Sqlite"   # Available options: Json, Sqlite. Default value: Sqlite.
+
+default_journal_priority = 3  # Sets the suggested priority while creating a new journal
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.

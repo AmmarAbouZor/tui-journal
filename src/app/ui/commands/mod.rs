@@ -207,7 +207,7 @@ impl UICommand {
             UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components),
             UICommand::SelectedNextEntry => exec_select_next_entry(ui_components, app),
             UICommand::SelectedPrevEntry => exec_select_prev_entry(ui_components, app),
-            UICommand::CreateEntry => exec_create_entry(ui_components),
+            UICommand::CreateEntry => exec_create_entry(ui_components, app),
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
             UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
             UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),

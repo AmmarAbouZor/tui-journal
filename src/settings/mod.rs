@@ -36,6 +36,8 @@ pub struct Settings {
     #[cfg(feature = "sqlite")]
     #[serde(default)]
     pub sqlite_backend: SqliteBackend,
+    #[serde(default)]
+    pub default_journal_priority: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -94,6 +96,7 @@ impl Settings {
             sqlite_backend: _,
             export: _,
             external_editor: _,
+            default_journal_priority: _,
         } = self;
 
         if self.backend_type.is_none() {
