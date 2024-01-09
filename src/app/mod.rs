@@ -1,32 +1,30 @@
+use self::{
+    filter::{Filter, FilterCriterion},
+    sorter::{SortCriteria, SortOrder, Sorter},
+};
+use crate::settings::Settings;
+use anyhow::{anyhow, bail, Context};
+use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
+use chrono::{DateTime, Utc};
+use rayon::prelude::*;
 use std::{
     collections::{BTreeSet, HashSet},
     fs::File,
     path::PathBuf,
 };
 
-use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
-
-use anyhow::{anyhow, bail, Context};
-use chrono::{DateTime, Utc};
-use rayon::prelude::*;
-
-pub use runner::run;
-pub use ui::UIComponents;
-
-#[cfg(test)]
-mod test;
-
 mod external_editor;
 mod filter;
 mod keymap;
 mod runner;
+mod sorter;
+#[cfg(test)]
+mod test;
 mod ui;
 
+pub use runner::run;
 pub use runner::HandleInputReturnType;
-
-use crate::settings::Settings;
-
-use self::filter::{Filter, FilterCriterion};
+pub use ui::UIComponents;
 
 pub struct App<D>
 where
@@ -42,6 +40,7 @@ where
     pub settings: Settings,
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
+    sorter: Sorter,
 }
 
 impl<D> App<D>
@@ -61,6 +60,7 @@ where
             settings,
             redraw_after_restore: false,
             filter: None,
+            sorter: Default::default(),
         }
     }
 
@@ -290,5 +290,12 @@ where
             .await?;
 
         Ok(())
+    }
+
+    fn apply_sort(&mut self, criteria: Vec<SortCriteria>, order: SortOrder) {
+        self.sorter.set_criteria(criteria);
+        self.sorter.order = order;
+        // TODO: Apply sorting on the current entries.
+        // Make sure you cover the filtered entries case too (With unit tests)
     }
 }
