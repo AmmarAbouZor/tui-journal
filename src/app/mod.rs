@@ -90,7 +90,7 @@ where
 
         self.entries = self.data_provide.load_all_entries().await?;
 
-        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+        self.sort_entries();
 
         self.update_filtered_out_entries();
 
@@ -116,6 +116,7 @@ where
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
+        self.sort_entries();
         self.update_filtered_out_entries();
 
         Ok(entry_id)
@@ -146,6 +147,8 @@ where
         self.data_provide.update_entry(clone).await?;
 
         self.entries.sort_by(|a, b| b.date.cmp(&a.date));
+
+        self.sort_entries();
 
         self.update_filter();
         self.update_filtered_out_entries();
@@ -292,10 +295,15 @@ where
         Ok(())
     }
 
-    fn apply_sort(&mut self, criteria: Vec<SortCriteria>, order: SortOrder) {
+    pub fn apply_sort(&mut self, criteria: Vec<SortCriteria>, order: SortOrder) {
         self.sorter.set_criteria(criteria);
         self.sorter.order = order;
-        // TODO: Apply sorting on the current entries.
-        // Make sure you cover the filtered entries case too (With unit tests)
+
+        self.sort_entries();
+    }
+
+    fn sort_entries(&mut self) {
+        self.entries
+            .sort_by(|entry1, entry2| self.sorter.sort(entry1, entry2));
     }
 }

@@ -199,3 +199,97 @@ async fn test_filter_relations() {
 
     assert_eq!(app.get_active_entries().count(), 0);
 }
+
+async fn add_extra_entries_drafts(app: &mut App<MockDataProvider>) {
+    let drafts = [
+        EntryDraft::new(
+            Utc.with_ymd_and_hms(2023, 11, 12, 11, 22, 33).unwrap(),
+            String::from("Title 3"),
+            vec![String::from("Tag 1"), String::from("Tag 2")],
+            Some(2),
+        ),
+        EntryDraft::new(
+            Utc.with_ymd_and_hms(2022, 12, 2, 1, 2, 3).unwrap(),
+            String::from("Title 4"),
+            vec![],
+            Some(4),
+        ),
+        EntryDraft::new(
+            Utc.with_ymd_and_hms(2023, 1, 2, 1, 2, 3).unwrap(),
+            String::from("Title 5"),
+            vec![String::from("Tag 1")],
+            Some(3),
+        ),
+    ];
+
+    for draft in drafts {
+        app.add_entry(draft.title, draft.date, draft.tags, draft.priority)
+            .await
+            .unwrap();
+    }
+}
+
+#[tokio::test]
+async fn test_sorter() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    add_extra_entries_drafts(&mut app).await;
+
+    app.current_entry_id = Some(0);
+
+    let mut sorter = Sorter::default();
+    sorter.set_criteria(vec![SortCriteria::Priority]);
+    sorter.order = SortOrder::Ascending;
+
+    app.apply_sort(vec![SortCriteria::Priority], SortOrder::Ascending);
+
+    let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+    assert_eq!(ids, vec![0, 1, 2, 4, 3], "Priority Ascending");
+
+    app.apply_sort(vec![SortCriteria::Priority], SortOrder::Descending);
+
+    let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+    assert_eq!(ids, vec![3, 4, 2, 1, 0], "Priority Descending");
+}
+
+#[tokio::test]
+async fn test_sorter_with_filter() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    add_extra_entries_drafts(&mut app).await;
+
+    app.current_entry_id = Some(0);
+
+    // Apply filter then apply sorter
+    let mut filter = Filter::default();
+    filter
+        .criteria
+        .push(FilterCriterion::Tag(String::from("Tag 2")));
+    app.apply_filter(Some(filter));
+
+    let mut sorter = Sorter::default();
+    sorter.set_criteria(vec![SortCriteria::Priority]);
+    sorter.order = SortOrder::Ascending;
+
+    app.apply_sort(vec![SortCriteria::Priority], SortOrder::Ascending);
+
+    let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+    assert_eq!(ids, vec![0, 2], "Apply Filter Then Sorter Ascending");
+
+    app.apply_sort(vec![SortCriteria::Priority], SortOrder::Descending);
+
+    let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+    assert_eq!(ids, vec![2, 0], "Apply Filter Then Sorter Descending");
+
+    // Apply Another filter on the already sorted items
+    let mut filter = Filter::default();
+    filter
+        .criteria
+        .push(FilterCriterion::Tag(String::from("Tag 1")));
+    app.apply_filter(Some(filter));
+
+    let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
+    assert_eq!(ids, vec![4, 2, 0], "Apply Filter Then Sorter Descending");
+}
