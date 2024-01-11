@@ -8,6 +8,21 @@ pub enum SortCriteria {
     Title,
 }
 
+impl SortCriteria {
+    fn compare(&self, entry1: &Entry, entry2: &Entry, order: &SortOrder) -> Ordering {
+        let ascending_ord = match self {
+            SortCriteria::Date => entry1.date.cmp(&entry2.date),
+            SortCriteria::Priority => entry1.priority.cmp(&entry2.priority),
+            SortCriteria::Title => entry1.title.cmp(&entry2.title),
+        };
+
+        match order {
+            SortOrder::Ascending => ascending_ord,
+            SortOrder::Descending => ascending_ord.reverse(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum SortOrder {
     Ascending,
@@ -41,7 +56,123 @@ impl Sorter {
     }
 
     pub fn sort(&self, entry1: &Entry, entry2: &Entry) -> Ordering {
-        // TODO:
-        todo!()
+        self.criteria
+            .iter()
+            .map(|cr| cr.compare(entry1, entry2, &self.order))
+            .find(|cmp| matches!(cmp, Ordering::Less | Ordering::Greater))
+            .unwrap_or(Ordering::Equal)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use chrono::{TimeZone, Utc};
+
+    use super::*;
+
+    fn get_default_entries() -> Vec<Entry> {
+        vec![
+            Entry::new(
+                0,
+                Utc.with_ymd_and_hms(2023, 12, 2, 1, 2, 3).unwrap(),
+                String::from("Title 2"),
+                String::from("Content 2"),
+                vec![],
+                Some(1),
+            ),
+            Entry::new(
+                1,
+                Utc.with_ymd_and_hms(2023, 10, 12, 11, 22, 33).unwrap(),
+                String::from("Title 1"),
+                String::from("Content 1"),
+                vec![String::from("Tag 1"), String::from("Tag 2")],
+                None,
+            ),
+            Entry::new(
+                2,
+                Utc.with_ymd_and_hms(2024, 1, 2, 1, 2, 3).unwrap(),
+                String::from("Title 2"), // This is intentionally
+                String::from("Content 3"),
+                vec![],
+                Some(2),
+            ),
+        ]
+    }
+
+    fn get_ids(entries: &[Entry]) -> Vec<u32> {
+        entries.iter().map(|e| e.id).collect()
+    }
+
+    #[test]
+    fn sort_single_date() {
+        let mut sorter = Sorter::default();
+        sorter.set_criteria(vec![SortCriteria::Date]);
+        sorter.order = SortOrder::Ascending;
+
+        let mut entries = get_default_entries();
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![1, 0, 2], "Date Ascending");
+
+        sorter.order = SortOrder::Descending;
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![2, 0, 1], "Date Descending");
+    }
+
+    #[test]
+    fn sort_single_priority() {
+        let mut sorter = Sorter::default();
+        sorter.set_criteria(vec![SortCriteria::Priority]);
+        sorter.order = SortOrder::Ascending;
+
+        let mut entries = get_default_entries();
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![1, 0, 2], "Priority Ascending");
+
+        sorter.order = SortOrder::Descending;
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![2, 0, 1], "Priority Descending");
+    }
+
+    #[test]
+    fn sort_single_title() {
+        let mut sorter = Sorter::default();
+        sorter.set_criteria(vec![SortCriteria::Title]);
+        sorter.order = SortOrder::Ascending;
+
+        let mut entries = get_default_entries();
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![1, 0, 2], "Title Ascending");
+
+        sorter.order = SortOrder::Descending;
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![0, 2, 1], "Title Descending");
+    }
+
+    #[test]
+    fn sort_multi() {
+        let mut sorter = Sorter::default();
+        sorter.set_criteria(vec![SortCriteria::Title, SortCriteria::Priority]);
+        sorter.order = SortOrder::Ascending;
+
+        let mut entries = get_default_entries();
+        let mut first_clone = entries[0].clone();
+        first_clone.id = 3;
+        first_clone.priority = Some(3);
+        entries.push(first_clone);
+
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![1, 0, 2, 3], "Multi Ascending");
+
+        sorter.order = SortOrder::Descending;
+        entries.sort_by(|e1, e2| sorter.sort(e1, e2));
+        let ids = get_ids(&entries);
+        assert_eq!(ids, vec![3, 2, 0, 1], "Multi Descending");
     }
 }
