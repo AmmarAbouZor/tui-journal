@@ -40,6 +40,7 @@ mod footer;
 mod fuzz_find;
 mod help_popup;
 mod msg_box;
+mod sort_popup;
 pub mod ui_functions;
 
 pub use commands::UICommand;
@@ -64,6 +65,13 @@ pub enum Popup<'a> {
     Export(Box<ExportPopup<'a>>),
     Filter(Box<FilterPopup<'a>>),
     FuzzFind(Box<FuzzFindPopup<'a>>),
+}
+
+#[derive(Debug, Clone)]
+pub enum PopupReturn<T> {
+    KeepPopup,
+    Cancel,
+    Apply(T),
 }
 
 pub struct UIComponents<'a> {

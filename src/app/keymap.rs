@@ -205,6 +205,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
             UICommand::ShowFuzzyFind,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('o'), KeyModifiers::NONE),
+            UICommand::ShowSortOptions,
+        ),
     ]
 }
 

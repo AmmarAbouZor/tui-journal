@@ -436,3 +436,11 @@ pub fn exec_toggle_full_screen_mode(ui_components: &mut UIComponents) -> CmdResu
     ui_components.fullscreen = !ui_components.fullscreen;
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn exec_show_sort_options<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    // TODO: Call sort popup
+    todo!()
+}

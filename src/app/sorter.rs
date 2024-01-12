@@ -1,7 +1,7 @@
 use backend::Entry;
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortCriteria {
     Date,
     Priority,
@@ -20,6 +20,21 @@ impl SortCriteria {
             SortOrder::Ascending => ascending_ord,
             SortOrder::Descending => ascending_ord.reverse(),
         }
+    }
+
+    pub fn iterator() -> impl Iterator<Item = SortCriteria> {
+        use SortCriteria as S;
+
+        // Static assertions to make sure all sort criteria are invloved in the iterator
+        if cfg!(debug_assertions) {
+            _ = match S::Date {
+                S::Date => (),
+                S::Priority => (),
+                S::Title => (),
+            };
+        }
+
+        [S::Date, S::Priority, S::Title].iter().copied()
     }
 }
 
