@@ -1,4 +1,4 @@
-use crossterm::event::KeyModifiers;
+use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
     prelude::*,
     style::Color,
@@ -13,7 +13,7 @@ use crate::app::{
 
 use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
 
-const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> move up/down | <Ctrl-d> Load default";
+const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> cycle between criteria | <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down | <Ctrl-d> Load default";
 const FOOTER_MARGIN: usize = 8;
 const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 const LIST_HIGHLIGHT_SYMBOL: &str = ">> ";
@@ -196,6 +196,144 @@ impl SortPopup {
     pub fn handle_input(&mut self, input: &Input) -> PopupReturn<SortOrder> {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
+        match input.key_code {
+            KeyCode::Esc | KeyCode::Char('q') => return PopupReturn::Cancel,
+            KeyCode::Char('c') if has_control => return PopupReturn::Cancel,
+            KeyCode::Tab => self.cycle_next_control(),
+            KeyCode::Char('i') if has_control => self.cycle_next_control(),
+            KeyCode::Char('d') if has_control => self.toggle_sort_order(),
+            KeyCode::Char(' ') => {
+                match self.active_control {
+                    SortControl::AvailableList => Self::move_criteria(
+                        &mut self.available_criteria,
+                        &mut self.applied_criteria,
+                        &mut self.available_state,
+                        &mut self.applied_state,
+                    ),
+                    SortControl::AppliedList => Self::move_criteria(
+                        &mut self.applied_criteria,
+                        &mut self.available_criteria,
+                        &mut self.applied_state,
+                        &mut self.available_state,
+                    ),
+                };
+
+                self.validate();
+            }
+
+            KeyCode::Char('k') | KeyCode::Up
+                if has_control && matches!(self.active_control, SortControl::AppliedList) =>
+            {
+                self.move_criteria_up()
+            }
+            KeyCode::Char('j') | KeyCode::Down
+                if has_control && matches!(self.active_control, SortControl::AppliedList) =>
+            {
+                self.move_criteria_down()
+            }
+
+            KeyCode::Char('k') | KeyCode::Up => match self.active_control {
+                SortControl::AvailableList => {
+                    Self::cycle_prev_criteria(&self.available_criteria, &mut self.available_state)
+                }
+                SortControl::AppliedList => {
+                    Self::cycle_prev_criteria(&self.applied_criteria, &mut self.applied_state)
+                }
+            },
+            KeyCode::Char('j') | KeyCode::Down => match self.active_control {
+                SortControl::AvailableList => {
+                    Self::cycle_next_criteria(&self.available_criteria, &mut self.available_state)
+                }
+                SortControl::AppliedList => {
+                    Self::cycle_next_criteria(&self.applied_criteria, &mut self.applied_state)
+                }
+            },
+            _ => {}
+        };
+
+        PopupReturn::KeepPopup
+    }
+
+    fn cycle_next_control(&mut self) {
+        self.active_control = match self.active_control {
+            SortControl::AvailableList => SortControl::AppliedList,
+            SortControl::AppliedList => SortControl::AvailableList,
+        }
+    }
+
+    fn toggle_sort_order(&mut self) {
+        self.sort_order = match self.sort_order {
+            SortOrder::Ascending => SortOrder::Descending,
+            SortOrder::Descending => SortOrder::Ascending,
+        }
+    }
+
+    fn move_criteria(
+        source: &mut Vec<SortCriteria>,
+        dest: &mut Vec<SortCriteria>,
+        source_state: &mut ListState,
+        dest_state: &mut ListState,
+    ) {
+        if let Some(cr_idx) = source_state.selected() {
+            let criteria = source.remove(cr_idx);
+            dest.push(criteria);
+
+            source_state.select(cr_idx.checked_sub(1).or(if source.is_empty() {
+                None
+            } else {
+                Some(0)
+            }));
+
+            if dest_state.selected().is_none() {
+                dest_state.select(Some(0));
+            }
+        }
+    }
+
+    #[inline]
+    fn validate(&mut self) {
+        self.is_valid = !self.applied_criteria.is_empty();
+    }
+
+    fn cycle_next_criteria(criteria: &[SortCriteria], state: &mut ListState) {
+        if criteria.is_empty() {
+            return;
+        }
+
+        let new_idx = state.selected().map(|idx| {
+            if idx >= criteria.len() - 1 {
+                0
+            } else {
+                idx + 1
+            }
+        });
+
+        state.select(new_idx);
+    }
+
+    fn cycle_prev_criteria(criteria: &[SortCriteria], state: &mut ListState) {
+        if criteria.is_empty() {
+            return;
+        }
+
+        let new_idx = state
+            .selected()
+            .map(|idx| idx.checked_sub(1).unwrap_or_else(|| criteria.len() - 1));
+
+        state.select(new_idx);
+    }
+
+    fn move_criteria_up(&mut self) {
+        if self.applied_criteria.is_empty() {
+            return;
+        }
+        //TODO:
+        todo!()
+    }
+    fn move_criteria_down(&mut self) {
+        if self.applied_criteria.is_empty() {
+            return;
+        }
         //TODO:
         todo!()
     }
