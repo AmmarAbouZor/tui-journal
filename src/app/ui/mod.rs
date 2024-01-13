@@ -12,6 +12,7 @@ use self::{
     fuzz_find::FuzzFindPopup,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
+    sort_popup::SortPopup,
 };
 
 use super::{
@@ -65,6 +66,7 @@ pub enum Popup<'a> {
     Export(Box<ExportPopup<'a>>),
     Filter(Box<FilterPopup<'a>>),
     FuzzFind(Box<FuzzFindPopup<'a>>),
+    Sort(Box<SortPopup>),
 }
 
 #[derive(Debug, Clone)]
@@ -171,6 +173,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
                 Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.size()),
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.size()),
+                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.size()),
             }
         }
     }
@@ -306,6 +309,14 @@ impl<'a, 'b> UIComponents<'a> {
                             self.set_current_entry(entry_id, app);
                         }
                     }
+                },
+                Popup::Sort(sort_popup) => match sort_popup.handle_input(input) {
+                    PopupReturn::KeepPopup => {}
+                    PopupReturn::Cancel => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
+                    //TODO:
+                    PopupReturn::Apply(sort_result) => todo!(),
                 },
             }
             Ok(HandleInputReturnType::Handled)

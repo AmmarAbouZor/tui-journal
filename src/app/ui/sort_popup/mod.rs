@@ -5,9 +5,12 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::sorter::{self, SortCriteria, SortOrder, Sorter};
+use crate::app::{
+    keymap::Input,
+    sorter::{self, SortCriteria, SortOrder, Sorter},
+};
 
-use super::{ui_functions::centered_rect, INVALID_CONTROL_COLOR};
+use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> move up/down | <Ctrl-d> Load default";
 const FOOTER_MARGIN: usize = 8;
@@ -22,6 +25,11 @@ pub struct SortPopup {
     availabe_state: ListState,
     applied_state: ListState,
     is_valid: bool,
+}
+
+pub struct SortResult {
+    applied_criteria: Vec<SortCriteria>,
+    order: SortOrder,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -175,5 +183,10 @@ impl SortPopup {
     #[inline]
     fn get_list_highlight_style() -> Style {
         Style::default().fg(Color::Black).bg(Color::LightGreen)
+    }
+
+    pub fn handle_input(&mut self, input: &Input) -> PopupReturn<SortOrder> {
+        //TODO:
+        PopupReturn::Cancel
     }
 }

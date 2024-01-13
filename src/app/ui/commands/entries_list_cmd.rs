@@ -441,6 +441,9 @@ pub fn exec_show_sort_options<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
-    // TODO: Call sort popup
-    todo!()
+    ui_components
+        .popup_stack
+        .push(Popup::Sort(Box::new(SortPopup::new(&app.sorter))));
+
+    Ok(HandleInputReturnType::Handled)
 }
