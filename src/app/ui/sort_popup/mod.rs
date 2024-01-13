@@ -8,10 +8,12 @@ use ratatui::{
 
 use crate::app::{
     keymap::Input,
-    sorter::{self, SortCriteria, SortOrder, Sorter},
+    sorter::{SortCriteria, SortOrder, Sorter},
 };
 
 use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
+
+type SortReturn = PopupReturn<SortResult>;
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> cycle between criteria | <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down | <Ctrl-d> Load default";
 const FOOTER_MARGIN: usize = 8;
@@ -29,8 +31,8 @@ pub struct SortPopup {
 }
 
 pub struct SortResult {
-    applied_criteria: Vec<SortCriteria>,
-    order: SortOrder,
+    pub applied_criteria: Vec<SortCriteria>,
+    pub order: SortOrder,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -43,30 +45,38 @@ impl SortPopup {
     pub fn new(sorter: &Sorter) -> Self {
         let active_control = SortControl::AvailableList;
         let sort_order = sorter.order;
-        let applied_criteria = sorter.get_criteria().to_vec();
-        let available_criteria: Vec<_> = SortCriteria::iterator()
-            .filter(|c| !applied_criteria.contains(c))
-            .collect();
 
-        let mut available_state = ListState::default();
-        let mut applied_state = ListState::default();
-
-        if !applied_criteria.is_empty() {
-            applied_state.select(Some(0));
-        }
-
-        if !available_criteria.is_empty() {
-            available_state.select(Some(0));
-        }
-
-        Self {
-            available_criteria,
-            applied_criteria,
+        let mut sort_popup = Self {
+            available_criteria: Default::default(),
+            applied_criteria: Default::default(),
             sort_order,
             active_control,
-            available_state,
-            applied_state,
+            available_state: Default::default(),
+            applied_state: Default::default(),
             is_valid: true,
+        };
+
+        sort_popup.load_form_sorter(sorter);
+        sort_popup.validate();
+
+        sort_popup
+    }
+
+    fn load_form_sorter(&mut self, sorter: &Sorter) {
+        self.applied_criteria = sorter.get_criteria().to_vec();
+        self.available_criteria = SortCriteria::iterator()
+            .filter(|c| !self.applied_criteria.contains(c))
+            .collect();
+
+        self.available_state = ListState::default();
+        self.applied_state = ListState::default();
+
+        if !self.applied_criteria.is_empty() {
+            self.applied_state.select(Some(0));
+        }
+
+        if !self.available_criteria.is_empty() {
+            self.available_state.select(Some(0));
         }
     }
 
@@ -146,10 +156,7 @@ impl SortPopup {
         let items: Vec<ListItem> = self
             .applied_criteria
             .iter()
-            .map(|cr| {
-                let criteria_txt = cr.to_string();
-                ListItem::new(cr.to_string()).style(Style::default().fg(Color::Reset))
-            })
+            .map(|cr| ListItem::new(cr.to_string()).style(Style::default().fg(Color::Reset)))
             .collect();
 
         let block_style = match (self.is_valid, self.active_control) {
@@ -193,7 +200,7 @@ impl SortPopup {
         Style::default().fg(Color::Black).bg(Color::LightGreen)
     }
 
-    pub fn handle_input(&mut self, input: &Input) -> PopupReturn<SortOrder> {
+    pub fn handle_input(&mut self, input: &Input) -> SortReturn {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
         match input.key_code {
@@ -201,7 +208,7 @@ impl SortPopup {
             KeyCode::Char('c') if has_control => return PopupReturn::Cancel,
             KeyCode::Tab => self.cycle_next_control(),
             KeyCode::Char('i') if has_control => self.cycle_next_control(),
-            KeyCode::Char('d') if has_control => self.toggle_sort_order(),
+            KeyCode::Char('o') => self.toggle_sort_order(),
             KeyCode::Char(' ') => {
                 match self.active_control {
                     SortControl::AvailableList => Self::move_criteria(
@@ -248,6 +255,9 @@ impl SortPopup {
                     Self::cycle_next_criteria(&self.applied_criteria, &mut self.applied_state)
                 }
             },
+            KeyCode::Enter => return self.confirm(),
+            KeyCode::Char('m') if has_control => return self.confirm(),
+            KeyCode::Char('d') if has_control => self.load_form_sorter(&Sorter::default()),
             _ => {}
         };
 
@@ -324,17 +334,55 @@ impl SortPopup {
     }
 
     fn move_criteria_up(&mut self) {
-        if self.applied_criteria.is_empty() {
+        if self.applied_criteria.is_empty() || self.applied_state.selected().is_none() {
             return;
         }
-        //TODO:
-        todo!()
+
+        let curr_idx = self.applied_state.selected().unwrap();
+
+        if curr_idx == 0 {
+            return;
+        }
+
+        let new_idx = curr_idx.checked_sub(1).unwrap();
+
+        self.applied_criteria.swap(curr_idx, new_idx);
+        self.applied_state.select(Some(new_idx));
     }
+
     fn move_criteria_down(&mut self) {
-        if self.applied_criteria.is_empty() {
+        if self.applied_criteria.is_empty() || self.applied_state.selected().is_none() {
             return;
         }
-        //TODO:
-        todo!()
+
+        let curr_idx = self.applied_state.selected().unwrap();
+        let last_idx = self.applied_criteria.len() - 1;
+
+        if curr_idx == last_idx {
+            return;
+        }
+
+        let new_idx = curr_idx + 1;
+
+        self.applied_criteria.swap(curr_idx, new_idx);
+        self.applied_state.select(Some(new_idx));
+    }
+
+    fn confirm(&mut self) -> SortReturn {
+        self.validate();
+
+        if !self.is_valid {
+            return PopupReturn::KeepPopup;
+        }
+
+        let applied_criteria = self.applied_criteria.clone();
+        let order = self.sort_order;
+
+        let result = SortResult {
+            applied_criteria,
+            order,
+        };
+
+        PopupReturn::Apply(result)
     }
 }

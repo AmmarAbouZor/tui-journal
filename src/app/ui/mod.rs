@@ -315,8 +315,11 @@ impl<'a, 'b> UIComponents<'a> {
                     PopupReturn::Cancel => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
-                    //TODO:
-                    PopupReturn::Apply(sort_result) => todo!(),
+                    PopupReturn::Apply(sort_result) => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                        app.apply_sort(sort_result.applied_criteria, sort_result.order)
+                        // TODO: Selected item index isn't updated with the new sort
+                    }
                 },
             }
             Ok(HandleInputReturnType::Handled)
