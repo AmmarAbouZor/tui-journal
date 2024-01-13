@@ -441,9 +441,40 @@ pub fn exec_show_sort_options<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ShowSortOptions));
+    } else {
+        show_sort_options(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+fn show_sort_options<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     ui_components
         .popup_stack
         .push(Popup::Sort(Box::new(SortPopup::new(&app.sorter))));
+}
+
+pub async fn continue_show_sort_options<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            show_sort_options(ui_components, app);
+        }
+        MsgBoxResult::No => {
+            // Discard the current content explicitly because it doesn't get discarded if the sort
+            // was cancelled which could confuse the users
+            discard_current_content(ui_components, app);
+
+            show_sort_options(ui_components, app);
+        }
+    }
 
     Ok(HandleInputReturnType::Handled)
 }

@@ -306,7 +306,9 @@ impl UICommand {
             UICommand::CopyOsClipboard => not_implemented(),
             UICommand::CutOsClipboard => not_implemented(),
             UICommand::PasteOsClipboard => not_implemented(),
-            UICommand::ShowSortOptions => not_implemented(),
+            UICommand::ShowSortOptions => {
+                continue_show_sort_options(ui_components, app, msg_box_result).await
+            }
         }
     }
 }
