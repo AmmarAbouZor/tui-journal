@@ -1,11 +1,21 @@
 use backend::Entry;
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt::Display};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortCriteria {
     Date,
     Priority,
     Title,
+}
+
+impl Display for SortCriteria {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SortCriteria::Date => write!(f, "Date"),
+            SortCriteria::Priority => write!(f, "Priority"),
+            SortCriteria::Title => write!(f, "Title"),
+        }
+    }
 }
 
 impl SortCriteria {
@@ -42,6 +52,15 @@ impl SortCriteria {
 pub enum SortOrder {
     Ascending,
     Descending,
+}
+
+impl Display for SortOrder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SortOrder::Ascending => write!(f, "Ascending"),
+            SortOrder::Descending => write!(f, "Descending"),
+        }
+    }
 }
 
 #[derive(Debug)]
