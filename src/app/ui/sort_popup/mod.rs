@@ -406,6 +406,6 @@ impl SortPopup {
             SortControl::AppliedList => " <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down |",
         };
 
-        format!("Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default", move_mapping)
+        format!("Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move criteria to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default", move_mapping)
     }
 }
