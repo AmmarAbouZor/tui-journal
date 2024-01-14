@@ -72,6 +72,8 @@ impl SortPopup {
         self.available_state = ListState::default();
         self.applied_state = ListState::default();
 
+        self.sort_order = sorter.order;
+
         if !self.applied_criteria.is_empty() {
             self.applied_state.select(Some(0));
         }
