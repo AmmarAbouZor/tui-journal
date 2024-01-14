@@ -64,6 +64,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Add custom tags to the journals and use them in the built-in filter.
 - Fuzzy Finder: Locate your desired journal with lightning-fast speed.
 - Search functions for journals title and content in the built-in filter.
+- Sort the journals based on their date, priority and title.
 - Control many journals at once via the multi-select mode
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - Utilize Editor's Visual Mode for VIM-style text selection, copying, and deletion.

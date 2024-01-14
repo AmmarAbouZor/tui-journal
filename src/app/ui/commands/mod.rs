@@ -59,6 +59,7 @@ pub enum UICommand {
     CopyOsClipboard,
     CutOsClipboard,
     PasteOsClipboard,
+    ShowSortOptions,
 }
 
 #[derive(Debug, Clone)]
@@ -191,6 +192,10 @@ impl UICommand {
                 "Paste OS clipboard Content",
                 "Paste the operation system clipboard content to in the editor",
             ),
+            UICommand::ShowSortOptions => CommandInfo::new(
+                "Open sort options",
+                "Open sort popup to set the sorting options of the journals",
+            ),
 
         }
     }
@@ -235,6 +240,7 @@ impl UICommand {
             UICommand::CopyOsClipboard => exec_copy_os_clipboard(ui_components),
             UICommand::CutOsClipboard => exec_cut_os_clipboard(ui_components),
             UICommand::PasteOsClipboard => exec_paste_os_clipboard(ui_components),
+            UICommand::ShowSortOptions => exec_show_sort_options(ui_components, app),
         }
     }
 
@@ -300,6 +306,9 @@ impl UICommand {
             UICommand::CopyOsClipboard => not_implemented(),
             UICommand::CutOsClipboard => not_implemented(),
             UICommand::PasteOsClipboard => not_implemented(),
+            UICommand::ShowSortOptions => {
+                continue_show_sort_options(ui_components, app, msg_box_result).await
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ use self::{
     fuzz_find::FuzzFindPopup,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
+    sort_popup::SortPopup,
 };
 
 use super::{
@@ -40,6 +41,7 @@ mod footer;
 mod fuzz_find;
 mod help_popup;
 mod msg_box;
+mod sort_popup;
 pub mod ui_functions;
 
 pub use commands::UICommand;
@@ -64,6 +66,14 @@ pub enum Popup<'a> {
     Export(Box<ExportPopup<'a>>),
     Filter(Box<FilterPopup<'a>>),
     FuzzFind(Box<FuzzFindPopup<'a>>),
+    Sort(Box<SortPopup>),
+}
+
+#[derive(Debug, Clone)]
+pub enum PopupReturn<T> {
+    KeepPopup,
+    Cancel,
+    Apply(T),
 }
 
 pub struct UIComponents<'a> {
@@ -163,6 +173,7 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
                 Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.size()),
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.size()),
+                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.size()),
             }
         }
     }
@@ -264,21 +275,21 @@ impl<'a, 'b> UIComponents<'a> {
                 },
                 Popup::Export(export_popup) => {
                     match export_popup.handle_input(input) {
-                        export_popup::ExportPopupInputReturn::KeepPopup => {}
-                        export_popup::ExportPopupInputReturn::Cancel => {
+                        PopupReturn::KeepPopup => {}
+                        PopupReturn::Cancel => {
                             self.popup_stack.pop().expect("popup stack isn't empty");
                         }
-                        export_popup::ExportPopupInputReturn::Export(path, entry_id) => {
+                        PopupReturn::Apply((path, entry_id)) => {
                             self.handle_export_popup_return(path, entry_id, app).await;
                         }
                     };
                 }
                 Popup::Filter(filter_popup) => match filter_popup.handle_input(input) {
-                    filter_popup::FilterPopupReturn::KeepPopup => {}
-                    filter_popup::FilterPopupReturn::Cancel => {
+                    PopupReturn::KeepPopup => {}
+                    PopupReturn::Cancel => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
-                    filter_popup::FilterPopupReturn::Apply(filter) => {
+                    PopupReturn::Apply(filter) => {
                         app.apply_filter(filter);
                         self.popup_stack.pop().expect("popup stack isn't empty");
 
@@ -297,6 +308,22 @@ impl<'a, 'b> UIComponents<'a> {
                         if entry_id.is_some() {
                             self.set_current_entry(entry_id, app);
                         }
+                    }
+                },
+                Popup::Sort(sort_popup) => match sort_popup.handle_input(input) {
+                    PopupReturn::KeepPopup => {}
+                    PopupReturn::Cancel => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+                    }
+                    PopupReturn::Apply(sort_result) => {
+                        self.popup_stack.pop().expect("popup stack isn't empty");
+
+                        // Preserve current entry
+                        let current_entry_id = app.current_entry_id;
+
+                        app.apply_sort(sort_result.applied_criteria, sort_result.order);
+
+                        self.set_current_entry(current_entry_id, app);
                     }
                 },
             }
