@@ -11,11 +11,12 @@ use crate::app::{
     sorter::{SortCriteria, SortOrder, Sorter},
 };
 
-use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
+use super::{
+    ui_functions::centered_rect, PopupReturn, INACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
+};
 
 type SortReturn = PopupReturn<SortResult>;
 
-const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> cycle between criteria | <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down | <Ctrl-d> Load default";
 const FOOTER_MARGIN: usize = 8;
 const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 const LIST_HIGHLIGHT_SYMBOL: &str = ">> ";
@@ -87,7 +88,9 @@ impl SortPopup {
         frame.render_widget(Clear, area);
         frame.render_widget(block, area);
 
-        let footer_height = textwrap::fill(FOOTER_TEXT, (area.width as usize) - FOOTER_MARGIN)
+        let footer_text = self.get_footer_text();
+
+        let footer_height = textwrap::fill(&footer_text, (area.width as usize) - FOOTER_MARGIN)
             .lines()
             .count() as u16;
 
@@ -113,7 +116,7 @@ impl SortPopup {
         self.render_sort_order(frame, chunks[0]);
         self.render_available_items(frame, chunks[1]);
         self.render_applied_items(frame, chunks[2]);
-        self.render_footer(frame, chunks[3]);
+        self.render_footer(footer_text, frame, chunks[3]);
     }
 
     fn render_sort_order(&self, frame: &mut Frame, area: Rect) {
@@ -146,7 +149,10 @@ impl SortPopup {
 
         let list = List::new(items)
             .block(list_block)
-            .highlight_style(Self::get_list_highlight_style())
+            .highlight_style(Self::get_list_highlight_style(matches!(
+                self.active_control,
+                SortControl::AvailableList
+            )))
             .highlight_symbol(LIST_HIGHLIGHT_SYMBOL);
 
         frame.render_stateful_widget(list, area, &mut self.available_state);
@@ -179,15 +185,18 @@ impl SortPopup {
 
         let list = List::new(items)
             .block(list_block)
-            .highlight_style(Self::get_list_highlight_style())
+            .highlight_style(Self::get_list_highlight_style(matches!(
+                self.active_control,
+                SortControl::AppliedList
+            )))
             .highlight_symbol(LIST_HIGHLIGHT_SYMBOL);
 
         frame.render_stateful_widget(list, area, &mut self.applied_state);
     }
 
     #[inline]
-    fn render_footer(&self, frame: &mut Frame, area: Rect) {
-        let footer = Paragraph::new(FOOTER_TEXT)
+    fn render_footer(&self, footer_text: String, frame: &mut Frame, area: Rect) {
+        let footer = Paragraph::new(footer_text)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: false })
             .block(Block::default().borders(Borders::NONE));
@@ -196,8 +205,13 @@ impl SortPopup {
     }
 
     #[inline]
-    fn get_list_highlight_style() -> Style {
-        Style::default().fg(Color::Black).bg(Color::LightGreen)
+    fn get_list_highlight_style(is_focused: bool) -> Style {
+        let base_style = Style::default().fg(Color::Black);
+        if is_focused {
+            base_style.bg(Color::LightGreen)
+        } else {
+            base_style.bg(INACTIVE_CONTROL_COLOR)
+        }
     }
 
     pub fn handle_input(&mut self, input: &Input) -> SortReturn {
@@ -384,5 +398,14 @@ impl SortPopup {
         };
 
         PopupReturn::Apply(result)
+    }
+
+    fn get_footer_text(&self) -> String {
+        let move_mapping = match self.active_control {
+            SortControl::AvailableList => "",
+            SortControl::AppliedList => " <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down |",
+        };
+
+        format!("Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default", move_mapping)
     }
 }
