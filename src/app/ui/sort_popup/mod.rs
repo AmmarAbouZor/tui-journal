@@ -342,7 +342,7 @@ impl SortPopup {
 
         let new_idx = state
             .selected()
-            .map(|idx| idx.checked_sub(1).unwrap_or_else(|| criteria.len() - 1));
+            .map(|idx| idx.checked_sub(1).unwrap_or(criteria.len() - 1));
 
         state.select(new_idx);
     }

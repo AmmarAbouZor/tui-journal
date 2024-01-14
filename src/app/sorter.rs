@@ -37,7 +37,7 @@ impl SortCriteria {
 
         // Static assertions to make sure all sort criteria are invloved in the iterator
         if cfg!(debug_assertions) {
-            _ = match S::Date {
+            match S::Date {
                 S::Date => (),
                 S::Priority => (),
                 S::Title => (),
