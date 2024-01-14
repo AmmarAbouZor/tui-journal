@@ -13,8 +13,11 @@ use tui_textarea::{CursorMove, TextArea};
 use crate::app::{keymap::Input, App};
 
 use super::{
-    ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
+    ui_functions::centered_rect_exact_height, PopupReturn, ACTIVE_CONTROL_COLOR,
+    INVALID_CONTROL_COLOR,
 };
+
+type ExportPopupInputReturn = PopupReturn<(PathBuf, Option<u32>)>;
 
 const FOOTER_TEXT: &str = "Enter: confirm | Esc or <Ctrl-c>: Cancel";
 const FOOTER_MARGINE: u16 = 8;
@@ -25,12 +28,6 @@ pub struct ExportPopup<'a> {
     path_err_msg: String,
     entry_id: Option<u32>,
     paragraph_text: String,
-}
-
-pub enum ExportPopupInputReturn {
-    KeepPopup,
-    Cancel,
-    Export(PathBuf, Option<u32>),
 }
 
 impl<'a> ExportPopup<'a> {
@@ -217,6 +214,6 @@ impl<'a> ExportPopup<'a> {
             .parse()
             .expect("PathBuf from string should never fail");
 
-        ExportPopupInputReturn::Export(path, self.entry_id)
+        ExportPopupInputReturn::Apply((path, self.entry_id))
     }
 }

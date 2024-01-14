@@ -275,21 +275,21 @@ impl<'a, 'b> UIComponents<'a> {
                 },
                 Popup::Export(export_popup) => {
                     match export_popup.handle_input(input) {
-                        export_popup::ExportPopupInputReturn::KeepPopup => {}
-                        export_popup::ExportPopupInputReturn::Cancel => {
+                        PopupReturn::KeepPopup => {}
+                        PopupReturn::Cancel => {
                             self.popup_stack.pop().expect("popup stack isn't empty");
                         }
-                        export_popup::ExportPopupInputReturn::Export(path, entry_id) => {
+                        PopupReturn::Apply((path, entry_id)) => {
                             self.handle_export_popup_return(path, entry_id, app).await;
                         }
                     };
                 }
                 Popup::Filter(filter_popup) => match filter_popup.handle_input(input) {
-                    filter_popup::FilterPopupReturn::KeepPopup => {}
-                    filter_popup::FilterPopupReturn::Cancel => {
+                    PopupReturn::KeepPopup => {}
+                    PopupReturn::Cancel => {
                         self.popup_stack.pop().expect("popup stack isn't empty");
                     }
-                    filter_popup::FilterPopupReturn::Apply(filter) => {
+                    PopupReturn::Apply(filter) => {
                         app.apply_filter(filter);
                         self.popup_stack.pop().expect("popup stack isn't empty");
 

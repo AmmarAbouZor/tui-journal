@@ -14,7 +14,9 @@ use crate::app::{
     keymap::Input,
 };
 
-use super::{ui_functions::centered_rect, INVALID_CONTROL_COLOR};
+use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
+
+type FilterPopupReturn = PopupReturn<Option<Filter>>;
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
 const FOOTER_MARGIN: usize = 8;
@@ -38,12 +40,6 @@ enum FilterControl {
     ContentTxt,
     PriorityTxt,
     TagsList,
-}
-
-pub enum FilterPopupReturn {
-    KeepPopup,
-    Cancel,
-    Apply(Option<Filter>),
 }
 
 impl<'a> FilterPopup<'a> {
