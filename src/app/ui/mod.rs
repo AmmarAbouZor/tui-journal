@@ -86,7 +86,6 @@ pub struct UIComponents<'a> {
     popup_stack: Vec<Popup<'a>>,
     pub active_control: ControlType,
     pending_command: Option<UICommand>,
-    fullscreen: bool,
 }
 
 impl<'a, 'b> UIComponents<'a> {
@@ -111,7 +110,6 @@ impl<'a, 'b> UIComponents<'a> {
             popup_stack: Vec::new(),
             active_control,
             pending_command: None,
-            fullscreen: false,
         }
     }
 
@@ -141,7 +139,7 @@ impl<'a, 'b> UIComponents<'a> {
             .split(f.size());
 
         render_footer(f, chunks[1], self, app);
-        if self.fullscreen {
+        if app.state.full_screen {
             match self.active_control {
                 ControlType::EntriesList => {
                     self.entries_list

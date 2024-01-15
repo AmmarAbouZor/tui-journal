@@ -441,8 +441,8 @@ pub async fn continue_fuzzy_find<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_toggle_full_screen_mode(ui_components: &mut UIComponents) -> CmdResult {
-    ui_components.fullscreen = !ui_components.fullscreen;
+pub fn exec_toggle_full_screen_mode<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    app.state.full_screen = !app.state.full_screen;
     Ok(HandleInputReturnType::Handled)
 }
 
@@ -462,7 +462,7 @@ pub fn exec_show_sort_options<D: DataProvider>(
 fn show_sort_options<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     ui_components
         .popup_stack
-        .push(Popup::Sort(Box::new(SortPopup::new(&app.sorter))));
+        .push(Popup::Sort(Box::new(SortPopup::new(&app.state.sorter))));
 }
 
 pub async fn continue_show_sort_options<'a, D: DataProvider>(

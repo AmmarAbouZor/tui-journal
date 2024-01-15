@@ -82,6 +82,9 @@ where
             ui_components.show_err_msg(err.to_string());
         }
     }
+
+    app.load_state(&mut ui_components);
+
     if let Err(err) = app.load_entries().await {
         ui_components.show_err_msg(err.to_string());
     }
@@ -105,7 +108,14 @@ where
                         // catch events like resize, Font resize, Mouse activation...
                         draw_ui(terminal, &mut app, &mut ui_components)?;
                     }
-                    HandleInputReturnType::ExitApp => return Ok(()),
+                    HandleInputReturnType::ExitApp => {
+                        // Logging persisting errors by closing the app is enough
+                        if let Err(err) = app.persist_state() {
+                            log::error!("Persisting app state failed: Error info {err}");
+                        }
+
+                        return Ok(());
+                    }
                     HandleInputReturnType::Ignore => {}
                 };
             }

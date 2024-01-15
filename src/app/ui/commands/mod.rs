@@ -256,7 +256,7 @@ impl UICommand {
             UICommand::ResetFilter => exec_reset_filter(app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
             UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
-            UICommand::ToggleFullScreenMode => exec_toggle_full_screen_mode(ui_components),
+            UICommand::ToggleFullScreenMode => exec_toggle_full_screen_mode(app),
             UICommand::CopyOsClipboard => exec_copy_os_clipboard(ui_components),
             UICommand::CutOsClipboard => exec_cut_os_clipboard(ui_components),
             UICommand::PasteOsClipboard => exec_paste_os_clipboard(ui_components),

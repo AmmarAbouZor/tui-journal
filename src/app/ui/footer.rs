@@ -112,7 +112,7 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
         footer_parts.push(get_keymap_text(sort_keymap));
     }
 
-    if ui_components.fullscreen {
+    if app.state.full_screen {
         let full_screen_keymap: Vec<_> = ui_components
             .global_keymaps
             .iter()

@@ -1,6 +1,7 @@
 use self::{
     filter::{Filter, FilterCriterion},
     sorter::{SortCriteria, SortOrder, Sorter},
+    state::AppState,
 };
 use crate::settings::Settings;
 use anyhow::{anyhow, bail, Context};
@@ -18,6 +19,7 @@ mod filter;
 mod keymap;
 mod runner;
 mod sorter;
+mod state;
 #[cfg(test)]
 mod test;
 mod ui;
@@ -40,7 +42,7 @@ where
     pub settings: Settings,
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
-    sorter: Sorter,
+    state: AppState,
 }
 
 impl<D> App<D>
@@ -60,7 +62,7 @@ where
             settings,
             redraw_after_restore: false,
             filter: None,
-            sorter: Default::default(),
+            state: Default::default(),
         }
     }
 
@@ -296,14 +298,34 @@ where
     }
 
     pub fn apply_sort(&mut self, criteria: Vec<SortCriteria>, order: SortOrder) {
-        self.sorter.set_criteria(criteria);
-        self.sorter.order = order;
+        self.state.sorter.set_criteria(criteria);
+        self.state.sorter.order = order;
 
         self.sort_entries();
     }
 
     fn sort_entries(&mut self) {
         self.entries
-            .sort_by(|entry1, entry2| self.sorter.sort(entry1, entry2));
+            .sort_by(|entry1, entry2| self.state.sorter.sort(entry1, entry2));
+    }
+
+    pub fn load_state(&mut self, ui_components: &mut UIComponents) {
+        let state = match AppState::load() {
+            Ok(state) => state,
+            Err(err) => {
+                ui_components.show_err_msg(format!(
+                    "Loading state failed. Falling back to default state\n\rError Info: {err}"
+                ));
+                AppState::default()
+            }
+        };
+
+        self.state = state;
+    }
+
+    pub fn persist_state(&self) -> anyhow::Result<()> {
+        self.state.save()?;
+
+        Ok(())
     }
 }
