@@ -102,6 +102,14 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
 
             footer_parts.push(get_keymap_text(reset_filter_keymap));
         }
+
+        let sort_keymap = ui_components
+            .entries_list_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::ShowSortOptions)
+            .collect();
+
+        footer_parts.push(get_keymap_text(sort_keymap));
     }
 
     if ui_components.fullscreen {
