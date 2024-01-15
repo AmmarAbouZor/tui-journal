@@ -505,13 +505,13 @@ pub fn go_to_bottom_entry<D: DataProvider>(ui_components: &mut UIComponents, app
 }
 
 pub fn page_up_entries<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
-    //TODO: get step from app settings
-    let step = 5;
+    let step = app.settings.get_scroll_per_page();
 
     select_prev_entry(step, ui_components, app);
 }
 
 pub fn page_down_entries<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
-    let step = 5;
+    let step = app.settings.get_scroll_per_page();
+
     select_next_entry(step, ui_components, app);
 }

@@ -22,6 +22,8 @@ pub mod sqlite_backend;
 mod export;
 mod external_editor;
 
+const DEFAULT_SCROLL_PER_PAGE: usize = 5;
+
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct Settings {
     #[serde(default)]
@@ -38,6 +40,8 @@ pub struct Settings {
     pub sqlite_backend: SqliteBackend,
     #[serde(default)]
     pub default_journal_priority: Option<u32>,
+    #[serde(default)]
+    pub scroll_per_page: Option<usize>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -97,6 +101,7 @@ impl Settings {
             export: _,
             external_editor: _,
             default_journal_priority: _,
+            scroll_per_page: _,
         } = self;
 
         if self.backend_type.is_none() {
@@ -113,7 +118,15 @@ impl Settings {
             self.sqlite_backend.file_path = Some(get_default_sqlite_path()?)
         }
 
+        if self.scroll_per_page.is_none() {
+            self.scroll_per_page = Some(DEFAULT_SCROLL_PER_PAGE);
+        }
+
         Ok(())
+    }
+
+    pub fn get_scroll_per_page(&self) -> usize {
+        self.scroll_per_page.unwrap_or(DEFAULT_SCROLL_PER_PAGE)
     }
 }
 

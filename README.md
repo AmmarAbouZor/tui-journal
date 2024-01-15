@@ -210,6 +210,7 @@ default_journal_priority = 3  # Sets the suggested priority while creating a new
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.
+scroll_per_page = 5    # Sets how many journals will be scrolled using Page-Up and Page-Down command
 
 [external_editor]
 # Set the external terminal editor to use from within the app.
