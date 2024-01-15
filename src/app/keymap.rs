@@ -209,6 +209,22 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('o'), KeyModifiers::NONE),
             UICommand::ShowSortOptions,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Home, KeyModifiers::NONE),
+            UICommand::GoToTopEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::End, KeyModifiers::NONE),
+            UICommand::GoToBottomEntry,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::PageUp, KeyModifiers::NONE),
+            UICommand::PageUpEntries,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::PageDown, KeyModifiers::NONE),
+            UICommand::PageDownEntries,
+        ),
     ]
 }
 

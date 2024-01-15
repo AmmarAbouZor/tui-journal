@@ -478,3 +478,19 @@ pub async fn continue_show_sort_options<'a, D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub fn go_to_top_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    todo!()
+}
+
+pub fn go_to_bottom_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    todo!()
+}
+
+pub fn page_up_entries<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    todo!()
+}
+
+pub fn page_down_entries<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    todo!()
+}

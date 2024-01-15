@@ -60,6 +60,10 @@ pub enum UICommand {
     CutOsClipboard,
     PasteOsClipboard,
     ShowSortOptions,
+    GoToTopEntry,
+    GoToBottomEntry,
+    PageUpEntries,
+    PageDownEntries,
 }
 
 #[derive(Debug, Clone)]
@@ -196,6 +200,22 @@ impl UICommand {
                 "Open sort options",
                 "Open sort popup to set the sorting options of the journals",
             ),
+            UICommand::GoToTopEntry => CommandInfo::new(
+                "Go to top journal",
+                "Go to the top entry in the journals' list",
+            ),
+            UICommand::GoToBottomEntry => CommandInfo::new(
+                "Go to bottom journal",
+                "Go to the bottom entry in the journals' list",
+            ),
+            UICommand::PageUpEntries => CommandInfo::new(
+                "Page Up journals",
+                "Go one page up in the journals' list",
+            ),
+            UICommand::PageDownEntries => CommandInfo::new(
+                "Page Down journals",
+                "Go one page down in the journals' list",
+            ),
 
         }
     }
@@ -241,6 +261,18 @@ impl UICommand {
             UICommand::CutOsClipboard => exec_cut_os_clipboard(ui_components),
             UICommand::PasteOsClipboard => exec_paste_os_clipboard(ui_components),
             UICommand::ShowSortOptions => exec_show_sort_options(ui_components, app),
+            cmd @ UICommand::GoToTopEntry => {
+                check_unsaved_then_exec_cmd(*cmd, go_to_top_entry, ui_components, app)
+            }
+            cmd @ UICommand::GoToBottomEntry => {
+                check_unsaved_then_exec_cmd(*cmd, go_to_bottom_entry, ui_components, app)
+            }
+            cmd @ UICommand::PageUpEntries => {
+                check_unsaved_then_exec_cmd(*cmd, page_up_entries, ui_components, app)
+            }
+            cmd @ UICommand::PageDownEntries => {
+                check_unsaved_then_exec_cmd(*cmd, page_down_entries, ui_components, app)
+            }
         }
     }
 
@@ -309,6 +341,85 @@ impl UICommand {
             UICommand::ShowSortOptions => {
                 continue_show_sort_options(ui_components, app, msg_box_result).await
             }
+            UICommand::GoToTopEntry => {
+                continue_cmd_after_check_unsaved(
+                    go_to_top_entry,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::GoToBottomEntry => {
+                continue_cmd_after_check_unsaved(
+                    go_to_bottom_entry,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::PageUpEntries => {
+                continue_cmd_after_check_unsaved(
+                    page_up_entries,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::PageDownEntries => {
+                continue_cmd_after_check_unsaved(
+                    page_down_entries,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
         }
     }
+}
+
+/// Checks for unsaved and show dialog of there is any, other way it calls the `cmd_func`
+pub fn check_unsaved_then_exec_cmd<D, F>(
+    cmd: UICommand,
+    cmd_func: F,
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult
+where
+    D: DataProvider,
+    F: Fn(&mut UIComponents, &mut App<D>),
+{
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(cmd));
+    } else {
+        cmd_func(ui_components, app);
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+/// Calls save entry content if wanted then calls `cmd_func`
+pub async fn continue_cmd_after_check_unsaved<'a, D, F>(
+    cmd_func: F,
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult
+where
+    D: DataProvider,
+    F: Fn(&mut UIComponents, &mut App<D>),
+{
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            cmd_func(ui_components, app);
+        }
+        MsgBoxResult::No => cmd_func(ui_components, app),
+    }
+
+    Ok(HandleInputReturnType::Handled)
 }
