@@ -65,7 +65,7 @@ where
     }
 
     /// Get entries that meet the filter criteria if any otherwise it returns all entries
-    pub fn get_active_entries(&self) -> impl Iterator<Item = &Entry> {
+    pub fn get_active_entries(&self) -> impl DoubleEndedIterator<Item = &Entry> {
         self.entries
             .iter()
             .filter(|entry| !self.filtered_out_entries.contains(&entry.id))
