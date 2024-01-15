@@ -21,6 +21,7 @@ pub enum HandleInputReturnType {
     Handled,
     NotFound,
     ExitApp,
+    Ignore,
 }
 
 pub async fn run<B: Backend>(
@@ -105,6 +106,7 @@ where
                         draw_ui(terminal, &mut app, &mut ui_components)?;
                     }
                     HandleInputReturnType::ExitApp => return Ok(()),
+                    HandleInputReturnType::Ignore => {}
                 };
             }
             Err(err) => {
@@ -166,7 +168,7 @@ async fn handle_input<'a, D: DataProvider>(
                 let input = Input::from(&key);
                 ui_components.handle_input(&input, app).await
             }
-            KeyEventKind::Repeat | KeyEventKind::Release => Ok(HandleInputReturnType::NotFound),
+            KeyEventKind::Repeat | KeyEventKind::Release => Ok(HandleInputReturnType::Ignore),
         }
     } else {
         Ok(HandleInputReturnType::NotFound)
