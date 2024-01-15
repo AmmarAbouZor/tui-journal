@@ -1,7 +1,8 @@
 use backend::Entry;
+use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum SortCriteria {
     Date,
     Priority,
@@ -48,7 +49,7 @@ impl SortCriteria {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum SortOrder {
     Ascending,
     Descending,
@@ -63,7 +64,7 @@ impl Display for SortOrder {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sorter {
     criteria: Vec<SortCriteria>,
     pub order: SortOrder,
