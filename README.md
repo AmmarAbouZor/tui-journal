@@ -208,6 +208,8 @@ backend_type = "Sqlite"   # Available options: Json, Sqlite. Default value: Sqli
 
 default_journal_priority = 3  # Sets the suggested priority while creating a new journal
 
+scroll_per_page = 5  # Sets how many journals will be scrolled when using page up/down commands
+
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.
