@@ -8,6 +8,33 @@
       references: {},
       version: (
         major: 0,
+        minor: 8,
+        patch: 0,
+      ),
+      released: "2024-01-16T20:26:03.747337975Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Add Default suggested priority while creating journals",
+            "Add an optional priority field to the journals",
+            "Add sort Functionality for journals",
+            "App State (Sorting and Full-Screen Options) will be persisted",
+            "CLI Sub-Command to assign priority to journals",
+            "Go to Top/Bottom Journal & Page Up/Down Commands",
+            "Sort key-map to app main footer",
+          ],
+          "Changed": [
+            "Skip Rendering the UI on Key-Release & Key-Repeat Events",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 7,
         patch: 0,
       ),
