@@ -243,7 +243,6 @@ impl<'a> EntriesList {
         frame.render_widget(place_holder, area);
     }
 
-    #[inline]
     fn get_list_block(&self, has_filter: bool) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",

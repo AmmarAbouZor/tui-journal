@@ -88,7 +88,6 @@ pub async fn exec_reload_all<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 async fn reload_all<'a, D: DataProvider>(
     ui_components: &mut UIComponents<'a>,
     app: &mut App<D>,

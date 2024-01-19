@@ -24,7 +24,6 @@ pub fn exec_select_prev_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn select_prev_entry<D: DataProvider>(
     step: usize,
     ui_components: &mut UIComponents,
@@ -76,7 +75,6 @@ pub fn exec_select_next_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn select_next_entry<D: DataProvider>(
     step: usize,
     ui_components: &mut UIComponents,
@@ -129,7 +127,6 @@ pub fn exec_create_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 pub fn create_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &App<D>) {
     ui_components
         .popup_stack
@@ -166,7 +163,6 @@ pub fn exec_edit_current_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     if let Some(entry) = app.get_current_entry() {
         ui_components
@@ -243,7 +239,6 @@ pub fn exec_export_entry_content<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 pub fn export_entry_content<D: DataProvider>(ui_components: &mut UIComponents, app: &App<D>) {
     if let Some(entry) = app.get_current_entry() {
         match ExportPopup::create_entry_content(entry, app) {
@@ -360,7 +355,6 @@ pub fn exec_show_filter<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn show_filter<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     let tags = app.get_all_tags();
     ui_components
@@ -410,7 +404,6 @@ pub fn exec_show_fuzzy_find<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn show_fuzzy_find<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
     let entries: HashMap<u32, String> = app
         .get_active_entries()

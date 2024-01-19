@@ -97,7 +97,6 @@ impl<'a> FuzzFindPopup<'a> {
         self.render_footer(frame, chunks[2]);
     }
 
-    #[inline]
     fn render_entries_list(&mut self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .filtered_entries
@@ -141,7 +140,6 @@ impl<'a> FuzzFindPopup<'a> {
         frame.render_stateful_widget(list, area, &mut self.list_state);
     }
 
-    #[inline]
     fn render_footer(&mut self, frame: &mut Frame, area: Rect) {
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
@@ -182,7 +180,6 @@ impl<'a> FuzzFindPopup<'a> {
         FuzzFindReturn::SelectEntry(selected_id)
     }
 
-    #[inline]
     pub fn cycle_next_entry(&mut self) {
         if self.filtered_entries.is_empty() {
             return;
@@ -195,7 +192,6 @@ impl<'a> FuzzFindPopup<'a> {
         self.list_state.select(Some(new_index));
     }
 
-    #[inline]
     pub fn cycle_prev_entry(&mut self) {
         if self.filtered_entries.is_empty() {
             return;

@@ -331,7 +331,6 @@ impl<'a, 'b> UIComponents<'a> {
         }
     }
 
-    #[inline]
     async fn handle_export_popup_return<D: DataProvider>(
         &mut self,
         path: PathBuf,

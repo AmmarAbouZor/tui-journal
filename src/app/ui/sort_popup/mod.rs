@@ -196,7 +196,6 @@ impl SortPopup {
         frame.render_stateful_widget(list, area, &mut self.applied_state);
     }
 
-    #[inline]
     fn render_footer(&self, footer_text: String, frame: &mut Frame, area: Rect) {
         let footer = Paragraph::new(footer_text)
             .alignment(Alignment::Center)
@@ -206,7 +205,6 @@ impl SortPopup {
         frame.render_widget(footer, area);
     }
 
-    #[inline]
     fn get_list_highlight_style(is_focused: bool) -> Style {
         let base_style = Style::default().fg(Color::Black);
         if is_focused {
@@ -316,7 +314,6 @@ impl SortPopup {
         }
     }
 
-    #[inline]
     fn validate(&mut self) {
         self.is_valid = !self.applied_criteria.is_empty();
     }

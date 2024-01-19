@@ -495,12 +495,10 @@ impl<'a> EntryPopup<'a> {
     }
 }
 
-#[inline]
 fn tags_to_text(tags: &[String]) -> String {
     tags.join(", ")
 }
 
-#[inline]
 fn text_to_tags(text: &str) -> Vec<String> {
     text.split_terminator(',')
         .map(|tag| String::from(tag.trim()))

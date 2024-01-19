@@ -133,7 +133,6 @@ impl<'a> FilterPopup<'a> {
         self.render_footer(frame, chunks[5]);
     }
 
-    #[inline]
     fn render_relations(&mut self, frame: &mut Frame, area: Rect) {
         let relation_text = match self.relation {
             CriteriaRelation::And => "Journals must meet all criteria",
@@ -152,7 +151,6 @@ impl<'a> FilterPopup<'a> {
         frame.render_widget(relation, area);
     }
 
-    #[inline]
     fn render_text_boxes(
         &mut self,
         frame: &mut Frame,
@@ -220,7 +218,6 @@ impl<'a> FilterPopup<'a> {
         frame.render_widget(self.priority_txt.widget(), priority_area);
     }
 
-    #[inline]
     fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
         let items: Vec<ListItem> = self
             .tags
@@ -251,7 +248,6 @@ impl<'a> FilterPopup<'a> {
         frame.render_stateful_widget(list, area, &mut self.tags_state);
     }
 
-    #[inline]
     fn render_tags_place_holder(&mut self, frame: &mut Frame, area: Rect) {
         let place_holder_text = String::from("\nNo journals with tags provided");
 
@@ -263,7 +259,6 @@ impl<'a> FilterPopup<'a> {
         frame.render_widget(place_holder, area);
     }
 
-    #[inline]
     fn get_list_block<'b>(&self) -> Block<'b> {
         let style = match self.active_control {
             FilterControl::TagsList => Style::default().fg(ACTIVE_BORDER_COLOR),
@@ -276,7 +271,6 @@ impl<'a> FilterPopup<'a> {
             .style(style)
     }
 
-    #[inline]
     fn render_footer(&mut self, frame: &mut Frame, area: Rect) {
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
@@ -359,7 +353,6 @@ impl<'a> FilterPopup<'a> {
         FilterPopupReturn::KeepPopup
     }
 
-    #[inline]
     fn cycle_next_tag(&mut self) {
         if self.tags.is_empty() {
             return;
@@ -375,7 +368,6 @@ impl<'a> FilterPopup<'a> {
         self.tags_state.select(Some(new_index));
     }
 
-    #[inline]
     fn cycle_prev_tag(&mut self) {
         if self.tags.is_empty() {
             return;
@@ -391,7 +383,6 @@ impl<'a> FilterPopup<'a> {
         self.tags_state.select(Some(new_index));
     }
 
-    #[inline]
     fn change_relation(&mut self) {
         self.relation = match self.relation {
             CriteriaRelation::And => CriteriaRelation::Or,
@@ -399,7 +390,6 @@ impl<'a> FilterPopup<'a> {
         }
     }
 
-    #[inline]
     fn toggle_selected(&mut self) {
         if let Some(idx) = self.tags_state.selected() {
             let tag = self

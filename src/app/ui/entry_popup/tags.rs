@@ -159,7 +159,6 @@ impl TagsPopup {
         }
     }
 
-    #[inline]
     fn cycle_next_tag(&mut self) -> TagsPopupReturn {
         if !self.tags.is_empty() {
             let last_index = self.tags.len() - 1;
@@ -175,7 +174,6 @@ impl TagsPopup {
         TagsPopupReturn::Keep
     }
 
-    #[inline]
     fn cycle_prev_tag(&mut self) -> TagsPopupReturn {
         if !self.tags.is_empty() {
             let last_index = self.tags.len() - 1;
@@ -191,7 +189,6 @@ impl TagsPopup {
         TagsPopupReturn::Keep
     }
 
-    #[inline]
     fn toggle_selected(&mut self) -> TagsPopupReturn {
         if let Some(idx) = self.state.selected() {
             let tag = self

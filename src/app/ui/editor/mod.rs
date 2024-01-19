@@ -472,7 +472,6 @@ impl<'a> Editor<'a> {
     }
 }
 
-#[inline]
 fn is_default_navigation(input: &Input) -> bool {
     let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
     let has_alt = input.modifiers.contains(KeyModifiers::ALT);
