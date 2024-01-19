@@ -55,7 +55,6 @@ pub fn continue_discard_content<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 pub fn discard_current_content<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,

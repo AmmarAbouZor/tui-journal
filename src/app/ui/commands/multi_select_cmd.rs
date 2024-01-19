@@ -74,7 +74,6 @@ pub fn exec_toggle_selected<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-#[inline]
 fn toggle_entry_selection<D: DataProvider>(entry_id: u32, app: &mut App<D>) {
     if !app.selected_entries.insert(entry_id) {
         // entry was selected, then remove it
