@@ -9,6 +9,27 @@
       version: (
         major: 0,
         minor: 8,
+        patch: 1,
+      ),
+      released: "2024-01-19T20:48:57.138308625Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Rust minimum supported version to cargo manifest",
+          ],
+          "Fixed": [
+            "Aeruginous: migrate from deprecated comment-changes option ``-T``",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 8,
         patch: 0,
       ),
       released: "2024-01-16T20:26:03.747337975Z",
