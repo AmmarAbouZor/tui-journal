@@ -96,7 +96,7 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('q'), KeyModifiers::NONE),
             UICommand::Quit,
         ),
-        // Char 'h' isn't recognized on windows
+        // Char '?' isn't recognized on windows
         #[cfg(not(target_os = "windows"))]
         Keymap::new(
             Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
@@ -346,7 +346,7 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('>'), KeyModifiers::NONE),
             UICommand::MulSelExportEntries,
         ),
-        // Char 'h' isn't recognized on windows
+        // Char '?' isn't recognized on windows
         #[cfg(not(target_os = "windows"))]
         Keymap::new(
             Input::new(KeyCode::Char('?'), KeyModifiers::NONE),
