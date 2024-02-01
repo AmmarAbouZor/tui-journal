@@ -9,6 +9,24 @@
       version: (
         major: 0,
         minor: 8,
+        patch: 2,
+      ),
+      released: "2024-02-01T20:04:46.038043673Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Fixed": [
+            "Change Help popup shortcut on Windows",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 8,
         patch: 1,
       ),
       released: "2024-01-19T20:48:57.138308625Z",
