@@ -116,8 +116,6 @@ where
 
         self.entries.push(entry);
 
-        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
-
         self.sort_entries();
         self.update_filtered_out_entries();
 
@@ -147,8 +145,6 @@ where
         let clone = entry.clone();
 
         self.data_provide.update_entry(clone).await?;
-
-        self.entries.sort_by(|a, b| b.date.cmp(&a.date));
 
         self.sort_entries();
 
