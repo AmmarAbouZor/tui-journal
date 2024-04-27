@@ -140,7 +140,7 @@ Make sure the OpenSSL development package is installed on your system.
 To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from [crates.io](https://crates.io/crates/tui-journal):
 
 ```bash
-cargo install tui-journal
+cargo install tui-journal --locked
 ```
 
 #### Install nightly version:
@@ -155,13 +155,13 @@ cargo install --git https://github.com/ammarabouzor/tui-journal
 You can choose to install TUI-Journal with specific features enabled or disabled by customizing the cargo installation command. To install TUI-Journal with only the JSON back-end feature, use the following command:
 
 ```bash
-cargo install tui-journal --no-default-features --features json
+cargo install tui-journal --locked --no-default-features --features json
 ```
 
 To install TUI-Journal with only the SQLite back-end feature, use the following command:
 
 ```bash
-cargo install tui-journal --no-default-features --features sqlite
+cargo install tui-journal --locked --no-default-features --features sqlite
 ```
 
 ## Usage
