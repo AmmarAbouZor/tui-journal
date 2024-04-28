@@ -17,7 +17,7 @@ build-release:
 build-release_mac_arm:
 	cargo build --release --target=aarch64-apple-darwin
 
-release-mac: build-release_mac_arm
+release-mac: build-release
 	strip target/release/tjournal
 	otool -L target/release/tjournal
 	mkdir -p release
