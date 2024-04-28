@@ -14,7 +14,10 @@ clippy:
 build-release:
 	cargo build --release
 
-release-mac: build-release
+build-release_mac_arm:
+	cargo build --release --target=aarch64-apple-darwin
+
+release-mac: build-release_mac_arm
 	strip target/release/tjournal
 	otool -L target/release/tjournal
 	mkdir -p release
