@@ -145,7 +145,7 @@ fn get_multi_select_text(ui_components: &UIComponents) -> String {
         .filter(|keymap| keymap.command == UICommand::ShowHelp)
         .collect();
 
-    let parts = vec![get_keymap_text(leave_keymap), get_keymap_text(help_keymap)];
+    let parts = [get_keymap_text(leave_keymap), get_keymap_text(help_keymap)];
 
     parts.join(SEPARATOR)
 }
