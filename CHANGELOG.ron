@@ -9,6 +9,28 @@
       version: (
         major: 0,
         minor: 8,
+        patch: 3,
+      ),
+      released: "2024-04-28T10:15:14.417876165Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Added `--locked` to Install Instruction & Update dependencies",
+          ],
+          "Fixed": [
+            "Remove forgotten unused sort calls from app.",
+            "Specify arm target on mac build and release",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 8,
         patch: 2,
       ),
       released: "2024-02-01T20:04:46.038043673Z",
