@@ -437,10 +437,6 @@ impl<'a> Editor<'a> {
     }
 
     pub fn get_selected_text(&mut self, operation: ClipboardOperation) -> anyhow::Result<String> {
-        if !self.is_visual_mode() {
-            bail!("Editor isn't in visual mode");
-        }
-
         match operation {
             ClipboardOperation::Copy => self.text_area.copy(),
             ClipboardOperation::Cut => {
