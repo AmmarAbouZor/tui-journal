@@ -71,6 +71,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Export and Import journals between different back-end files.
 - Export the current journal's content to a predefined export path or the current directory 
 - Transfer text between the built-in editor and the system clipboard using Cut, Copy, and Paste.
+- Optionally sync the clipboard between the built-in editor and the operating system, with vim and emacs keybindings.
 - Sorting and full-screen preferences in the App State will be retained.
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
@@ -209,6 +210,8 @@ backend_type = "Sqlite"   # Available options: Json, Sqlite. Default value: Sqli
 default_journal_priority = 3  # Sets the suggested priority while creating a new journal
 
 scroll_per_page = 5  # Sets how many journals will be scrolled when using page up/down commands
+
+sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard 
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
