@@ -42,6 +42,8 @@ pub struct Settings {
     pub default_journal_priority: Option<u32>,
     #[serde(default)]
     pub scroll_per_page: Option<usize>,
+    #[serde(default)]
+    pub sync_os_clipboard: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -102,6 +104,7 @@ impl Settings {
             external_editor: _,
             default_journal_priority: _,
             scroll_per_page: _,
+            sync_os_clipboard: _,
         } = self;
 
         if self.backend_type.is_none() {

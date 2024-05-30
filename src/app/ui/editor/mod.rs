@@ -1,4 +1,5 @@
-use anyhow::bail;
+use anyhow::{anyhow, bail};
+use arboard::Clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use ratatui::{
     layout::Rect,
@@ -100,6 +101,32 @@ impl<'a> Editor<'a> {
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
         if self.is_insert_mode() {
+            // We must handle clipboard operation separately if sync with system clipboard is
+            // activated
+            if app.settings.sync_os_clipboard {
+                let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
+                // Keymaps are taken from `text_area` source code
+                let handeld = match input.key_code {
+                    KeyCode::Char('x') if has_ctrl => {
+                        self.exec_os_clipboard(ClipboardOperation::Cut)?;
+                        true
+                    }
+                    KeyCode::Char('c') if has_ctrl => {
+                        self.exec_os_clipboard(ClipboardOperation::Copy)?;
+                        true
+                    }
+                    KeyCode::Char('y') if has_ctrl => {
+                        self.exec_os_clipboard(ClipboardOperation::Paste)?;
+                        true
+                    }
+                    _ => false,
+                };
+
+                if handeld {
+                    return Ok(HandleInputReturnType::Handled);
+                }
+            }
+
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
@@ -124,11 +151,15 @@ impl<'a> Editor<'a> {
             return Ok(HandleInputReturnType::Handled);
         }
 
+        let sync_os_clipboard = app.settings.sync_os_clipboard;
+
         if is_default_navigation(input) {
             let key_event = KeyEvent::from(input);
             self.text_area.input(key_event);
-        } else if !self.is_visual_mode() || !self.handle_input_visual_only(input) {
-            self.handle_vim_motions(input);
+        } else if !self.is_visual_mode()
+            || !self.handle_input_visual_only(input, sync_os_clipboard)?
+        {
+            self.handle_vim_motions(input, sync_os_clipboard)?;
         }
 
         // Check if the input led the editor to leave the visual mode and make the corresponding UI changes
@@ -143,31 +174,47 @@ impl<'a> Editor<'a> {
     }
 
     /// Handles input specialized for visual mode only like cut and copy
-    fn handle_input_visual_only(&mut self, input: &Input) -> bool {
+    fn handle_input_visual_only(
+        &mut self,
+        input: &Input,
+        sync_os_clipboard: bool,
+    ) -> anyhow::Result<bool> {
         if !input.modifiers.is_empty() {
-            return false;
+            return Ok(false);
         }
 
         match input.key_code {
             KeyCode::Char('d') => {
-                self.text_area.cut();
-                true
+                if sync_os_clipboard {
+                    self.exec_os_clipboard(ClipboardOperation::Cut)?;
+                } else {
+                    self.text_area.cut();
+                }
+                Ok(true)
             }
             KeyCode::Char('y') => {
-                self.text_area.copy();
+                if sync_os_clipboard {
+                    self.exec_os_clipboard(ClipboardOperation::Copy)?;
+                } else {
+                    self.text_area.copy();
+                }
                 self.set_editor_mode(EditorMode::Normal);
-                true
+                Ok(true)
             }
             KeyCode::Char('c') => {
-                self.text_area.cut();
+                if sync_os_clipboard {
+                    self.exec_os_clipboard(ClipboardOperation::Copy)?;
+                } else {
+                    self.text_area.cut();
+                }
                 self.set_editor_mode(EditorMode::Insert);
-                true
+                Ok(true)
             }
-            _ => false,
+            _ => Ok(false),
         }
     }
 
-    fn handle_vim_motions(&mut self, input: &Input) {
+    fn handle_vim_motions(&mut self, input: &Input, sync_os_clipboard: bool) -> anyhow::Result<()> {
         let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
 
         match (input.key_code, has_control) {
@@ -197,13 +244,19 @@ impl<'a> Editor<'a> {
             }
             (KeyCode::Char('D'), false) => {
                 self.text_area.delete_line_by_end();
+                self.exec_os_clipboard(ClipboardOperation::Copy)?;
             }
             (KeyCode::Char('C'), false) => {
                 self.text_area.delete_line_by_end();
+                self.exec_os_clipboard(ClipboardOperation::Copy)?;
                 self.mode = EditorMode::Insert;
             }
             (KeyCode::Char('p'), false) => {
-                self.text_area.paste();
+                if sync_os_clipboard {
+                    self.exec_os_clipboard(ClipboardOperation::Paste)?;
+                } else {
+                    self.text_area.paste();
+                }
             }
             (KeyCode::Char('u'), false) => {
                 self.text_area.undo();
@@ -213,6 +266,7 @@ impl<'a> Editor<'a> {
             }
             (KeyCode::Char('x'), false) => {
                 self.text_area.delete_next_char();
+                self.exec_os_clipboard(ClipboardOperation::Copy)?;
             }
             (KeyCode::Char('i'), false) => self.mode = EditorMode::Insert,
             (KeyCode::Char('a'), false) => {
@@ -252,6 +306,8 @@ impl<'a> Editor<'a> {
             }
             _ => {}
         }
+
+        Ok(())
     }
 
     pub fn get_editor_mode(&self) -> EditorMode {
@@ -436,35 +492,45 @@ impl<'a> Editor<'a> {
         self.refresh_has_unsaved(app);
     }
 
-    pub fn get_selected_text(&mut self, operation: ClipboardOperation) -> anyhow::Result<String> {
+    pub fn exec_os_clipboard(
+        &mut self,
+        operation: ClipboardOperation,
+    ) -> anyhow::Result<HandleInputReturnType> {
+        let mut clipboard = Clipboard::new().map_err(map_clipboard_error)?;
+
         match operation {
-            ClipboardOperation::Copy => self.text_area.copy(),
+            ClipboardOperation::Copy => {
+                self.text_area.copy();
+                let selected_text = self.text_area.yank_text();
+                clipboard
+                    .set_text(selected_text)
+                    .map_err(map_clipboard_error)?;
+            }
             ClipboardOperation::Cut => {
                 if self.text_area.cut() {
                     self.is_dirty = true;
                     self.has_unsaved = true;
                 }
+                let selected_text = self.text_area.yank_text();
+                clipboard
+                    .set_text(selected_text)
+                    .map_err(map_clipboard_error)?;
             }
             ClipboardOperation::Paste => {
-                unreachable!("Paste operation can't be used to get text from editor")
+                let content = clipboard.get_text().map_err(map_clipboard_error)?;
+                if content.is_empty() {
+                    return Ok(HandleInputReturnType::Handled);
+                }
+
+                if !self.text_area.insert_str(content) {
+                    bail!("Text can't be pasted into editor")
+                }
+                self.is_dirty = true;
+                self.has_unsaved = true;
             }
         }
 
-        self.text_area.copy();
-        Ok(self.text_area.yank_text())
-    }
-
-    pub fn paste_text(&mut self, text: &str) -> anyhow::Result<()> {
-        if text.is_empty() {
-            return Ok(());
-        }
-
-        if !self.text_area.insert_str(text) {
-            bail!("Text can't be pasted into editor")
-        }
-        self.is_dirty = true;
-        self.has_unsaved = true;
-        Ok(())
+        Ok(HandleInputReturnType::Handled)
     }
 }
 
@@ -489,4 +555,11 @@ fn is_default_navigation(input: &Input) -> bool {
         KeyCode::Char('v') if has_control || has_alt => true,
         _ => false,
     }
+}
+
+fn map_clipboard_error(err: arboard::Error) -> anyhow::Error {
+    anyhow!(
+        "Error while communicating with the operation system clipboard.\nError Details: {}",
+        err.to_string()
+    )
 }
