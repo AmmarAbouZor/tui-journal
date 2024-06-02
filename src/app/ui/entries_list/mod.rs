@@ -160,7 +160,7 @@ impl<'a> EntriesList {
         let items_count = items.len();
 
         let list = List::new(items)
-            .block(self.get_list_block(app.filter.is_some()))
+            .block(self.get_list_block(app.filter.is_some(), app.get_active_entries().count()))
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -222,6 +222,7 @@ impl<'a> EntriesList {
         area: Rect,
         list_keymaps: &[Keymap],
         has_filter: bool,
+        entries_len: usize,
     ) {
         let keys_text: Vec<String> = list_keymaps
             .iter()
@@ -238,12 +239,12 @@ impl<'a> EntriesList {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block(has_filter));
+            .block(self.get_list_block(has_filter, entries_len));
 
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block(&self, has_filter: bool) -> Block<'a> {
+    fn get_list_block(&self, has_filter: bool, entries_len: usize) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",
             (true, false) => "Journals - Multi-Select",
@@ -262,10 +263,16 @@ impl<'a> EntriesList {
             (false, _) => Style::default().fg(INACTIVE_CONTROL_COLOR),
         };
 
-        Block::default()
+        let block = Block::default()
             .borders(Borders::ALL)
             .title(title)
-            .border_style(border_style)
+            .border_style(border_style);
+
+        if let Some(selected) = self.state.selected().map(|v| v + 1) {
+            block.title_bottom(Line::from(format!("{selected}/{entries_len}")).right_aligned())
+        } else {
+            block
+        }
     }
 
     pub fn render_widget<D: DataProvider>(
@@ -276,7 +283,13 @@ impl<'a> EntriesList {
         list_keymaps: &[Keymap],
     ) {
         if app.get_active_entries().next().is_none() {
-            self.render_place_holder(frame, area, list_keymaps, app.filter.is_some());
+            self.render_place_holder(
+                frame,
+                area,
+                list_keymaps,
+                app.filter.is_some(),
+                app.get_active_entries().count(),
+            );
         } else {
             self.render_list(frame, app, area);
         }
