@@ -160,7 +160,7 @@ impl<'a> EntriesList {
         let items_count = items.len();
 
         let list = List::new(items)
-            .block(self.get_list_block(app.filter.is_some(), app.get_active_entries().count()))
+            .block(self.get_list_block(app.filter.is_some(), Some(items_count)))
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -222,7 +222,6 @@ impl<'a> EntriesList {
         area: Rect,
         list_keymaps: &[Keymap],
         has_filter: bool,
-        entries_len: usize,
     ) {
         let keys_text: Vec<String> = list_keymaps
             .iter()
@@ -239,12 +238,12 @@ impl<'a> EntriesList {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block(has_filter, entries_len));
+            .block(self.get_list_block(has_filter, None));
 
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block(&self, has_filter: bool, entries_len: usize) -> Block<'a> {
+    fn get_list_block(&self, has_filter: bool, entries_len: Option<usize>) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",
             (true, false) => "Journals - Multi-Select",
@@ -268,10 +267,11 @@ impl<'a> EntriesList {
             .title(title)
             .border_style(border_style);
 
-        if let Some(selected) = self.state.selected().map(|v| v + 1) {
-            block.title_bottom(Line::from(format!("{selected}/{entries_len}")).right_aligned())
-        } else {
-            block
+        match (entries_len, self.state.selected().map(|v| v + 1)) {
+            (Some(entries_len), Some(selected)) => {
+                block.title_bottom(Line::from(format!("{selected}/{entries_len}")).right_aligned())
+            }
+            _ => block,
         }
     }
 
@@ -283,13 +283,7 @@ impl<'a> EntriesList {
         list_keymaps: &[Keymap],
     ) {
         if app.get_active_entries().next().is_none() {
-            self.render_place_holder(
-                frame,
-                area,
-                list_keymaps,
-                app.filter.is_some(),
-                app.get_active_entries().count(),
-            );
+            self.render_place_holder(frame, area, list_keymaps, app.filter.is_some());
         } else {
             self.render_list(frame, app, area);
         }
