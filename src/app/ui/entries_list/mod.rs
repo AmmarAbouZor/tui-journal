@@ -160,7 +160,7 @@ impl<'a> EntriesList {
         let items_count = items.len();
 
         let list = List::new(items)
-            .block(self.get_list_block(app.filter.is_some()))
+            .block(self.get_list_block(app.filter.is_some(), Some(items_count)))
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
@@ -238,12 +238,12 @@ impl<'a> EntriesList {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block(has_filter));
+            .block(self.get_list_block(has_filter, None));
 
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block(&self, has_filter: bool) -> Block<'a> {
+    fn get_list_block(&self, has_filter: bool, entries_len: Option<usize>) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",
             (true, false) => "Journals - Multi-Select",
@@ -262,10 +262,17 @@ impl<'a> EntriesList {
             (false, _) => Style::default().fg(INACTIVE_CONTROL_COLOR),
         };
 
-        Block::default()
+        let block = Block::default()
             .borders(Borders::ALL)
             .title(title)
-            .border_style(border_style)
+            .border_style(border_style);
+
+        match (entries_len, self.state.selected().map(|v| v + 1)) {
+            (Some(entries_len), Some(selected)) => {
+                block.title_bottom(Line::from(format!("{selected}/{entries_len}")).right_aligned())
+            }
+            _ => block,
+        }
     }
 
     pub fn render_widget<D: DataProvider>(
