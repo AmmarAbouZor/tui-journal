@@ -34,7 +34,7 @@ git2 = { version = "0.18.3", default-features = false }
 rayon = "1.10.0"
 fuzzy-matcher = "0.3.7"
 path-absolutize = "3.1.1"
-tui-textarea = "0.4.0"
+tui-textarea = "0.5.0"
 ratatui = { version = "0.26.3", features = ["all-widgets"]}
 arboard = { version = "3.4.0", default-features = false, features = ["wayland-data-control"]}
 
