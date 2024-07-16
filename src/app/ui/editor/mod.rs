@@ -408,7 +408,7 @@ impl<'a> Editor<'a> {
             .track_symbol(Some(symbols::line::VERTICAL))
             .thumb_symbol(symbols::block::FULL);
 
-        let scroll_area = area.inner(&Margin {
+        let scroll_area = area.inner(Margin {
             horizontal: 0,
             vertical: 1,
         });
@@ -441,7 +441,7 @@ impl<'a> Editor<'a> {
             .track_symbol(Some(symbols::line::HORIZONTAL))
             .thumb_symbol("🬋");
 
-        let scroll_area = area.inner(&Margin {
+        let scroll_area = area.inner(Margin {
             horizontal: 1,
             vertical: 0,
         });

@@ -276,7 +276,7 @@ fn render_scrollbar(frame: &mut Frame, area: Rect, pos: usize, items_count: usiz
         .track_symbol(Some(symbols::line::VERTICAL))
         .thumb_symbol(symbols::block::FULL);
 
-    let scroll_area = area.inner(&Margin {
+    let scroll_area = area.inner(Margin {
         horizontal: 0,
         vertical: 1,
     });
