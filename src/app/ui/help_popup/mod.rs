@@ -35,7 +35,15 @@ const TAB_LETTER_HIGHLIGHT_COLOR: Color = Color::LightGreen;
 const EDITOR_HINT_TEXT: &str = r"The editor has three modes:
  - Normal-Mode: In this mode Vim keybindings are used to navigate the text and to enter edit mode via (i, I, a , A, o, O).
  - Edit-Mode: In this mode Emacs keybindings are used to edit and navigate the text.
- - Visual-Mode: Like the visual mode in Vim to select, delete and yank text with extra vim keybindings (d, y, c)";
+ - Visual-Mode: Like the visual mode in Vim to select, delete and yank text with extra vim keybindings (d, y, c).
+
+ Basic Emacs Keybindings:
+ - Ctrl-f / Ctrl-b: Move forward / backward one character
+ - Alt-f / Alt-b: Move forward / backward one word
+ - Ctrl-n / Ctrl-p: Move to the next / previous line
+ - Ctrl-d / Ctrl-h: Delete the next / previous character
+ - Alt-d / Alt-Backspace: Delete the next / previous word
+";
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum KeybindingsTabs {
