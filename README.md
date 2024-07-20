@@ -85,6 +85,9 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 #### Application:
 - [x]  Edit journals content with external text editor from within the app.
 - [x]  Filter & Search functionalities.
+- [ ]  Add mouse support
+- [ ]  Preview mode for journals supporting Mark Down highlighting and word wrapping.
+- [ ]  Improve app input and rending cycle using app events to support real concurrency within the app.
 - [ ]  Customize themes and keybindings.
 
       
