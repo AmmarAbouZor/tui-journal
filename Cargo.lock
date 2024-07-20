@@ -2392,7 +2392,7 @@ dependencies = [
 
 [[package]]
 name = "tui-journal"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "anyhow",
  "arboard",
