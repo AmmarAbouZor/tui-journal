@@ -92,7 +92,7 @@ pub fn render_message_centered(frame: &mut Frame, message: &str) {
     let width = message.len() as u16 + TEXT_MARGIN;
     let height = message.lines().count() as u16 + HEIGHT_MARGIN;
 
-    let area = centered_rect_exact_dimensions(width, height, frame.size());
+    let area = centered_rect_exact_dimensions(width, height, frame.area());
 
     let paragraph = Paragraph::new(message)
         .block(
