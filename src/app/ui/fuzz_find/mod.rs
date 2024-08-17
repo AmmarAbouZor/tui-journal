@@ -1,4 +1,4 @@
-use std::{collections::HashMap, usize};
+use std::collections::HashMap;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
@@ -90,7 +90,7 @@ impl<'a> FuzzFindPopup<'a> {
             )
             .split(area);
 
-        frame.render_widget(self.query_text_box.widget(), chunks[0]);
+        frame.render_widget(&self.query_text_box, chunks[0]);
 
         self.render_entries_list(frame, chunks[1]);
 

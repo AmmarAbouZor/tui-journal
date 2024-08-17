@@ -158,8 +158,8 @@ fn draw_ui<B: Backend, D: DataProvider>(
         app.redraw_after_restore = false;
         // Apply hide cursor again after closing the external editor
         terminal.hide_cursor()?;
-        // Resize forces the terminal to redraw everything
-        terminal.resize(terminal.size()?)?;
+        // Clear the terminal and force a full redraw on the next draw call.
+        terminal.clear()?;
     }
 
     terminal.draw(|f| ui_components.render_ui(f, app))?;

@@ -131,12 +131,12 @@ impl<'a, 'b> UIComponents<'a> {
     where
         D: DataProvider,
     {
-        let footer_height = get_footer_heigh(f.size().width, self, app);
+        let footer_height = get_footer_heigh(f.area().width, self, app);
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(2), Constraint::Length(footer_height)].as_ref())
-            .split(f.size());
+            .split(f.area());
 
         render_footer(f, chunks[1], self, app);
         if app.state.full_screen {
@@ -165,13 +165,13 @@ impl<'a, 'b> UIComponents<'a> {
     pub fn render_popup(&mut self, f: &mut Frame) {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup {
-                Popup::Help(help_popup) => help_popup.render_widget(f, f.size()),
-                Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.size()),
-                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.size()),
-                Popup::Export(export_popup) => export_popup.render_widget(f, f.size()),
-                Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.size()),
-                Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.size()),
-                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.size()),
+                Popup::Help(help_popup) => help_popup.render_widget(f, f.area()),
+                Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.area()),
+                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area()),
+                Popup::Export(export_popup) => export_popup.render_widget(f, f.area()),
+                Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.area()),
+                Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area()),
+                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area()),
             }
         }
     }
