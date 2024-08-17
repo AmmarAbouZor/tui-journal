@@ -176,7 +176,7 @@ impl<'a> ExportPopup<'a> {
 
         self.path_txt.set_cursor_line_style(Style::default());
 
-        frame.render_widget(self.path_txt.widget(), chunks[1]);
+        frame.render_widget(&self.path_txt, chunks[1]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)

@@ -383,7 +383,7 @@ impl<'a> Editor<'a> {
         self.text_area
             .set_selection_style(Style::default().bg(Color::White).fg(Color::Black));
 
-        frame.render_widget(self.text_area.widget(), area);
+        frame.render_widget(&self.text_area, area);
 
         self.render_vertical_scrollbar(frame, area);
         self.render_horizontal_scrollbar(frame, area);

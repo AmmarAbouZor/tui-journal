@@ -285,10 +285,10 @@ impl<'a> EntryPopup<'a> {
             );
         }
 
-        frame.render_widget(self.title_txt.widget(), chunks[0]);
-        frame.render_widget(self.date_txt.widget(), chunks[1]);
-        frame.render_widget(self.priority_txt.widget(), chunks[2]);
-        frame.render_widget(self.tags_txt.widget(), chunks[3]);
+        frame.render_widget(&self.title_txt, chunks[0]);
+        frame.render_widget(&self.date_txt, chunks[1]);
+        frame.render_widget(&self.priority_txt, chunks[2]);
+        frame.render_widget(&self.tags_txt, chunks[3]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)

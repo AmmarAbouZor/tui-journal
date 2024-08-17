@@ -213,9 +213,9 @@ impl<'a> FilterPopup<'a> {
         self.content_txt.set_block(content_txt_block);
         self.priority_txt.set_block(priority_txt_block);
 
-        frame.render_widget(self.title_txt.widget(), title_area);
-        frame.render_widget(self.content_txt.widget(), content_area);
-        frame.render_widget(self.priority_txt.widget(), priority_area);
+        frame.render_widget(&self.title_txt, title_area);
+        frame.render_widget(&self.content_txt, content_area);
+        frame.render_widget(&self.priority_txt, priority_area);
     }
 
     fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
