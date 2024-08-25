@@ -147,6 +147,14 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('f'), KeyModifiers::CONTROL),
             UICommand::ToggleFullScreenMode,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
+            UICommand::Undo,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT),
+            UICommand::Redo,
+        ),
     ]
 }
 

@@ -64,6 +64,8 @@ pub enum UICommand {
     GoToBottomEntry,
     PageUpEntries,
     PageDownEntries,
+    Undo,
+    Redo,
 }
 
 #[derive(Debug, Clone)]
@@ -216,6 +218,8 @@ impl UICommand {
                 "Page Down journals",
                 "Go one page down in the journals' list",
             ),
+            UICommand::Undo => CommandInfo::new("Undo", "Undo the latest change on journals"),
+            UICommand::Redo => CommandInfo::new("Redo", "Redo the latest change on journals"),
 
         }
     }
@@ -273,6 +277,8 @@ impl UICommand {
             cmd @ UICommand::PageDownEntries => {
                 check_unsaved_then_exec_cmd(*cmd, page_down_entries, ui_components, app)
             }
+            UICommand::Undo => exec_undo(ui_components, app).await,
+            UICommand::Redo => exec_redo(ui_components, app).await,
         }
     }
 
@@ -377,6 +383,8 @@ impl UICommand {
                 )
                 .await
             }
+            UICommand::Undo => continue_undo(ui_components, app, msg_box_result).await,
+            UICommand::Redo => continue_redo(ui_components, app, msg_box_result).await,
         }
     }
 }

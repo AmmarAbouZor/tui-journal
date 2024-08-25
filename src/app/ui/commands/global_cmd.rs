@@ -114,3 +114,85 @@ pub async fn continue_reload_all<'a, D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
+
+pub async fn exec_undo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::Undo));
+    } else {
+        undo(ui_components, app).await?;
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+async fn undo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+) -> anyhow::Result<()> {
+    if let Some(id) = app.undo().await? {
+        ui_components.set_current_entry(Some(id), app);
+    }
+
+    Ok(())
+}
+
+pub async fn continue_undo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            undo(ui_components, app).await?;
+        }
+        MsgBoxResult::No => undo(ui_components, app).await?,
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn exec_redo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::Redo));
+    } else {
+        redo(ui_components, app).await?;
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+async fn redo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+) -> anyhow::Result<()> {
+    if let Some(id) = app.redo().await? {
+        ui_components.set_current_entry(Some(id), app);
+    }
+
+    Ok(())
+}
+
+pub async fn continue_redo<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            redo(ui_components, app).await?;
+        }
+        MsgBoxResult::No => redo(ui_components, app).await?,
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}

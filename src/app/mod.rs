@@ -17,12 +17,14 @@ use std::{
 mod external_editor;
 mod filter;
 mod keymap;
+mod redo;
 mod runner;
 mod sorter;
 mod state;
 #[cfg(test)]
 mod test;
 mod ui;
+mod undo;
 
 pub use runner::run;
 pub use runner::HandleInputReturnType;
@@ -323,5 +325,15 @@ where
         self.state.save()?;
 
         Ok(())
+    }
+
+    /// Apply undo on entries returning the id of the effected entry.
+    pub async fn undo(&mut self) -> anyhow::Result<Option<u32>> {
+        todo!()
+    }
+
+    /// Apply redo on entries returning the id of the effected entry.
+    pub async fn redo(&mut self) -> anyhow::Result<Option<u32>> {
+        todo!()
     }
 }
