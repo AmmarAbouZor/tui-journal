@@ -292,7 +292,7 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
 ) -> anyhow::Result<()> {
     use tokio::fs;
 
-    if let Some(entry) = app.get_current_entry_mut() {
+    if let Some(entry) = app.get_current_entry() {
         const FILE_NAME: &str = "tui_journal.txt";
 
         let file_path = env::temp_dir().join(FILE_NAME);

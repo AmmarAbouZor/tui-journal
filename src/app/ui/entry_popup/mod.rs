@@ -485,7 +485,7 @@ impl<'a> EntryPopup<'a> {
         };
 
         if self.is_edit_entry {
-            app.update_current_entry(title, date, tags, priority)
+            app.update_current_entry_attributes(title, date, tags, priority)
                 .await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {

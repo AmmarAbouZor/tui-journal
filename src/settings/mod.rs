@@ -44,6 +44,12 @@ pub struct Settings {
     pub scroll_per_page: Option<usize>,
     #[serde(default)]
     pub sync_os_clipboard: bool,
+    #[serde(default = "defualt_history_limit")]
+    pub history_limit: usize,
+}
+
+const fn defualt_history_limit() -> usize {
+    10
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -105,6 +111,7 @@ impl Settings {
             default_journal_priority: _,
             scroll_per_page: _,
             sync_os_clipboard: _,
+            history_limit: _,
         } = self;
 
         if self.backend_type.is_none() {

@@ -7,6 +7,7 @@ use crate::settings::Settings;
 use anyhow::{anyhow, bail, Context};
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 use chrono::{DateTime, Utc};
+use history::HistoryManager;
 use rayon::prelude::*;
 use std::{
     collections::{BTreeSet, HashSet},
@@ -16,15 +17,14 @@ use std::{
 
 mod external_editor;
 mod filter;
+mod history;
 mod keymap;
-mod redo;
 mod runner;
 mod sorter;
 mod state;
 #[cfg(test)]
 mod test;
 mod ui;
-mod undo;
 
 pub use runner::run;
 pub use runner::HandleInputReturnType;
@@ -45,6 +45,7 @@ where
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
     state: AppState,
+    history: HistoryManager,
 }
 
 impl<D> App<D>
@@ -55,6 +56,7 @@ where
         let entries = Vec::new();
         let selected_entries = HashSet::new();
         let filtered_out_entries = HashSet::new();
+        let history = HistoryManager::new(settings.history_limit);
         Self {
             data_provide,
             entries,
@@ -65,6 +67,7 @@ where
             redraw_after_restore: false,
             filter: None,
             state: Default::default(),
+            history,
         }
     }
 
@@ -84,9 +87,21 @@ where
             .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
     }
 
-    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
-        self.current_entry_id
-            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
+    /// Gives a mutable reference to the current entry, if exist, registering it in the history
+    /// according to the given [`EditTarget`]
+    fn get_current_entry_mut(&mut self, edit_target: EditTarget) -> Option<&mut Entry> {
+        let entry_opt = self
+            .current_entry_id
+            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id));
+
+        if let Some(entry) = entry_opt.as_ref() {
+            match edit_target {
+                EditTarget::Attributes => self.history.register_change_attributes(entry),
+                EditTarget::Content => self.history.register_change_content(entry),
+            };
+        }
+
+        entry_opt
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -116,6 +131,8 @@ where
             .await?;
         let entry_id = entry.id;
 
+        self.history.register_add(&entry);
+
         self.entries.push(entry);
 
         self.sort_entries();
@@ -124,7 +141,7 @@ where
         Ok(entry_id)
     }
 
-    pub async fn update_current_entry(
+    pub async fn update_current_entry_attributes(
         &mut self,
         title: String,
         date: DateTime<Utc>,
@@ -136,7 +153,7 @@ where
         assert!(self.current_entry_id.is_some());
 
         let entry = self
-            .get_current_entry_mut()
+            .get_current_entry_mut(EditTarget::Attributes)
             .context("journal entry should exist")?;
 
         entry.title = title;
@@ -162,7 +179,7 @@ where
     ) -> anyhow::Result<()> {
         log::trace!("Updating entry content");
 
-        if let Some(entry) = self.get_current_entry_mut() {
+        if let Some(entry) = self.get_current_entry_mut(EditTarget::Content) {
             entry.content = entry_content;
 
             let clone = entry.clone();
@@ -179,11 +196,14 @@ where
         log::trace!("Deleting entry with id: {entry_id}");
 
         self.data_provide.remove_entry(entry_id).await?;
-        self.entries
+        let removed_entry = self
+            .entries
             .iter()
             .position(|entry| entry.id == entry_id)
             .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
+
+        self.history.register_remove(removed_entry);
 
         self.update_filter();
         self.update_filtered_out_entries();
@@ -336,4 +356,10 @@ where
     pub async fn redo(&mut self) -> anyhow::Result<Option<u32>> {
         todo!()
     }
+}
+
+/// Represents what part of entry need to be changed.
+enum EditTarget {
+    Attributes,
+    Content,
 }
