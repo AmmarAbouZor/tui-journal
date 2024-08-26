@@ -7,7 +7,7 @@ use crate::settings::Settings;
 use anyhow::{anyhow, bail, Context};
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 use chrono::{DateTime, Utc};
-use history::HistoryManager;
+use history::{Change, HistoryManager, HistoryTarget};
 use rayon::prelude::*;
 use std::{
     collections::{BTreeSet, HashSet},
@@ -82,26 +82,31 @@ where
         self.get_active_entries().find(|e| e.id == entry_id)
     }
 
-    pub fn get_current_entry(&self) -> Option<&Entry> {
-        self.current_entry_id
-            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
-    }
-
-    /// Gives a mutable reference to the current entry, if exist, registering it in the history
-    /// according to the given [`EditTarget`]
-    fn get_current_entry_mut(&mut self, edit_target: EditTarget) -> Option<&mut Entry> {
-        let entry_opt = self
-            .current_entry_id
-            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id));
+    /// Gives a mutable reference to the entry with given id if exist, registering it in
+    /// the history according to the given [`EditTarget`] and [`HistoryTarget`]
+    fn get_entry_mut(
+        &mut self,
+        entry_id: u32,
+        edit_target: EditTarget,
+        history_target: HistoryTarget,
+    ) -> Option<&mut Entry> {
+        let entry_opt = self.entries.iter_mut().find(|e| e.id == entry_id);
 
         if let Some(entry) = entry_opt.as_ref() {
             match edit_target {
-                EditTarget::Attributes => self.history.register_change_attributes(entry),
-                EditTarget::Content => self.history.register_change_content(entry),
+                EditTarget::Attributes => self
+                    .history
+                    .register_change_attributes(history_target, entry),
+                EditTarget::Content => self.history.register_change_content(history_target, entry),
             };
         }
 
         entry_opt
+    }
+
+    pub fn get_current_entry(&self) -> Option<&Entry> {
+        self.current_entry_id
+            .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -123,15 +128,30 @@ where
         tags: Vec<String>,
         priority: Option<u32>,
     ) -> anyhow::Result<u32> {
+        self.add_entry_intern(title, date, tags, priority, None, HistoryTarget::Undo)
+            .await
+    }
+
+    async fn add_entry_intern(
+        &mut self,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+        priority: Option<u32>,
+        content: Option<String>,
+        history_target: HistoryTarget,
+    ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
-        let entry = self
-            .data_provide
-            .add_entry(EntryDraft::new(date, title, tags, priority))
-            .await?;
+        let mut draft = EntryDraft::new(date, title, tags, priority);
+        if let Some(content) = content {
+            draft = draft.with_content(content);
+        }
+
+        let entry = self.data_provide.add_entry(draft).await?;
         let entry_id = entry.id;
 
-        self.history.register_add(&entry);
+        self.history.register_add(history_target, &entry);
 
         self.entries.push(entry);
 
@@ -148,13 +168,36 @@ where
         tags: Vec<String>,
         priority: Option<u32>,
     ) -> anyhow::Result<()> {
+        let current_entry_id = self
+            .current_entry_id
+            .expect("Current entry id must have value when updating entry attributes");
+        self.update_entry_attributes(
+            current_entry_id,
+            title,
+            date,
+            tags,
+            priority,
+            HistoryTarget::Redo,
+        )
+        .await
+    }
+
+    async fn update_entry_attributes(
+        &mut self,
+        entry_id: u32,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+        priority: Option<u32>,
+        history_target: HistoryTarget,
+    ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
 
         assert!(self.current_entry_id.is_some());
 
         let entry = self
-            .get_current_entry_mut(EditTarget::Attributes)
-            .context("journal entry should exist")?;
+            .get_entry_mut(entry_id, EditTarget::Attributes, history_target)
+            .expect("Current entry must have value when updating entry attributes");
 
         entry.title = title;
         entry.date = date;
@@ -177,22 +220,46 @@ where
         &mut self,
         entry_content: String,
     ) -> anyhow::Result<()> {
+        let current_entry_id = self
+            .current_entry_id
+            .expect("Current entry id must have value when updating entry content");
+        self.update_entry_content(current_entry_id, entry_content, HistoryTarget::Undo)
+            .await
+    }
+
+    pub async fn update_entry_content(
+        &mut self,
+        entry_id: u32,
+        entry_content: String,
+        history_target: HistoryTarget,
+    ) -> anyhow::Result<()> {
         log::trace!("Updating entry content");
 
-        if let Some(entry) = self.get_current_entry_mut(EditTarget::Content) {
-            entry.content = entry_content;
+        let entry = self
+            .get_entry_mut(entry_id, EditTarget::Content, history_target)
+            .expect("Current entry id must have value when updating entry content");
 
-            let clone = entry.clone();
+        entry.content = entry_content;
 
-            self.data_provide.update_entry(clone).await?;
+        let clone = entry.clone();
 
-            self.update_filtered_out_entries();
-        }
+        self.data_provide.update_entry(clone).await?;
+
+        self.update_filtered_out_entries();
 
         Ok(())
     }
 
     pub async fn delete_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
+        self.delete_entry_intern(entry_id, HistoryTarget::Redo)
+            .await
+    }
+
+    pub async fn delete_entry_intern(
+        &mut self,
+        entry_id: u32,
+        history_target: HistoryTarget,
+    ) -> anyhow::Result<()> {
         log::trace!("Deleting entry with id: {entry_id}");
 
         self.data_provide.remove_entry(entry_id).await?;
@@ -203,7 +270,7 @@ where
             .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
 
-        self.history.register_remove(removed_entry);
+        self.history.register_remove(history_target, removed_entry);
 
         self.update_filter();
         self.update_filtered_out_entries();
@@ -349,12 +416,63 @@ where
 
     /// Apply undo on entries returning the id of the effected entry.
     pub async fn undo(&mut self) -> anyhow::Result<Option<u32>> {
-        todo!()
+        match self.history.pop_undo() {
+            Some(change) => self.apply_change(change, HistoryTarget::Redo).await,
+            None => Ok(None),
+        }
     }
 
     /// Apply redo on entries returning the id of the effected entry.
     pub async fn redo(&mut self) -> anyhow::Result<Option<u32>> {
-        todo!()
+        match self.history.pop_redo() {
+            Some(change) => self.apply_change(change, HistoryTarget::Undo).await,
+            None => Ok(None),
+        }
+    }
+
+    async fn apply_change(
+        &mut self,
+        change: Change,
+        history_target: HistoryTarget,
+    ) -> anyhow::Result<Option<u32>> {
+        match change {
+            Change::AddEntry { id } => {
+                self.delete_entry_intern(id, history_target).await?;
+                Ok(None)
+            }
+            Change::RemoveEntry(entry) => {
+                let id = self
+                    .add_entry_intern(
+                        entry.title,
+                        entry.date,
+                        entry.tags,
+                        entry.priority,
+                        Some(entry.content),
+                        history_target,
+                    )
+                    .await?;
+
+                Ok(Some(id))
+            }
+            Change::ChangeAttribute(attr) => {
+                self.update_entry_attributes(
+                    attr.id,
+                    attr.title,
+                    attr.date,
+                    attr.tags,
+                    attr.priority,
+                    history_target,
+                )
+                .await?;
+
+                Ok(Some(attr.id))
+            }
+            Change::ChangeContent { id, content } => {
+                self.update_entry_content(id, content, history_target)
+                    .await?;
+                Ok(Some(id))
+            }
+        }
     }
 }
 

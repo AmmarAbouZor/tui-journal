@@ -116,6 +116,12 @@ impl EntryDraft {
         }
     }
 
+    #[must_use]
+    pub fn with_content(mut self, content: String) -> Self {
+        self.content = content;
+        self
+    }
+
     pub fn from_entry(entry: Entry) -> Self {
         Self {
             date: entry.date,

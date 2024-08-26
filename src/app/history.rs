@@ -30,28 +30,40 @@ impl HistoryManager {
         }
     }
 
-    pub fn register_add(&mut self, entry: &Entry) {
+    pub fn register_add(&mut self, target: HistoryTarget, entry: &Entry) {
         let change = Change::AddEntry { id: entry.id };
-        self.add_to_stack(change, HistoryTarget::Undo);
+        self.add_to_stack(change, target);
     }
 
-    pub fn register_remove(&mut self, deleted_entry: Entry) {
+    pub fn register_remove(&mut self, target: HistoryTarget, deleted_entry: Entry) {
         let change = Change::RemoveEntry(Box::new(deleted_entry));
-        self.add_to_stack(change, HistoryTarget::Undo);
+        self.add_to_stack(change, target);
     }
 
-    pub fn register_change_attributes(&mut self, entry_before_change: &Entry) {
+    pub fn register_change_attributes(
+        &mut self,
+        target: HistoryTarget,
+        entry_before_change: &Entry,
+    ) {
         let change = Change::ChangeAttribute(Box::new(entry_before_change.into()));
-        self.add_to_stack(change, HistoryTarget::Undo);
+        self.add_to_stack(change, target);
     }
 
-    pub fn register_change_content(&mut self, entry_before_change: &Entry) {
+    pub fn register_change_content(&mut self, target: HistoryTarget, entry_before_change: &Entry) {
         let change = Change::ChangeContent {
             id: entry_before_change.id,
             content: entry_before_change.content.to_owned(),
         };
 
-        self.add_to_stack(change, HistoryTarget::Undo);
+        self.add_to_stack(change, target);
+    }
+
+    pub fn pop_undo(&mut self) -> Option<Change> {
+        self.undo_stack.pop_front()
+    }
+
+    pub fn pop_redo(&mut self) -> Option<Change> {
+        self.redo_stack.pop_front()
     }
 }
 
