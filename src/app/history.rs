@@ -31,11 +31,13 @@ impl HistoryManager {
     }
 
     pub fn register_add(&mut self, target: HistoryTarget, entry: &Entry) {
+        log::trace!("History Register Add: Entry: {entry:?}");
         let change = Change::AddEntry { id: entry.id };
         self.add_to_stack(change, target);
     }
 
     pub fn register_remove(&mut self, target: HistoryTarget, deleted_entry: Entry) {
+        log::trace!("History Register Remove: Deleted Entry: {deleted_entry:?}");
         let change = Change::RemoveEntry(Box::new(deleted_entry));
         self.add_to_stack(change, target);
     }
@@ -45,11 +47,16 @@ impl HistoryManager {
         target: HistoryTarget,
         entry_before_change: &Entry,
     ) {
+        log::trace!("History Register Change attribute: Entry before: {entry_before_change:?}");
         let change = Change::ChangeAttribute(Box::new(entry_before_change.into()));
         self.add_to_stack(change, target);
     }
 
     pub fn register_change_content(&mut self, target: HistoryTarget, entry_before_change: &Entry) {
+        log::trace!(
+            "History Register Change content: Entry ID: {}",
+            entry_before_change.id
+        );
         let change = Change::ChangeContent {
             id: entry_before_change.id,
             content: entry_before_change.content.to_owned(),

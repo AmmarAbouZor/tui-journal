@@ -177,7 +177,7 @@ where
             date,
             tags,
             priority,
-            HistoryTarget::Redo,
+            HistoryTarget::Undo,
         )
         .await
     }
@@ -251,7 +251,7 @@ where
     }
 
     pub async fn delete_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
-        self.delete_entry_intern(entry_id, HistoryTarget::Redo)
+        self.delete_entry_intern(entry_id, HistoryTarget::Undo)
             .await
     }
 
@@ -437,10 +437,12 @@ where
     ) -> anyhow::Result<Option<u32>> {
         match change {
             Change::AddEntry { id } => {
+                log::trace!("History Apply: Add Entry: ID {id}");
                 self.delete_entry_intern(id, history_target).await?;
                 Ok(None)
             }
             Change::RemoveEntry(entry) => {
+                log::trace!("History Apply: Remove Entry: {entry:?}");
                 let id = self
                     .add_entry_intern(
                         entry.title,
@@ -455,6 +457,7 @@ where
                 Ok(Some(id))
             }
             Change::ChangeAttribute(attr) => {
+                log::trace!("History Apply: Change Attributes: {attr:?}");
                 self.update_entry_attributes(
                     attr.id,
                     attr.title,
@@ -468,6 +471,7 @@ where
                 Ok(Some(attr.id))
             }
             Change::ChangeContent { id, content } => {
+                log::trace!("History Apply: Change Content: ID: {id}");
                 self.update_entry_content(id, content, history_target)
                     .await?;
                 Ok(Some(id))
