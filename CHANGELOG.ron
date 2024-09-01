@@ -8,6 +8,27 @@
       references: {},
       version: (
         major: 0,
+        minor: 10,
+        patch: 0,
+      ),
+      released: "2024-09-01T09:08:52.944615158Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "History Management: Provide Undo & Redo Functionalities.",
+          ],
+          "Changed": [
+            "Update Dependencies & Fix Crossterm and Raratui Breaking Changes",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 9,
         patch: 1,
       ),
