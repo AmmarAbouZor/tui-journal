@@ -24,7 +24,7 @@ mod external_editor;
 
 const DEFAULT_SCROLL_PER_PAGE: usize = 5;
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
     #[serde(default)]
     pub export: ExportSettings,
@@ -44,6 +44,27 @@ pub struct Settings {
     pub scroll_per_page: Option<usize>,
     #[serde(default)]
     pub sync_os_clipboard: bool,
+    #[serde(default = "default_history_limit")]
+    /// Set the maximum size of the history stacks (undo & redo) size.
+    pub history_limit: usize,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            export: Default::default(),
+            backend_type: Default::default(),
+            external_editor: Default::default(),
+            #[cfg(feature = "json")]
+            json_backend: Default::default(),
+            #[cfg(feature = "sqlite")]
+            sqlite_backend: Default::default(),
+            default_journal_priority: Default::default(),
+            scroll_per_page: Default::default(),
+            sync_os_clipboard: Default::default(),
+            history_limit: default_history_limit(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -52,6 +73,10 @@ pub enum BackendType {
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
+}
+
+const fn default_history_limit() -> usize {
+    10
 }
 
 impl Settings {
@@ -105,6 +130,7 @@ impl Settings {
             default_journal_priority: _,
             scroll_per_page: _,
             sync_os_clipboard: _,
+            history_limit: _,
         } = self;
 
         if self.backend_type.is_none() {

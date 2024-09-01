@@ -7,6 +7,7 @@ use crate::settings::Settings;
 use anyhow::{anyhow, bail, Context};
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 use chrono::{DateTime, Utc};
+use history::{Change, HistoryManager, HistoryStack};
 use rayon::prelude::*;
 use std::{
     collections::{BTreeSet, HashSet},
@@ -16,6 +17,7 @@ use std::{
 
 mod external_editor;
 mod filter;
+mod history;
 mod keymap;
 mod runner;
 mod sorter;
@@ -43,6 +45,8 @@ where
     pub redraw_after_restore: bool,
     pub filter: Option<Filter>,
     state: AppState,
+    /// Keeps history of the changes on entries, enabling undo & redo operations
+    history: HistoryManager,
 }
 
 impl<D> App<D>
@@ -53,6 +57,7 @@ where
         let entries = Vec::new();
         let selected_entries = HashSet::new();
         let filtered_out_entries = HashSet::new();
+        let history = HistoryManager::new(settings.history_limit);
         Self {
             data_provide,
             entries,
@@ -63,6 +68,7 @@ where
             redraw_after_restore: false,
             filter: None,
             state: Default::default(),
+            history,
         }
     }
 
@@ -77,14 +83,34 @@ where
         self.get_active_entries().find(|e| e.id == entry_id)
     }
 
+    /// Gives a mutable reference to the entry with given id if exist, registering it in
+    /// the history according to the given [`EntryEditPart`] and [`HistoryStack`]
+    fn get_entry_mut(
+        &mut self,
+        entry_id: u32,
+        edit_target: EntryEditPart,
+        history_target: HistoryStack,
+    ) -> Option<&mut Entry> {
+        let entry_opt = self.entries.iter_mut().find(|e| e.id == entry_id);
+
+        if let Some(entry) = entry_opt.as_ref() {
+            match edit_target {
+                EntryEditPart::Attributes => self
+                    .history
+                    .register_change_attributes(history_target, entry),
+                EntryEditPart::Content => {
+                    self.history.register_change_content(history_target, entry)
+                }
+            };
+        }
+
+        entry_opt
+    }
+
+    /// Gets' the selected entry currently.
     pub fn get_current_entry(&self) -> Option<&Entry> {
         self.current_entry_id
             .and_then(|id| self.get_active_entries().find(|entry| entry.id == id))
-    }
-
-    pub fn get_current_entry_mut(&mut self) -> Option<&mut Entry> {
-        self.current_entry_id
-            .and_then(|id| self.entries.iter_mut().find(|entry| entry.id == id))
     }
 
     pub async fn load_entries(&mut self) -> anyhow::Result<()> {
@@ -106,13 +132,32 @@ where
         tags: Vec<String>,
         priority: Option<u32>,
     ) -> anyhow::Result<u32> {
+        self.add_entry_intern(title, date, tags, priority, None, HistoryStack::Undo)
+            .await
+    }
+
+    /// Creates an [`Entry`] from the given arguments, registering the change to the provided
+    /// [`HistoryStack`].
+    async fn add_entry_intern(
+        &mut self,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+        priority: Option<u32>,
+        content: Option<String>,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
-        let entry = self
-            .data_provide
-            .add_entry(EntryDraft::new(date, title, tags, priority))
-            .await?;
+        let mut draft = EntryDraft::new(date, title, tags, priority);
+        if let Some(content) = content {
+            draft = draft.with_content(content);
+        }
+
+        let entry = self.data_provide.add_entry(draft).await?;
         let entry_id = entry.id;
+
+        self.history.register_add(history_target, &entry);
 
         self.entries.push(entry);
 
@@ -122,20 +167,46 @@ where
         Ok(entry_id)
     }
 
-    pub async fn update_current_entry(
+    /// Updates the attributes of the currently selected [`Entry`]
+    pub async fn update_current_entry_attributes(
         &mut self,
         title: String,
         date: DateTime<Utc>,
         tags: Vec<String>,
         priority: Option<u32>,
     ) -> anyhow::Result<()> {
+        let current_entry_id = self
+            .current_entry_id
+            .expect("Current entry id must have value when updating entry attributes");
+        self.update_entry_attributes(
+            current_entry_id,
+            title,
+            date,
+            tags,
+            priority,
+            HistoryStack::Undo,
+        )
+        .await
+    }
+
+    /// Updates the attributes of the given [`Entry`], registering its state before the change on
+    /// the given [`HistoryStack`]
+    async fn update_entry_attributes(
+        &mut self,
+        entry_id: u32,
+        title: String,
+        date: DateTime<Utc>,
+        tags: Vec<String>,
+        priority: Option<u32>,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
 
         assert!(self.current_entry_id.is_some());
 
         let entry = self
-            .get_current_entry_mut()
-            .context("journal entry should exist")?;
+            .get_entry_mut(entry_id, EntryEditPart::Attributes, history_target)
+            .expect("Current entry must have value when updating entry attributes");
 
         entry.title = title;
         entry.date = date;
@@ -154,34 +225,64 @@ where
         Ok(())
     }
 
+    /// Updates the content of the currently selected [`Entry`]
     pub async fn update_current_entry_content(
         &mut self,
         entry_content: String,
     ) -> anyhow::Result<()> {
+        let current_entry_id = self
+            .current_entry_id
+            .expect("Current entry id must have value when updating entry content");
+        self.update_entry_content(current_entry_id, entry_content, HistoryStack::Undo)
+            .await
+    }
+
+    /// Update the content of the given [`Entry`], registering its previous content to the given
+    /// [`HistoryStack`]
+    pub async fn update_entry_content(
+        &mut self,
+        entry_id: u32,
+        entry_content: String,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<()> {
         log::trace!("Updating entry content");
 
-        if let Some(entry) = self.get_current_entry_mut() {
-            entry.content = entry_content;
+        let entry = self
+            .get_entry_mut(entry_id, EntryEditPart::Content, history_target)
+            .expect("Current entry id must have value when updating entry content");
 
-            let clone = entry.clone();
+        entry.content = entry_content;
 
-            self.data_provide.update_entry(clone).await?;
+        let clone = entry.clone();
 
-            self.update_filtered_out_entries();
-        }
+        self.data_provide.update_entry(clone).await?;
+
+        self.update_filtered_out_entries();
 
         Ok(())
     }
 
     pub async fn delete_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
+        self.delete_entry_intern(entry_id, HistoryStack::Undo).await
+    }
+
+    /// Removes the given entry, registering it to the given [`HistoryStack`]
+    pub async fn delete_entry_intern(
+        &mut self,
+        entry_id: u32,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<()> {
         log::trace!("Deleting entry with id: {entry_id}");
 
         self.data_provide.remove_entry(entry_id).await?;
-        self.entries
+        let removed_entry = self
+            .entries
             .iter()
             .position(|entry| entry.id == entry_id)
             .map(|index| self.entries.remove(index))
             .expect("entry must be in the entries list");
+
+        self.history.register_remove(history_target, removed_entry);
 
         self.update_filter();
         self.update_filtered_out_entries();
@@ -324,4 +425,77 @@ where
 
         Ok(())
     }
+
+    /// Apply undo on entries returning the id of the effected entry.
+    pub async fn undo(&mut self) -> anyhow::Result<Option<u32>> {
+        match self.history.pop_undo() {
+            Some(change) => self.apply_change(change, HistoryStack::Redo).await,
+            None => Ok(None),
+        }
+    }
+
+    /// Apply redo on entries returning the id of the effected entry.
+    pub async fn redo(&mut self) -> anyhow::Result<Option<u32>> {
+        match self.history.pop_redo() {
+            Some(change) => self.apply_change(change, HistoryStack::Undo).await,
+            None => Ok(None),
+        }
+    }
+
+    async fn apply_change(
+        &mut self,
+        change: Change,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<Option<u32>> {
+        match change {
+            Change::AddEntry { id } => {
+                log::trace!("History Apply: Add Entry: ID {id}");
+                self.delete_entry_intern(id, history_target).await?;
+                Ok(None)
+            }
+            Change::RemoveEntry(entry) => {
+                log::trace!("History Apply: Remove Entry: {entry:?}");
+                let id = self
+                    .add_entry_intern(
+                        entry.title,
+                        entry.date,
+                        entry.tags,
+                        entry.priority,
+                        Some(entry.content),
+                        history_target,
+                    )
+                    .await?;
+
+                Ok(Some(id))
+            }
+            Change::EntryAttribute(attr) => {
+                log::trace!("History Apply: Change Attributes: {attr:?}");
+                self.update_entry_attributes(
+                    attr.id,
+                    attr.title,
+                    attr.date,
+                    attr.tags,
+                    attr.priority,
+                    history_target,
+                )
+                .await?;
+
+                Ok(Some(attr.id))
+            }
+            Change::EntryContent { id, content } => {
+                log::trace!("History Apply: Change Content: ID: {id}");
+                self.update_entry_content(id, content, history_target)
+                    .await?;
+                Ok(Some(id))
+            }
+        }
+    }
+}
+
+/// Represents what part of [`Entry`] will be changed.
+enum EntryEditPart {
+    /// The attributes (Name, Date...) of the entry will be changed
+    Attributes,
+    /// The content of the entry will be changed.
+    Content,
 }

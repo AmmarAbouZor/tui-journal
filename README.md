@@ -66,6 +66,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Search functions for journals title and content in the built-in filter.
 - Sort the journals based on their date, priority and title.
 - Control many journals at once via the multi-select mode
+- History management with Undo and Redo actions to easily revert or reapply changes in your entries
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - Utilize Editor's Visual Mode for VIM-style text selection, copying, and deletion.
 - Export and Import journals between different back-end files.
@@ -215,6 +216,8 @@ default_journal_priority = 3  # Sets the suggested priority while creating a new
 scroll_per_page = 5  # Sets how many journals will be scrolled when using page up/down commands
 
 sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard 
+
+history_limit = 10  # Sets the maximum changes limit for the undo & redo stacks. Use 0 to disable it.
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.

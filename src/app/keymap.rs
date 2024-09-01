@@ -147,6 +147,14 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('f'), KeyModifiers::CONTROL),
             UICommand::ToggleFullScreenMode,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
+            UICommand::Undo,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT),
+            UICommand::Redo,
+        ),
     ]
 }
 
@@ -209,7 +217,11 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             UICommand::ResetFilter,
         ),
         Keymap::new(
-            Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
+            Input::new(KeyCode::Char('a'), KeyModifiers::NONE),
+            UICommand::ShowFuzzyFind,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('F'), KeyModifiers::SHIFT),
             UICommand::ShowFuzzyFind,
         ),
         Keymap::new(
