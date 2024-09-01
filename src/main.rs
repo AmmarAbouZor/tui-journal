@@ -3,7 +3,6 @@ use std::io;
 use anyhow::Result;
 use clap::Parser;
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -31,7 +30,7 @@ async fn main() -> Result<()> {
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -46,11 +45,7 @@ async fn main() -> Result<()> {
 
     // restore terminal
     disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
     terminal.show_cursor()?;
 
     Ok(())
@@ -62,7 +57,7 @@ fn chain_panic_hook() {
 
     std::panic::set_hook(Box::new(move |panic| {
         disable_raw_mode().unwrap();
-        execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture).unwrap();
+        execute!(io::stdout(), LeaveAlternateScreen).unwrap();
         original_hook(panic);
     }));
 }
