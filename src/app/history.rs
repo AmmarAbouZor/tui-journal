@@ -4,9 +4,11 @@ use backend::Entry;
 use chrono::{DateTime, Utc};
 
 #[derive(Debug)]
+/// Keeps history of the changes on entries, enabling undo & redo operations
 pub struct HistoryManager {
     undo_stack: VecDeque<Change>,
     redo_stack: VecDeque<Change>,
+    /// Sets the size limit of each stack
     stacks_limit: usize,
 }
 
@@ -19,10 +21,13 @@ impl HistoryManager {
         }
     }
 
-    fn add_to_stack(&mut self, change: Change, target: HistoryTarget) {
+    /// Adds the given history [`Change`] to the corresponding stack of the given [`HistoryStack`]
+    /// and keeping the stack within its allowed limit by dropping changes from the bottom if
+    /// needed.
+    fn add_to_stack(&mut self, change: Change, target: HistoryStack) {
         let stack = match target {
-            HistoryTarget::Undo => &mut self.undo_stack,
-            HistoryTarget::Redo => &mut self.redo_stack,
+            HistoryStack::Undo => &mut self.undo_stack,
+            HistoryStack::Redo => &mut self.redo_stack,
         };
         stack.push_front(change);
         if stack.len() > self.stacks_limit {
@@ -30,34 +35,38 @@ impl HistoryManager {
         }
     }
 
-    pub fn register_add(&mut self, target: HistoryTarget, entry: &Entry) {
+    /// Register Add Change on the corresponding stack of the [`HistoryStack`]
+    pub fn register_add(&mut self, target: HistoryStack, entry: &Entry) {
         log::trace!("History Register Add: Entry: {entry:?}");
         let change = Change::AddEntry { id: entry.id };
         self.add_to_stack(change, target);
     }
 
-    pub fn register_remove(&mut self, target: HistoryTarget, deleted_entry: Entry) {
+    /// Register Remove Entry Change on the corresponding stack of the [`HistoryStack`]
+    pub fn register_remove(&mut self, target: HistoryStack, deleted_entry: Entry) {
         log::trace!("History Register Remove: Deleted Entry: {deleted_entry:?}");
         let change = Change::RemoveEntry(Box::new(deleted_entry));
         self.add_to_stack(change, target);
     }
 
+    /// Register changes on Entry attributes on the corresponding stack of the [`HistoryStack`]
     pub fn register_change_attributes(
         &mut self,
-        target: HistoryTarget,
+        target: HistoryStack,
         entry_before_change: &Entry,
     ) {
         log::trace!("History Register Change attribute: Entry before: {entry_before_change:?}");
-        let change = Change::ChangeAttribute(Box::new(entry_before_change.into()));
+        let change = Change::EntryAttribute(Box::new(entry_before_change.into()));
         self.add_to_stack(change, target);
     }
 
-    pub fn register_change_content(&mut self, target: HistoryTarget, entry_before_change: &Entry) {
+    /// Register changes on Entry content on the corresponding stack of the [`HistoryStack`]
+    pub fn register_change_content(&mut self, target: HistoryStack, entry_before_change: &Entry) {
         log::trace!(
             "History Register Change content: Entry ID: {}",
             entry_before_change.id
         );
-        let change = Change::ChangeContent {
+        let change = Change::EntryContent {
             id: entry_before_change.id,
             content: entry_before_change.content.to_owned(),
         };
@@ -65,17 +74,20 @@ impl HistoryManager {
         self.add_to_stack(change, target);
     }
 
+    /// Pops the latest undo Change from its stack if available
     pub fn pop_undo(&mut self) -> Option<Change> {
         self.undo_stack.pop_front()
     }
 
+    /// Pops the latest redo Change from its stack if available
     pub fn pop_redo(&mut self) -> Option<Change> {
         self.redo_stack.pop_front()
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum HistoryTarget {
+/// Represents the types of history targets within the [`HistoryManager`]
+pub enum HistoryStack {
     Undo,
     Redo,
 }
@@ -88,12 +100,13 @@ pub enum Change {
     /// Entry removed. It contains the removed entry.
     RemoveEntry(Box<Entry>),
     /// Entry attributes changed. It contains the attribute before the change.
-    ChangeAttribute(Box<EntryAttributes>),
+    EntryAttribute(Box<EntryAttributes>),
     /// Entry content changed. It contains the content before the change.
-    ChangeContent { id: u32, content: String },
+    EntryContent { id: u32, content: String },
 }
 
 #[derive(Debug, Clone)]
+/// Contains the changes of attributes on an [`Entry`] to be saved in the history stacks
 pub struct EntryAttributes {
     pub id: u32,
     pub date: DateTime<Utc>,

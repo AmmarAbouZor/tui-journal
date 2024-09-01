@@ -44,12 +44,9 @@ pub struct Settings {
     pub scroll_per_page: Option<usize>,
     #[serde(default)]
     pub sync_os_clipboard: bool,
-    #[serde(default = "defualt_history_limit")]
+    #[serde(default = "default_history_limit")]
+    /// Set the maximum size of the history stacks (undo & redo) size.
     pub history_limit: usize,
-}
-
-const fn defualt_history_limit() -> usize {
-    10
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -58,6 +55,10 @@ pub enum BackendType {
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
+}
+
+const fn default_history_limit() -> usize {
+    10
 }
 
 impl Settings {
