@@ -15,6 +15,7 @@ use std::{
     path::PathBuf,
 };
 
+mod colored_tags;
 mod external_editor;
 mod filter;
 mod history;
