@@ -6,15 +6,15 @@ use ratatui::style::Color;
 /// Note: the order to pick the colors is from bottom to top because we are popping the colors from
 /// the end of the stack.
 const TAG_COLORS: &[TagColor] = &[
+    TagColor::new(Color::Black, Color::LightMagenta),
+    TagColor::new(Color::Red, Color::Cyan),
+    TagColor::new(Color::Yellow, Color::Blue),
+    TagColor::new(Color::Reset, Color::Red),
+    TagColor::new(Color::Black, Color::LightYellow),
     TagColor::new(Color::Reset, Color::DarkGray),
-    TagColor::new(Color::Blue, Color::LightRed),
-    TagColor::new(Color::Black, Color::Cyan),
-    TagColor::new(Color::Green, Color::Magenta),
-    TagColor::new(Color::Blue, Color::Yellow),
-    TagColor::new(Color::White, Color::Black),
-    TagColor::new(Color::Reset, Color::Green),
-    TagColor::new(Color::Gray, Color::Red),
-    TagColor::new(Color::LightYellow, Color::Blue),
+    TagColor::new(Color::Black, Color::LightGreen),
+    TagColor::new(Color::Black, Color::LightRed),
+    TagColor::new(Color::Black, Color::LightCyan),
 ];
 
 #[derive(Debug, Clone)]
@@ -26,17 +26,13 @@ pub struct ColoredTagsManager {
 }
 
 impl ColoredTagsManager {
-    pub fn new(tags: Vec<String>) -> Self {
+    pub fn new() -> Self {
         let available_colors = TAG_COLORS.to_vec();
 
-        let mut manager = Self {
+        Self {
             tag_colors_map: HashMap::new(),
             available_colors,
-        };
-
-        manager.update_tags(tags);
-
-        manager
+        }
     }
 
     /// Updates the tag_color map with the provided tags, removing the not existing tags and
@@ -67,7 +63,7 @@ impl ColoredTagsManager {
         }
     }
 
-    /// Gets the matching color for the giving tag if tag is existing.
+    /// Gets the matching color for the giving tag if tag exists.
     pub fn get_tag_color(&self, tag: &str) -> Option<TagColor> {
         self.tag_colors_map.get(tag).copied()
     }
@@ -75,8 +71,8 @@ impl ColoredTagsManager {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct TagColor {
-    foreground: Color,
-    background: Color,
+    pub foreground: Color,
+    pub background: Color,
 }
 
 impl TagColor {
@@ -106,7 +102,8 @@ mod tests {
             String::from("Tag 4"),
         ];
 
-        let mut manager = ColoredTagsManager::new(tags.clone());
+        let mut manager = ColoredTagsManager::new();
+        manager.update_tags(tags.clone());
 
         // Ensure all tags have colors.
         for tag in tags.iter() {
