@@ -131,26 +131,42 @@ impl<'a> EntriesList {
 
                 // *** Tags ***
                 if !entry.tags.is_empty() {
-                    let tags: Vec<String> = entry.tags.iter().map(String::from).collect();
-                    let tag_line = tags.join(" | ");
+                    const TAGS_SEPARATOR: &str = " | ";
+                    let tags_default_style: Style = Style::default()
+                        .fg(Color::LightCyan)
+                        .add_modifier(Modifier::DIM);
 
-                    // Text wrapping
-                    let tag_line =
-                        textwrap::wrap(&tag_line, area.width as usize - LIST_INNER_MARGIN);
+                    let mut added_lines = 1;
+                    spans.push(Line::default());
 
-                    lines_count += tag_line.len();
+                    for tag in entry.tags.iter() {
+                        let mut last_line = spans.last_mut().unwrap();
+                        let allowd_width = area.width as usize - LIST_INNER_MARGIN;
+                        if !last_line.spans.is_empty() {
+                            if last_line.width() + TAGS_SEPARATOR.len() > allowd_width {
+                                added_lines += 1;
+                                spans.push(Line::default());
+                                last_line = spans.last_mut().unwrap();
+                            }
+                            last_line.push_span(Span::styled(TAGS_SEPARATOR, tags_default_style))
+                        }
 
-                    tag_line
-                        .into_iter()
-                        .map(|line| {
-                            Line::from(Span::styled(
-                                line.to_string(),
-                                Style::default()
-                                    .fg(Color::LightCyan)
-                                    .add_modifier(Modifier::DIM),
-                            ))
-                        })
-                        .for_each(|span| spans.push(span));
+                        let style = app
+                            .get_color_for_tag(tag)
+                            .map(|c| Style::default().bg(c.background).fg(c.foreground))
+                            .unwrap_or(tags_default_style);
+                        let span_to_add = Span::styled(tag.to_owned(), style);
+
+                        if last_line.width() + tag.len() < allowd_width {
+                            last_line.push_span(span_to_add);
+                        } else {
+                            added_lines += 1;
+                            let line = Line::from(span_to_add);
+                            spans.push(line);
+                        }
+                    }
+
+                    lines_count += added_lines;
                 }
 
                 ListItem::new(spans)

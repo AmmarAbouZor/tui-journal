@@ -7,6 +7,7 @@ use crate::settings::Settings;
 use anyhow::{anyhow, bail, Context};
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 use chrono::{DateTime, Utc};
+use colored_tags::ColoredTagsManager;
 use history::{Change, HistoryManager, HistoryStack};
 use rayon::prelude::*;
 use std::{
@@ -15,6 +16,7 @@ use std::{
     path::PathBuf,
 };
 
+mod colored_tags;
 mod external_editor;
 mod filter;
 mod history;
@@ -29,6 +31,8 @@ mod ui;
 pub use runner::run;
 pub use runner::HandleInputReturnType;
 pub use ui::UIComponents;
+
+pub use colored_tags::TagColors;
 
 pub struct App<D>
 where
@@ -47,6 +51,7 @@ where
     state: AppState,
     /// Keeps history of the changes on entries, enabling undo & redo operations
     history: HistoryManager,
+    colored_tags: Option<ColoredTagsManager>,
 }
 
 impl<D> App<D>
@@ -58,6 +63,8 @@ where
         let selected_entries = HashSet::new();
         let filtered_out_entries = HashSet::new();
         let history = HistoryManager::new(settings.history_limit);
+        let colored_tags = settings.colored_tags.then(ColoredTagsManager::new);
+
         Self {
             data_provide,
             entries,
@@ -69,6 +76,7 @@ where
             filter: None,
             state: Default::default(),
             history,
+            colored_tags,
         }
     }
 
@@ -122,6 +130,8 @@ where
 
         self.update_filtered_out_entries();
 
+        self.update_colored_tags();
+
         Ok(())
     }
 
@@ -163,6 +173,7 @@ where
 
         self.sort_entries();
         self.update_filtered_out_entries();
+        self.update_colored_tags();
 
         Ok(entry_id)
     }
@@ -221,6 +232,7 @@ where
 
         self.update_filter();
         self.update_filtered_out_entries();
+        self.update_colored_tags();
 
         Ok(())
     }
@@ -286,6 +298,7 @@ where
 
         self.update_filter();
         self.update_filtered_out_entries();
+        self.update_colored_tags();
 
         Ok(())
     }
@@ -385,6 +398,26 @@ where
         }
     }
 
+    /// Updates the colors tags mapping, assigning colors to new one and removing the non existing
+    /// tags from the colors map.
+    fn update_colored_tags(&mut self) {
+        if self.colored_tags.is_none() {
+            return;
+        }
+
+        let tags = { self.get_all_tags() };
+        if let Some(colored_tags) = self.colored_tags.as_mut() {
+            colored_tags.update_tags(tags);
+        }
+    }
+
+    /// Gets the matching color for the giving tag if colored tags are enabled and tag exists.
+    pub fn get_color_for_tag(&self, tag: &str) -> Option<TagColors> {
+        self.colored_tags
+            .as_ref()
+            .and_then(|c| c.get_tag_color(tag))
+    }
+
     /// Assigns priority to all entries that don't have a priority assigned to
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         self.data_provide
@@ -429,7 +462,7 @@ where
     /// Apply undo on entries returning the id of the effected entry.
     pub async fn undo(&mut self) -> anyhow::Result<Option<u32>> {
         match self.history.pop_undo() {
-            Some(change) => self.apply_change(change, HistoryStack::Redo).await,
+            Some(change) => self.apply_history_change(change, HistoryStack::Redo).await,
             None => Ok(None),
         }
     }
@@ -437,12 +470,12 @@ where
     /// Apply redo on entries returning the id of the effected entry.
     pub async fn redo(&mut self) -> anyhow::Result<Option<u32>> {
         match self.history.pop_redo() {
-            Some(change) => self.apply_change(change, HistoryStack::Undo).await,
+            Some(change) => self.apply_history_change(change, HistoryStack::Undo).await,
             None => Ok(None),
         }
     }
 
-    async fn apply_change(
+    async fn apply_history_change(
         &mut self,
         change: Change,
         history_target: HistoryStack,

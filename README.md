@@ -61,7 +61,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Intuitive, responsive and user-friendly text-based user interface (TUI).
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from within the app.
-- Add custom tags to the journals and use them in the built-in filter.
+- Add custom colored tags to the journals and use them in the built-in filter.
 - Fuzzy Finder: Locate your desired journal with lightning-fast speed.
 - Search functions for journals title and content in the built-in filter.
 - Sort the journals based on their date, priority and title.
@@ -218,6 +218,8 @@ scroll_per_page = 5  # Sets how many journals will be scrolled when using page u
 sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard 
 
 history_limit = 10  # Sets the maximum changes limit for the undo & redo stacks. Use 0 to disable it.
+
+colored_tags = true   # Sets if automatically coloring for tags is enabled.
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
