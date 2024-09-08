@@ -32,7 +32,7 @@ pub use runner::run;
 pub use runner::HandleInputReturnType;
 pub use ui::UIComponents;
 
-pub use colored_tags::TagColor;
+pub use colored_tags::TagColors;
 
 pub struct App<D>
 where
@@ -63,7 +63,7 @@ where
         let selected_entries = HashSet::new();
         let filtered_out_entries = HashSet::new();
         let history = HistoryManager::new(settings.history_limit);
-        let colored_tags = settings.colored_tags.then(|| ColoredTagsManager::new());
+        let colored_tags = settings.colored_tags.then(ColoredTagsManager::new);
 
         Self {
             data_provide,
@@ -412,7 +412,7 @@ where
     }
 
     /// Gets the matching color for the giving tag if colored tags are enabled and tag exists.
-    pub fn get_color_for_tag(&self, tag: &str) -> Option<TagColor> {
+    pub fn get_color_for_tag(&self, tag: &str) -> Option<TagColors> {
         self.colored_tags
             .as_ref()
             .and_then(|c| c.get_tag_color(tag))

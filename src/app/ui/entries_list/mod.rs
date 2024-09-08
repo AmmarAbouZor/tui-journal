@@ -137,7 +137,6 @@ impl<'a> EntriesList {
                         .add_modifier(Modifier::DIM);
 
                     let mut added_lines = 1;
-
                     spans.push(Line::default());
 
                     for tag in entry.tags.iter() {
@@ -158,7 +157,7 @@ impl<'a> EntriesList {
                             .unwrap_or(tags_default_style);
                         let span_to_add = Span::styled(tag.to_owned(), style);
 
-                        if last_line.width() + tag.len() < area.width as usize - LIST_INNER_MARGIN {
+                        if last_line.width() + tag.len() < allowd_width {
                             last_line.push_span(span_to_add);
                         } else {
                             added_lines += 1;

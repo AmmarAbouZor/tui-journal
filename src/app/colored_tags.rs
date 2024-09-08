@@ -5,24 +5,24 @@ use ratatui::style::Color;
 /// Hard coded colors for the tags.
 /// Note: the order to pick the colors is from bottom to top because we are popping the colors from
 /// the end of the stack.
-const TAG_COLORS: &[TagColor] = &[
-    TagColor::new(Color::Black, Color::LightMagenta),
-    TagColor::new(Color::Red, Color::Cyan),
-    TagColor::new(Color::Yellow, Color::Blue),
-    TagColor::new(Color::Reset, Color::Red),
-    TagColor::new(Color::Black, Color::LightYellow),
-    TagColor::new(Color::Reset, Color::DarkGray),
-    TagColor::new(Color::Black, Color::LightGreen),
-    TagColor::new(Color::Black, Color::LightRed),
-    TagColor::new(Color::Black, Color::LightCyan),
+const TAG_COLORS: &[TagColors] = &[
+    TagColors::new(Color::Black, Color::LightMagenta),
+    TagColors::new(Color::Red, Color::Cyan),
+    TagColors::new(Color::Yellow, Color::Blue),
+    TagColors::new(Color::Reset, Color::Red),
+    TagColors::new(Color::Black, Color::LightYellow),
+    TagColors::new(Color::Reset, Color::DarkGray),
+    TagColors::new(Color::Black, Color::LightGreen),
+    TagColors::new(Color::Black, Color::LightRed),
+    TagColors::new(Color::Black, Color::LightCyan),
 ];
 
 #[derive(Debug, Clone)]
 /// Manages assigning colors to the tags, keeping track on the assigned colors and providing
 /// functions to updating them.
 pub struct ColoredTagsManager {
-    tag_colors_map: HashMap<String, TagColor>,
-    available_colors: Vec<TagColor>,
+    tag_colors_map: HashMap<String, TagColors>,
+    available_colors: Vec<TagColors>,
 }
 
 impl ColoredTagsManager {
@@ -64,18 +64,19 @@ impl ColoredTagsManager {
     }
 
     /// Gets the matching color for the giving tag if tag exists.
-    pub fn get_tag_color(&self, tag: &str) -> Option<TagColor> {
+    pub fn get_tag_color(&self, tag: &str) -> Option<TagColors> {
         self.tag_colors_map.get(tag).copied()
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct TagColor {
+/// Represents the needed colors for a colored tag
+pub struct TagColors {
     pub foreground: Color,
     pub background: Color,
 }
 
-impl TagColor {
+impl TagColors {
     pub const fn new(foreground: Color, background: Color) -> Self {
         Self {
             foreground,

@@ -47,7 +47,7 @@ pub struct Settings {
     #[serde(default = "default_history_limit")]
     /// Set the maximum size of the history stacks (undo & redo) size.
     pub history_limit: usize,
-    #[serde(default)]
+    #[serde(default = "default_colored_tags")]
     pub colored_tags: bool,
 }
 
@@ -65,7 +65,7 @@ impl Default for Settings {
             scroll_per_page: Default::default(),
             sync_os_clipboard: Default::default(),
             history_limit: default_history_limit(),
-            colored_tags: Default::default(),
+            colored_tags: default_colored_tags(),
         }
     }
 }
@@ -80,6 +80,10 @@ pub enum BackendType {
 
 const fn default_history_limit() -> usize {
     10
+}
+
+const fn default_colored_tags() -> bool {
+    true
 }
 
 impl Settings {
