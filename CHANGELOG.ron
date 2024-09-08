@@ -8,6 +8,24 @@
       references: {},
       version: (
         major: 0,
+        minor: 11,
+        patch: 0,
+      ),
+      released: "2024-09-08T11:49:56.679586845Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Colored Tags to Journals, generated and assigned automatically",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 10,
         patch: 0,
       ),
