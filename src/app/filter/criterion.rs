@@ -1,6 +1,6 @@
 use backend::Entry;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FilterCriterion {
     Tag(String),
     Title(String),

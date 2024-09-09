@@ -1,6 +1,11 @@
 use std::{collections::HashMap, env};
 
-use crate::app::{external_editor, ui::*, App, UIComponents};
+use crate::app::{
+    external_editor,
+    filter::{Filter, FilterCriterion},
+    ui::*,
+    App, UIComponents,
+};
 
 use backend::DataProvider;
 
@@ -387,6 +392,32 @@ pub async fn continue_show_filter<'a, D: DataProvider>(
 
 pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     app.apply_filter(None);
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_toggle_tag_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
+    let tags = app.get_all_tags();
+    let first_tag_filter = tags
+        .first()
+        .map(|tag| FilterCriterion::Tag(tag.to_string()));
+
+    let tag_filter = app.filter.as_ref().and_then(|f| {
+        let filter = &f.criteria;
+        tags.iter()
+            .position(|tag| {
+                filter
+                    .iter()
+                    .any(|v| v == &FilterCriterion::Tag(tag.to_string()))
+            })
+            .and_then(|index| tags.get(index + 1))
+            .map(|tag| FilterCriterion::Tag(tag.to_string()))
+    });
+
+    app.apply_filter(Some(Filter {
+        criteria: vec![tag_filter.or(first_tag_filter).unwrap()],
+        ..Default::default()
+    }));
 
     Ok(HandleInputReturnType::Handled)
 }
