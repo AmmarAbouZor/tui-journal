@@ -15,8 +15,8 @@ use ratatui::{
 
 use backend::DataProvider;
 
-use crate::app::keymap::Keymap;
 use crate::app::App;
+use crate::{app::keymap::Keymap, settings::DatumVisibility};
 
 use super::INACTIVE_CONTROL_COLOR;
 use super::{UICommand, ACTIVE_CONTROL_COLOR};
@@ -85,35 +85,43 @@ impl<'a> EntriesList {
                     .collect();
 
                 // *** Date & Priority ***
-                let date_priority_lines = if let Some(prio) = entry.priority {
-                    let one_liner = format!(
-                        "{},{},{} | Priority: {}",
-                        entry.date.day(),
-                        entry.date.month(),
-                        entry.date.year(),
-                        prio
-                    );
+                let date_priority_lines = match (app.settings.datum_visibility, entry.priority) {
+                    (DatumVisibility::Show, Some(prio)) => {
+                        let one_liner = format!(
+                            "{},{},{} | Priority: {}",
+                            entry.date.day(),
+                            entry.date.month(),
+                            entry.date.year(),
+                            prio
+                        );
 
-                    if one_liner.len() > area.width as usize - LIST_INNER_MARGIN {
-                        vec![
-                            format!(
-                                "{},{},{}",
-                                entry.date.day(),
-                                entry.date.month(),
-                                entry.date.year()
-                            ),
-                            format!("Priority: {prio}"),
-                        ]
-                    } else {
-                        vec![one_liner]
+                        if one_liner.len() > area.width as usize - LIST_INNER_MARGIN {
+                            vec![
+                                format!(
+                                    "{},{},{}",
+                                    entry.date.day(),
+                                    entry.date.month(),
+                                    entry.date.year()
+                                ),
+                                format!("Priority: {prio}"),
+                            ]
+                        } else {
+                            vec![one_liner]
+                        }
                     }
-                } else {
-                    vec![format!(
-                        "{},{},{}",
-                        entry.date.day(),
-                        entry.date.month(),
-                        entry.date.year()
-                    )]
+                    (DatumVisibility::Show, None) => {
+                        vec![format!(
+                            "{},{},{}",
+                            entry.date.day(),
+                            entry.date.month(),
+                            entry.date.year()
+                        )]
+                    }
+                    (DatumVisibility::Hide, None) => Vec::new(),
+                    (DatumVisibility::EmptyLine, None) => vec![String::new()],
+                    (_, Some(prio)) => {
+                        vec![format!("Priority: {}", prio)]
+                    }
                 };
 
                 let date_lines = date_priority_lines.iter().map(|line| {

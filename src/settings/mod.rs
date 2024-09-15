@@ -49,6 +49,9 @@ pub struct Settings {
     pub history_limit: usize,
     #[serde(default = "default_colored_tags")]
     pub colored_tags: bool,
+    #[serde(default)]
+    /// Sets the visibility options for the datum of journals when rendered in entries list.
+    pub datum_visibility: DatumVisibility,
 }
 
 impl Default for Settings {
@@ -66,8 +69,23 @@ impl Default for Settings {
             sync_os_clipboard: Default::default(),
             history_limit: default_history_limit(),
             colored_tags: default_colored_tags(),
+            datum_visibility: Default::default(),
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
+#[serde(rename_all = "snake_case")]
+/// Represents the visibility options for the datum of journals when rendered in entries list.
+pub enum DatumVisibility {
+    #[default]
+    /// Render the datum in entry list.
+    Show,
+    /// Hide the datum without providing an extra empty line if `priority` filed for the entry is
+    /// empty too.
+    Hide,
+    /// Hide the datum providing an extra empty line if `priority` filed for the entry is empty.
+    EmptyLine,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
@@ -139,6 +157,7 @@ impl Settings {
             sync_os_clipboard: _,
             history_limit: _,
             colored_tags: _,
+            datum_visibility: _,
         } = self;
 
         if self.backend_type.is_none() {
