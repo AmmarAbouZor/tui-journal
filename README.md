@@ -221,6 +221,12 @@ history_limit = 10  # Sets the maximum changes limit for the undo & redo stacks.
 
 colored_tags = true   # Sets if automatically coloring for tags is enabled.
 
+# Sets the visibility option for the datum of journals. Available options:
+#  - `show`: Render datum in journals list.
+#  - `hide`: Hide datum without providing an extra empty line for journal without `priority` value. 
+#  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
+datum_visibility = "show"  
+
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.
