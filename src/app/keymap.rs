@@ -149,7 +149,7 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
         ),
         Keymap::new(
             Input::new(KeyCode::Char('t'), KeyModifiers::CONTROL),
-            UICommand::ToggleTagFilter,
+            UICommand::CycleTagFilter,
         ),
         Keymap::new(
             Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
