@@ -418,6 +418,31 @@ where
             .and_then(|c| c.get_tag_color(tag))
     }
 
+    pub fn cycle_tags_in_filter(&mut self) {
+        let tags = self.get_all_tags();
+        let tag_filter = self.filter.as_ref().and_then(|f| {
+            let filter = &f.criteria;
+            tags.iter()
+                .position(|tag| {
+                    filter
+                        .iter()
+                        .any(|v| v == &FilterCriterion::Tag(tag.to_string()))
+                })
+                .and_then(|index| tags.get(index + 1))
+                .map(|tag| FilterCriterion::Tag(tag.to_string()))
+        });
+
+        if let Some(filter) = tag_filter.or(tags
+            .first()
+            .map(|tag| FilterCriterion::Tag(tag.to_string())))
+        {
+            self.apply_filter(Some(Filter {
+                criteria: vec![filter],
+                ..Default::default()
+            }));
+        }
+    }
+
     /// Assigns priority to all entries that don't have a priority assigned to
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         self.data_provide
