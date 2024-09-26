@@ -176,7 +176,7 @@ impl UICommand {
                 "Reset the applied filter on journals",
             ),
             UICommand::CycleTagFilter => CommandInfo::new(
-                "Toggle Tag Filter",
+                "Cycle Tag Filter",
                 "Cycle through the tag filters",
             ),
             UICommand::ShowFuzzyFind => CommandInfo::new(
