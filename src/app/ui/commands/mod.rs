@@ -53,7 +53,7 @@ pub enum UICommand {
     MulSelExportEntries,
     ShowFilter,
     ResetFilter,
-    ToggleTagFilter,
+    CycleTagFilter,
     ShowFuzzyFind,
     ToggleEditorVisualMode,
     ToggleFullScreenMode,
@@ -175,7 +175,7 @@ impl UICommand {
                 "Reset filter",
                 "Reset the applied filter on journals",
             ),
-            UICommand::ToggleTagFilter => CommandInfo::new(
+            UICommand::CycleTagFilter => CommandInfo::new(
                 "Toggle Tag Filter",
                 "Cycle through the tag filters",
             ),
@@ -263,7 +263,7 @@ impl UICommand {
             UICommand::MulSelExportEntries => exec_export_selected_entries(ui_components, app),
             UICommand::ShowFilter => exec_show_filter(ui_components, app),
             UICommand::ResetFilter => exec_reset_filter(app),
-            UICommand::ToggleTagFilter => exec_toggle_tag_filter(app),
+            UICommand::CycleTagFilter => exec_toggle_tag_filter(app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
             UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
             UICommand::ToggleFullScreenMode => exec_toggle_full_screen_mode(app),
@@ -342,7 +342,7 @@ impl UICommand {
             UICommand::MulSelExportEntries => not_implemented(),
             UICommand::ShowFilter => continue_show_filter(ui_components, app, msg_box_result).await,
             UICommand::ResetFilter => not_implemented(),
-            UICommand::ToggleTagFilter => not_implemented(),
+            UICommand::CycleTagFilter => not_implemented(),
             UICommand::ShowFuzzyFind => {
                 continue_fuzzy_find(ui_components, app, msg_box_result).await
             }
