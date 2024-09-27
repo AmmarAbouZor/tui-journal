@@ -391,8 +391,35 @@ pub fn exec_reset_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_toggle_tag_filter<D: DataProvider>(app: &mut App<D>) -> CmdResult {
-    app.cycle_tags_in_filter();
+pub fn exec_cycle_tag_filter<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::CycleTagFilter));
+    } else {
+        app.cycle_tags_in_filter();
+    }
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn continue_cycle_tag_filter<'a, D: DataProvider>(
+    ui_components: &mut UIComponents<'a>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            exec_save_entry_content(ui_components, app).await?;
+            app.cycle_tags_in_filter();
+        }
+        MsgBoxResult::No => {
+            discard_current_content(ui_components, app);
+            app.cycle_tags_in_filter();
+        }
+    }
 
     Ok(HandleInputReturnType::Handled)
 }

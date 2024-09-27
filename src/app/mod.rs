@@ -419,27 +419,75 @@ where
     }
 
     pub fn cycle_tags_in_filter(&mut self) {
-        let tags = self.get_all_tags();
-        let tag_filter = self.filter.as_ref().and_then(|f| {
-            let filter = &f.criteria;
-            tags.iter()
-                .position(|tag| {
-                    filter
-                        .iter()
-                        .any(|v| v == &FilterCriterion::Tag(tag.to_string()))
-                })
-                .and_then(|index| tags.get(index + 1))
-                .map(|tag| FilterCriterion::Tag(tag.to_string()))
-        });
+        let all_tags = self.get_all_tags();
+        if all_tags.len() <= 1 {
+            return;
+        }
 
-        if let Some(filter) = tag_filter.or(tags
-            .first()
-            .map(|tag| FilterCriterion::Tag(tag.to_string())))
-        {
-            self.apply_filter(Some(Filter {
-                criteria: vec![filter],
-                ..Default::default()
-            }));
+        if let Some(mut filter) = self.filter.take() {
+            let applied_tags: Vec<String> = filter
+                .criteria
+                .iter()
+                .filter_map(|c| match c {
+                    FilterCriterion::Tag(tag) => Some(tag.to_owned()),
+                    _ => None,
+                })
+                .collect();
+            match applied_tags.len() {
+                // No existing tags => apply the first one.
+                0 => {
+                    filter.criteria.push(FilterCriterion::Tag(
+                        all_tags
+                            .into_iter()
+                            .next()
+                            .expect("Bound check done at the beginning"),
+                    ));
+                }
+                // One tag exist only => Cycle to the next one.
+                1 => {
+                    let current_tag = filter
+                        .criteria
+                        .iter_mut()
+                        .find_map(|c| match c {
+                            FilterCriterion::Tag(tag) => Some(tag),
+                            _ => None,
+                        })
+                        .expect("Criteria checked for having one Tag only");
+
+                    let tag_pos = all_tags
+                        .iter()
+                        .position(|t| t == current_tag)
+                        .expect("Tag from filter must exist in current tags");
+
+                    let next_index = (tag_pos + 1) % all_tags.len();
+
+                    *current_tag = all_tags.into_iter().nth(next_index).unwrap();
+                }
+                // Many tags exist => Clean them and apply the first one.
+                _ => {
+                    filter
+                        .criteria
+                        .retain(|c| !matches!(c, FilterCriterion::Tag(_)));
+                    filter.criteria.push(FilterCriterion::Tag(
+                        all_tags
+                            .into_iter()
+                            .next()
+                            .expect("Bound check done at the beginning"),
+                    ));
+                }
+            }
+
+            self.apply_filter(Some(filter));
+        } else {
+            // Apply filter with the first criteria
+            let mut filter = Filter::default();
+            filter.criteria.push(FilterCriterion::Tag(
+                all_tags
+                    .into_iter()
+                    .next()
+                    .expect("Bound check done at the beginning"),
+            ));
+            self.apply_filter(Some(filter));
         }
     }
 
