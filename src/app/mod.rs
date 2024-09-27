@@ -457,7 +457,7 @@ where
                     let tag_pos = all_tags
                         .iter()
                         .position(|t| t == current_tag)
-                        .expect("Tag from filter must exist in current tags");
+                        .unwrap_or_default();
 
                     let next_index = (tag_pos + 1) % all_tags.len();
 
