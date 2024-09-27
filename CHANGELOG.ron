@@ -8,6 +8,25 @@
       references: {},
       version: (
         major: 0,
+        minor: 12,
+        patch: 0,
+      ),
+      released: "2024-09-27T18:16:58.361361032Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Provide Configuration for entries datum visibility",
+            "Support Cycling Through Tags via Keybinding",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 11,
         patch: 0,
       ),
