@@ -148,6 +148,10 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             UICommand::ToggleFullScreenMode,
         ),
         Keymap::new(
+            Input::new(KeyCode::Char('t'), KeyModifiers::CONTROL),
+            UICommand::CycleTagFilter,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Char('u'), KeyModifiers::NONE),
             UICommand::Undo,
         ),

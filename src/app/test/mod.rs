@@ -1,6 +1,6 @@
 use chrono::TimeZone;
 
-use crate::app::filter::CriteriaRelation;
+mod filter;
 
 use self::mock::MockDataProvider;
 
@@ -129,76 +129,6 @@ async fn test_current_entry() {
     assert_eq!(current_entry.id, 0);
     assert_eq!(current_entry.tags.len(), 2);
     assert_eq!(current_entry.title, String::from("Title 1"));
-}
-
-#[tokio::test]
-async fn test_filter() {
-    let mut app = create_default_app();
-    app.load_entries().await.unwrap();
-
-    app.current_entry_id = Some(0);
-
-    let mut filter = Filter::default();
-    filter
-        .criteria
-        .push(FilterCriterion::Title(String::from("Title 2")));
-    app.apply_filter(Some(filter));
-
-    assert_eq!(app.get_active_entries().count(), 1);
-    assert!(app.get_current_entry().is_none());
-    let entry = app.get_active_entries().next().unwrap();
-    assert_eq!(entry.id, 1);
-    assert_eq!(entry.title, String::from("Title 2"));
-    assert!(app.get_entry(0).is_none());
-
-    app.apply_filter(None);
-    assert_eq!(app.get_active_entries().count(), 2);
-}
-
-#[tokio::test]
-async fn test_filter_priority() {
-    let mut app = create_default_app();
-    app.load_entries().await.unwrap();
-
-    app.current_entry_id = Some(0);
-
-    let mut filter = Filter::default();
-    filter.criteria.push(FilterCriterion::Priority(1));
-    app.apply_filter(Some(filter));
-
-    assert_eq!(app.get_active_entries().count(), 1);
-    assert!(app.get_current_entry().is_none());
-    let entry = app.get_active_entries().next().unwrap();
-    assert_eq!(entry.id, 1);
-    assert_eq!(entry.priority, Some(1));
-    assert!(app.get_entry(0).is_none());
-
-    app.apply_filter(None);
-    assert_eq!(app.get_active_entries().count(), 2);
-}
-
-#[tokio::test]
-async fn test_filter_relations() {
-    let mut app = create_default_app();
-    app.load_entries().await.unwrap();
-    let criteria = vec![
-        FilterCriterion::Content("1".into()),
-        FilterCriterion::Content("2".into()),
-    ];
-
-    let mut filter = Filter {
-        criteria,
-        relation: CriteriaRelation::Or,
-    };
-
-    app.apply_filter(Some(filter.clone()));
-
-    assert_eq!(app.get_active_entries().count(), 2);
-
-    filter.relation = CriteriaRelation::And;
-    app.apply_filter(Some(filter));
-
-    assert_eq!(app.get_active_entries().count(), 0);
 }
 
 async fn add_extra_entries_drafts(app: &mut App<MockDataProvider>) {

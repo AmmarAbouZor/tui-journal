@@ -418,6 +418,79 @@ where
             .and_then(|c| c.get_tag_color(tag))
     }
 
+    pub fn cycle_tags_in_filter(&mut self) {
+        let all_tags = self.get_all_tags();
+        if all_tags.len() <= 1 {
+            return;
+        }
+
+        if let Some(mut filter) = self.filter.take() {
+            let applied_tags: Vec<String> = filter
+                .criteria
+                .iter()
+                .filter_map(|c| match c {
+                    FilterCriterion::Tag(tag) => Some(tag.to_owned()),
+                    _ => None,
+                })
+                .collect();
+            match applied_tags.len() {
+                // No existing tags => apply the first one.
+                0 => {
+                    filter.criteria.push(FilterCriterion::Tag(
+                        all_tags
+                            .into_iter()
+                            .next()
+                            .expect("Bound check done at the beginning"),
+                    ));
+                }
+                // One tag exist only => Cycle to the next one.
+                1 => {
+                    let current_tag = filter
+                        .criteria
+                        .iter_mut()
+                        .find_map(|c| match c {
+                            FilterCriterion::Tag(tag) => Some(tag),
+                            _ => None,
+                        })
+                        .expect("Criteria checked for having one Tag only");
+
+                    let tag_pos = all_tags
+                        .iter()
+                        .position(|t| t == current_tag)
+                        .unwrap_or_default();
+
+                    let next_index = (tag_pos + 1) % all_tags.len();
+
+                    *current_tag = all_tags.into_iter().nth(next_index).unwrap();
+                }
+                // Many tags exist => Clean them and apply the first one.
+                _ => {
+                    filter
+                        .criteria
+                        .retain(|c| !matches!(c, FilterCriterion::Tag(_)));
+                    filter.criteria.push(FilterCriterion::Tag(
+                        all_tags
+                            .into_iter()
+                            .next()
+                            .expect("Bound check done at the beginning"),
+                    ));
+                }
+            }
+
+            self.apply_filter(Some(filter));
+        } else {
+            // Apply filter with the first criteria
+            let mut filter = Filter::default();
+            filter.criteria.push(FilterCriterion::Tag(
+                all_tags
+                    .into_iter()
+                    .next()
+                    .expect("Bound check done at the beginning"),
+            ));
+            self.apply_filter(Some(filter));
+        }
+    }
+
     /// Assigns priority to all entries that don't have a priority assigned to
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         self.data_provide

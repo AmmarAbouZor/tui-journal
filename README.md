@@ -74,6 +74,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Transfer text between the built-in editor and the system clipboard using Cut, Copy, and Paste.
 - Optionally sync the clipboard between the built-in editor and the operating system, with vim and emacs keybindings.
 - Sorting and full-screen preferences in the App State will be retained.
+- Easily cycle through tags in the main view with a single command \<Ctrl-t\>, applying the current filter for quick navigation.
 - See the keybindings from inside the app
 - Cross-platform compatibility (Windows, macOS, Linux, NetBSD).
 
