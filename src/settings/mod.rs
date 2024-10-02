@@ -198,11 +198,10 @@ fn get_settings_path() -> anyhow::Result<PathBuf> {
 }
 
 fn get_default_data_dir() -> anyhow::Result<PathBuf> {
-    UserDirs::new()
+    BaseDirs::new()
         .map(|user_dirs| {
             user_dirs
-                .document_dir()
-                .unwrap_or(user_dirs.home_dir())
+                .data_dir()
                 .join("tui-journal")
         })
         .context("Default entries directory path couldn't be retrieved")
