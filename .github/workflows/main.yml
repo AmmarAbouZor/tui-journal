@@ -36,7 +36,7 @@ jobs:
         rustup default ${{ env.RUST_CHANNEL }}
 
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2.7.3
+      uses: Swatinem/rust-cache@v2.7.5
 
     - name: Check json
       run: cargo check --no-default-features -F json --verbose
