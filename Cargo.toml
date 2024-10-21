@@ -13,7 +13,7 @@ rust-version = "1.75.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.89"
+anyhow = "1.0.90"
 tokio = { version = "1.39.3", features = ["full"] }
 serde = { version = "1.0.204", features = ["derive"]}
 serde_json = "1.0.124"
