@@ -24,7 +24,7 @@ crossterm = {version =  "0.28.1", features = ["event-stream"]}
 directories = "5.0.0"
 simplelog = "0.12.2"
 textwrap = "0.16.1"
-thiserror = "1.0.64"
+thiserror = "1.0.68"
 toml = "0.8.16"
 sqlx = {version = "0.8.1", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
