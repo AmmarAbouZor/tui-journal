@@ -255,7 +255,7 @@ fn render_keybindings<T: KeybindingsTable>(frame: &mut Frame, area: Rect, table:
             .title(table.get_title().to_owned())
             .borders(Borders::ALL),
     )
-    .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+    .row_highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
     let table_state = table.get_state_mut();
 
