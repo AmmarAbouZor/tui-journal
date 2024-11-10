@@ -1,23 +1,30 @@
 name: Homebrew Bump Formula
 on:
   workflow_dispatch:
-  # Not all binaries will be available at the moment when release is published.
-  # release:
-  #   types: [published]
+  release:
+    types: [released]
 jobs:
   homebrew:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2 
     - name: Get Latest Tag
       id: ltag
-      run: echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+      run: |
+        git fetch --tags
+        echo "GIT_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_OUTPUT
+    - name: Debug tag
+      run: |
+        echo "-------------------------------------------------------------"
+        echo ${{ steps.ltag.outputs.GIT_TAG }}
+        echo "-------------------------------------------------------------"
 
     - name: Bump Homebrew Formula
-      uses: mislav/bump-homebrew-formula-action@v3
-      env:
-        COMMITTER_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+      uses: dawidd6/action-homebrew-bump-formula@v4
       with:
-        homebrew-tap: AmmarAbouZor/homebrew-tui-journal
-        formula-name: tui-journal
-        formula-path: Formula/tui-journal.rb
-        tag-name: ${{ steps.ltag.outputs.GIT_TAG }}
+        token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+        tap: AmmarAbouZor/homebrew-tui-journal
+        formula: tui-journal
+        tag: ${{ steps.ltag.outputs.GIT_TAG }}
+        force: true
