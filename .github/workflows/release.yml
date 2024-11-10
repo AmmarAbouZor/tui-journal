@@ -24,7 +24,7 @@ jobs:
           - os: ubuntu-latest
             container: rust
             dependencies: "libssl-dev"
-          - os: macos-latest
+          - os: macos-13
             arch: x86_64
           - os: macos-latest
             arch: arm64
@@ -43,7 +43,7 @@ jobs:
       run: apt update && apt install -y ${{ matrix.dependencies }}
 
     - name: Build Release Mac x86_64
-      if: matrix.os == 'macos-latest' && matrix.arch == 'x86_64'
+      if: matrix.os == 'macos-13' && matrix.arch == 'x86_64'
       run: make release-mac-x86_64
     - name: Build Release Mac ARM64
       if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
