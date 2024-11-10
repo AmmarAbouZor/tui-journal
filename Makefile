@@ -14,15 +14,21 @@ clippy:
 build-release:
 	cargo build --release
 
-build-release_mac_arm:
-	cargo build --release --target=aarch64-apple-darwin
-
-release-mac: build-release
-	strip target/release/tjournal
-	otool -L target/release/tjournal
+release-mac-x86_64: build-release
+	cargo build --release --target=x86_64-apple-darwin
+	strip target/x86_64-apple-darwin/release/tjournal
+	otool -L target/x86_64-apple-darwin/release/tjournal
 	mkdir -p release
-	tar -C ./target/release/ -czvf ./release/tjournal-mac.tar.gz ./tjournal
-	ls -lisah ./release/tjournal-mac.tar.gz
+	tar -C ./target/x86_64-apple-darwin/release/ -czvf ./release/tjournal-mac-x86_64.tar.gz ./tjournal
+	ls -lisah ./release/tjournal-mac-x86_64.tar.gz
+
+release-mac-arm64: build-release
+	cargo build --release --target=aarch64-apple-darwin
+	strip target/aarch64-apple-darwin/release/tjournal
+	otool -L target/aarch64-apple-darwin/release/tjournal
+	mkdir -p release
+	tar -C ./target/aarch64-apple-darwin/release/ -czvf ./release/tjournal-mac-arm64.tar.gz ./tjournal
+	ls -lisah ./release/tjournal-mac-arm64.tar.gz
 
 release-win: build-release
 	mkdir -p release
