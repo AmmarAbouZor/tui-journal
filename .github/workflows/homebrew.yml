@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Get Latest Tag
       id: ltag
-      run: echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+      run: echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
 
     - name: Bump Homebrew Formula
       uses: mislav/bump-homebrew-formula-action@v3
