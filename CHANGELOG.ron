@@ -9,6 +9,24 @@
       version: (
         major: 0,
         minor: 12,
+        patch: 1,
+      ),
+      released: "2024-11-10T18:10:57.516434462Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "GitHub Action to Release on Homebrew Tap",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 12,
         patch: 0,
       ),
       released: "2024-09-27T18:16:58.361361032Z",
