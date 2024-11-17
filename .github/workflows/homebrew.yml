@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2 
+      uses: actions/checkout@v4
     - name: Get Latest Tag
       id: ltag
       run: |
         git fetch --tags
-        echo "GIT_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_OUTPUT
+        echo "GIT_TAG=$(git describe --tags "$(git rev-list --tags --max-count=1)")" >> "$GITHUB_OUTPUT"
     - name: Debug tag
       run: |
         echo "-------------------------------------------------------------"
