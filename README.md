@@ -121,6 +121,27 @@ On NetBSD a pre-compiled binary built with default features is available from th
 pkgin install tui-journal
 ```
 
+### Nix
+
+TUI-Journal is available on the [Nix package manager](https://nixos.org/). You can install it using the following commands:
+
+```bash
+# On NixOS:
+nix-env -iA nixos.tui-journal
+
+# On Non NixOS:
+nix-env -iA nixpkgs.tui-journal
+```
+For more information, visit the [TUI-Journal package page on Nix](https://search.nixos.org/packages?show=tui-journal).
+
+### Homebrew (macOS and Linux)
+
+For macOS and Linux users, TUI-Journal can be installed via Homebrew using a direct installation method:
+
+```bash
+brew install AmmarAbouZor/homebrew-tui-journal/tui-journal
+```
+
 ### Build & Install via Cargo 
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
