@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         # Run on latest and minimal supported rust versions.
-        rust-version: ["stable", "1.75.0"]
+        rust-version: ["stable", "1.81.0"]
 
     steps:
     - uses: actions/checkout@v4
