@@ -51,12 +51,14 @@ jobs:
       run: cargo check --no-default-features -F sqlite --verbose
 
     - name: Clippy
+      if: ${{ matrix.rust-version == 'stable' }}
       run: cargo clippy --verbose
 
     - name: Build
       run: cargo build --verbose
 
     - name: Run tests
+      if: ${{ matrix.rust-version == 'stable' }}
       run: cargo test --verbose
 
   cffconvert:
