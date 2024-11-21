@@ -24,16 +24,22 @@ jobs:
           args: -color
 
   build:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run on latest and minimal supported rust versions.
+        rust-version: ["stable", "1.81.0"]
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Latest Rust
+    - name: Install Rust
       run: |
-        rustup update --no-self-update ${{ env.RUST_CHANNEL }}
-        rustup default ${{ env.RUST_CHANNEL }}
+        echo "Installing Rust ${{ matrix.rust-version }}"
+        rustup update --no-self-update ${{ matrix.rust-version  }}
+        rustup default ${{ matrix.rust-version  }}
 
     - name: Rust Cache
       uses: Swatinem/rust-cache@v2.7.5
@@ -45,12 +51,14 @@ jobs:
       run: cargo check --no-default-features -F sqlite --verbose
 
     - name: Clippy
-      run: cargo clippy
+      if: ${{ matrix.rust-version == 'stable' }}
+      run: cargo clippy --verbose
 
     - name: Build
       run: cargo build --verbose
 
     - name: Run tests
+      if: ${{ matrix.rust-version == 'stable' }}
       run: cargo test --verbose
 
   cffconvert:
