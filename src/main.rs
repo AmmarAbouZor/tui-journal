@@ -38,9 +38,8 @@ async fn main() -> Result<()> {
 
     app::run(&mut terminal, settings, pending_cmd)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             log::error!("[PANIC] {}", err.to_string());
-            err
         })?;
 
     // restore terminal
