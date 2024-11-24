@@ -57,7 +57,7 @@ impl<'a> FuzzFindPopup<'a> {
             search_query: None,
             filtered_entries: Vec::new(),
             list_state: ListState::default(),
-            matcher: SkimMatcherV2::default(),
+            matcher: SkimMatcherV2::default().smart_case(),
         }
     }
 
