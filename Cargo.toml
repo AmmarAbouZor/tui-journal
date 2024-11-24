@@ -13,31 +13,31 @@ rust-version = "1.81.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.89"
-tokio = { version = "1.39.3", features = ["full"] }
-serde = { version = "1.0.204", features = ["derive"]}
-serde_json = "1.0.124"
-log = "0.4.22"
-chrono = { version = "0.4.38", features = ["serde"] }
-clap = { version = "4.5.20", features = ["derive"] }
-crossterm = {version =  "0.28.1", features = ["event-stream"]}
-directories = "5.0.0"
-simplelog = "0.12.2"
-textwrap = "0.16.1"
-thiserror = "2.0.2"
-toml = "0.8.16"
-sqlx = {version = "0.8.1", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
+anyhow = "1"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"]}
+serde_json = "1"
+log = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.5", features = ["derive"] }
+crossterm = {version =  "0.28", features = ["event-stream"]}
+directories = "5"
+simplelog = "0.12"
+textwrap = "0.16"
+thiserror = "2"
+toml = "0.8"
+sqlx = {version = "0.8", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 aho-corasick = "1.1"
 
-scopeguard = "1.2.0"
-git2 = { version = "0.19.0", default-features = false }
-rayon = "1.10.0"
-fuzzy-matcher = "0.3.7"
-path-absolutize = "3.1.1"
+scopeguard = "1.2"
+git2 = { version = "0.19", default-features = false }
+rayon = "1.10"
+fuzzy-matcher = "0.3"
+path-absolutize = "3.1"
 tui-textarea = "0.7"
-ratatui = { version = "0.29.0", features = ["all-widgets"]}
-arboard = { version = "3.4.1", default-features = false, features = ["wayland-data-control"]}
+ratatui = { version = "0.29", features = ["all-widgets"]}
+arboard = { version = "3.4", default-features = false, features = ["wayland-data-control"]}
 
 [features]
 default = ["json", "sqlite"]
