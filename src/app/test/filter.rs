@@ -26,6 +26,52 @@ async fn test_filter() {
 }
 
 #[tokio::test]
+async fn test_title_smart_case() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    app.current_entry_id = Some(0);
+    let mut filter = Filter::default();
+    filter
+        .criteria
+        .push(FilterCriterion::Title(String::from("title 2")));
+    app.apply_filter(Some(filter));
+
+    assert_eq!(app.get_active_entries().count(), 1);
+    assert!(app.get_current_entry().is_none());
+    let entry = app.get_active_entries().next().unwrap();
+    assert_eq!(entry.id, 1);
+    assert_eq!(entry.title, String::from("Title 2"));
+    assert!(app.get_entry(0).is_none());
+
+    app.apply_filter(None);
+    assert_eq!(app.get_active_entries().count(), 2);
+}
+
+#[tokio::test]
+async fn test_content_smart_case() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    app.current_entry_id = Some(0);
+    let mut filter = Filter::default();
+    filter
+        .criteria
+        .push(FilterCriterion::Content(String::from("content 2")));
+    app.apply_filter(Some(filter));
+
+    assert_eq!(app.get_active_entries().count(), 1);
+    assert!(app.get_current_entry().is_none());
+    let entry = app.get_active_entries().next().unwrap();
+    assert_eq!(entry.id, 1);
+    assert_eq!(entry.content, String::from("Content 2"));
+    assert!(app.get_entry(0).is_none());
+
+    app.apply_filter(None);
+    assert_eq!(app.get_active_entries().count(), 2);
+}
+
+#[tokio::test]
 async fn test_filter_priority() {
     let mut app = create_default_app();
     app.load_entries().await.unwrap();
