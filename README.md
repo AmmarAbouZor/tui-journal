@@ -62,8 +62,8 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from within the app.
 - Add custom colored tags to the journals and use them in the built-in filter.
-- Fuzzy Finder: Locate your desired journal with lightning-fast speed.
-- Search functions for journals title and content in the built-in filter.
+- Fuzzy Finder: Locate your desired journal with lightning-fast speed using smart-case search.
+- Smart search functions for journals title and content in the built-in filter.
 - Sort the journals based on their date, priority and title.
 - Control many journals at once via the multi-select mode
 - History management with Undo and Redo actions to easily revert or reapply changes in your entries
