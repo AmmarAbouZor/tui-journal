@@ -8,6 +8,31 @@
       references: {},
       version: (
         major: 0,
+        minor: 13,
+        patch: 0,
+      ),
+      released: "2024-11-25T18:59:38.861019821Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Smart Case for Filter & Fuzzy Finder",
+          ],
+          "Changed": [
+            "Update dependencies & Simplified versions",
+          ],
+          "Fixed": [
+            "Fix Homebrew GitHub Action",
+            "Increase Min Rust Version & Include minimal supported rust version in CI",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 12,
         patch: 1,
       ),
