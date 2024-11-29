@@ -45,6 +45,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [Installation](#installation)
   - [Arch Linux](#arch-linux)
   - [Alpine Linux](#alpine-linux)
+  - [FreeBSD](#freebsd)
   - [NetBSD](#netbsd)
   - [Build & Install via Cargo ](#build--install-via-cargo)
 - [Usage](#usage)
@@ -111,6 +112,14 @@ TUI-Journal is available for [Alpine Edge](https://pkgs.alpinelinux.org/packages
 
 ```bash
 apk add tui-journal
+```
+
+### FreeBSD
+
+On FreeBSD, you can install TUI-Journal by using [pkg](https://www.freshports.org/textproc/tui-journal):
+
+```bash
+pkg install -y tui-journal
 ```
 
 ### NetBSD
