@@ -30,7 +30,7 @@ pub struct ExportPopup<'a> {
     paragraph_text: String,
 }
 
-impl<'a> ExportPopup<'a> {
+impl ExportPopup<'_> {
     pub fn create_entry_content<D: DataProvider>(
         entry: &Entry,
         app: &App<D>,

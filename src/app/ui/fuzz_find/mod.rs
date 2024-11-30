@@ -44,7 +44,7 @@ impl FilteredEntry {
     }
 }
 
-impl<'a> FuzzFindPopup<'a> {
+impl FuzzFindPopup<'_> {
     pub fn new(entries: HashMap<u32, String>) -> Self {
         let mut query_text_box = TextArea::default();
         let block = Block::default().title("Search Query").borders(Borders::ALL);
