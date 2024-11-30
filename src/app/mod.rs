@@ -23,7 +23,7 @@ mod history;
 mod keymap;
 mod runner;
 mod sorter;
-mod state;
+pub mod state;
 #[cfg(test)]
 mod test;
 mod ui;
@@ -513,7 +513,7 @@ where
     }
 
     pub fn load_state(&mut self, ui_components: &mut UIComponents) {
-        let state = match AppState::load() {
+        let state = match AppState::load(&self.settings) {
             Ok(state) => state,
             Err(err) => {
                 ui_components.show_err_msg(format!(
@@ -527,7 +527,7 @@ where
     }
 
     pub fn persist_state(&self) -> anyhow::Result<()> {
-        self.state.save()?;
+        self.state.save(&self.settings)?;
 
         Ok(())
     }

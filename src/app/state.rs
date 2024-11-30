@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
+const STATE_FILE_NAME: &str = "state.json";
+
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct AppState {
     pub sorter: Sorter,
@@ -12,8 +14,8 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn load() -> anyhow::Result<Self> {
-        let state_path = Self::get_path()?;
+    pub fn load(settings: &Settings) -> anyhow::Result<Self> {
+        let state_path = Self::get_persist_path(settings)?;
 
         let state = if state_path.exists() {
             let state_file = File::open(state_path)
@@ -27,8 +29,16 @@ impl AppState {
         Ok(state)
     }
 
-    pub fn save(&self) -> anyhow::Result<()> {
-        let state_path = Self::get_path()?;
+    fn get_persist_path(settings: &Settings) -> anyhow::Result<PathBuf> {
+        if let Some(path) = settings.app_state_dir.as_ref() {
+            Ok(path.join(STATE_FILE_NAME))
+        } else {
+            Self::default_persist_dir().map(|dir| dir.join(STATE_FILE_NAME))
+        }
+    }
+
+    pub fn save(&self, settings: &Settings) -> anyhow::Result<()> {
+        let state_path = Self::get_persist_path(settings)?;
         if let Some(parent) = state_path.parent() {
             fs::create_dir_all(parent)?;
         }
@@ -41,9 +51,16 @@ impl AppState {
         Ok(())
     }
 
-    fn get_path() -> anyhow::Result<PathBuf> {
+    /// Return the default path of the directory used to persist the application state.
+    /// It uses the state directories on supported platforms falling back to the data directory.
+    pub fn default_persist_dir() -> anyhow::Result<PathBuf> {
         BaseDirs::new()
-            .map(|base_dirs| base_dirs.data_dir().join("tui-journal").join("state.json"))
+            .map(|base_dirs| {
+                base_dirs
+                    .state_dir()
+                    .unwrap_or_else(|| base_dirs.data_dir())
+                    .join("tui-journal")
+            })
             .context("Config file path couldn't be retrieved")
     }
 }

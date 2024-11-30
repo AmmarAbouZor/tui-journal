@@ -258,6 +258,10 @@ colored_tags = true   # Sets if automatically coloring for tags is enabled.
 #  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
 datum_visibility = "show"  
 
+# Sets the directory where the application persists its state between sessions.
+# Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows 
+app_state_dir = "<STATE_DIRECTORY>/tui-journal/"
+
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.
 show_confirmation = true   # Show confirmation after successful export.

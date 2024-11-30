@@ -8,6 +8,8 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 
+use crate::app::state::AppState;
+
 #[cfg(feature = "json")]
 use self::json_backend::{get_default_json_path, JsonBackend};
 #[cfg(feature = "sqlite")]
@@ -52,6 +54,8 @@ pub struct Settings {
     #[serde(default)]
     /// Sets the visibility options for the datum of journals when rendered in entries list.
     pub datum_visibility: DatumVisibility,
+    /// Overwrite the path for the directory used to persist the app state.
+    pub app_state_dir: Option<PathBuf>,
 }
 
 impl Default for Settings {
@@ -70,6 +74,7 @@ impl Default for Settings {
             history_limit: default_history_limit(),
             colored_tags: default_colored_tags(),
             datum_visibility: Default::default(),
+            app_state_dir: Default::default(),
         }
     }
 }
@@ -158,6 +163,7 @@ impl Settings {
             history_limit: _,
             colored_tags: _,
             datum_visibility: _,
+            app_state_dir: _,
         } = self;
 
         if self.backend_type.is_none() {
@@ -176,6 +182,10 @@ impl Settings {
 
         if self.scroll_per_page.is_none() {
             self.scroll_per_page = Some(DEFAULT_SCROLL_PER_PAGE);
+        }
+
+        if self.app_state_dir.is_none() {
+            self.app_state_dir = Some(AppState::default_persist_dir()?);
         }
 
         Ok(())
