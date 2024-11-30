@@ -5,8 +5,8 @@ use std::{
 };
 
 use crate::{
-    logging::{get_default_path, setup_logging},
-    settings::{BackendType, Settings},
+    logging::{get_default_path as defaul_log_path, setup_logging},
+    settings::{settings_default_path, BackendType, Settings},
 };
 
 pub mod commands;
@@ -30,6 +30,9 @@ pub struct Cli {
     /// Sets the backend type and starts using it.
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
+
+    #[arg(short = 'c', long = "config", value_name = "FLIE PAHT", help = config_help())]
+    pub config_path: Option<PathBuf>,
 
     /// write the current settings to config file (this will rewrite the whole config file)
     #[arg(short, long)]
@@ -72,7 +75,9 @@ impl Cli {
         }
 
         if self.write_config {
-            settings.write_current_settings().await?;
+            settings
+                .write_current_settings(self.config_path.clone())
+                .await?;
         }
 
         setup_logging(self.verbose, self.log_file)?;
@@ -123,7 +128,16 @@ fn set_backend_type(backend: BackendType, settings: &mut Settings) {
 fn log_help() -> String {
     format!(
         "Specifies a file to use for logging\n(default file: {})",
-        get_default_path()
+        defaul_log_path()
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default()
+    )
+}
+
+fn config_help() -> String {
+    format!(
+        "Specifies the path for the configuration file\n(default path: {})",
+        settings_default_path()
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default()
     )

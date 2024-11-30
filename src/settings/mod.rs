@@ -110,8 +110,13 @@ const fn default_colored_tags() -> bool {
 }
 
 impl Settings {
-    pub async fn new() -> anyhow::Result<Self> {
-        let settings_path = get_settings_path()?;
+    pub async fn new(custom_path: Option<PathBuf>) -> anyhow::Result<Self> {
+        let settings_path = if let Some(path) = custom_path {
+            path
+        } else {
+            settings_default_path()?
+        };
+
         let settings = if settings_path.exists() {
             let file_content = tokio::fs::read_to_string(settings_path)
                 .await
@@ -125,10 +130,17 @@ impl Settings {
         Ok(settings)
     }
 
-    pub async fn write_current_settings(&mut self) -> anyhow::Result<()> {
+    pub async fn write_current_settings(
+        &mut self,
+        custom_path: Option<PathBuf>,
+    ) -> anyhow::Result<()> {
         let toml = self.get_as_text()?;
 
-        let settings_path = get_settings_path()?;
+        let settings_path = if let Some(path) = custom_path {
+            path
+        } else {
+            settings_default_path()?
+        };
 
         if let Some(parent) = settings_path.parent() {
             tokio::fs::create_dir_all(parent).await?;
@@ -196,7 +208,7 @@ impl Settings {
     }
 }
 
-fn get_settings_path() -> anyhow::Result<PathBuf> {
+pub fn settings_default_path() -> anyhow::Result<PathBuf> {
     BaseDirs::new()
         .map(|base_dirs| {
             base_dirs
