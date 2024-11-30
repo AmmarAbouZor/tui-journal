@@ -15,6 +15,13 @@ pub struct AppState {
 
 impl AppState {
     pub fn load(settings: &Settings) -> anyhow::Result<Self> {
+        // Move state file from legacy data directory to the new state directory
+        // to avoid breaking changes on users.
+        // TODO: Remove this after three releases.
+        if settings.app_state_dir.is_none() {
+            Self::move_legacy_state();
+        }
+
         let state_path = Self::get_persist_path(settings)?;
 
         let state = if state_path.exists() {
@@ -62,5 +69,78 @@ impl AppState {
                     .join("tui-journal")
             })
             .context("Config file path couldn't be retrieved")
+    }
+
+    /// Move app state from legacy path to the new one if the legacy exists and the new doesn't.
+    fn move_legacy_state() {
+        // Return early if operating system doesn't support `state_dir()`
+        let state_path = match BaseDirs::new()
+            .map(|base_dirs| base_dirs.state_dir().map(|state| state.join("tui-journal")))
+        {
+            Some(Some(state)) => state,
+            _ => return,
+        };
+
+        // Gets legacy path which was used to store the state previously.
+        let legacy_data_dir =
+            match BaseDirs::new().map(|base_dirs| base_dirs.data_dir().join("tui-journal")) {
+                Some(path) => path,
+                None => return,
+            };
+        // Legacy already removed -> Done
+        if !legacy_data_dir.exists() {
+            return;
+        }
+
+        let legacy_state_file = legacy_data_dir.join(STATE_FILE_NAME);
+        if !legacy_state_file.exists() {
+            // Legacy dir exists but it has no files -> remove it -> Done.
+            if let Err(err) = std::fs::remove_dir_all(&legacy_data_dir) {
+                log::error!(
+                    "Legacy State: Removing legacy directory failed. path: {}, Error {err}",
+                    legacy_data_dir.display()
+                );
+            }
+            return;
+        }
+
+        let new_state_file = state_path.join(STATE_FILE_NAME);
+        if new_state_file.exists() {
+            // New state file exists somehow -> Remove old state directory to avoid running this
+            // again.
+            if let Err(err) = std::fs::remove_dir_all(&legacy_data_dir) {
+                log::error!(
+                    "Legacy State: Removing legacy directory failed. path: {}, Error {err}",
+                    legacy_data_dir.display()
+                );
+            }
+
+            return;
+        }
+
+        if !state_path.exists() {
+            // Create new state directory if not exists.
+            if let Err(err) = std::fs::create_dir_all(&state_path) {
+                log::error!(
+                    "Legacy State: Creating state dir filed. Path: {}, Error {err}",
+                    state_path.display()
+                );
+                return;
+            }
+        }
+
+        // Move state file.
+        if let Err(err) = std::fs::rename(legacy_state_file, new_state_file) {
+            log::error!("Legacy State: Moving legacy state file failed. Error {err}");
+            return;
+        }
+
+        // Finally remove legacy state directory.
+        if let Err(err) = std::fs::remove_dir_all(&legacy_data_dir) {
+            log::error!(
+                "Legacy State: Removing legacy directory failed. path: {}, Error {err}",
+                legacy_data_dir.display()
+            );
+        }
     }
 }
