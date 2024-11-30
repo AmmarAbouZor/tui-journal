@@ -42,7 +42,7 @@ enum FilterControl {
     TagsList,
 }
 
-impl<'a> FilterPopup<'a> {
+impl FilterPopup<'_> {
     pub fn new(tags: Vec<String>, filter: Option<Filter>) -> Self {
         let filter = filter.unwrap_or_default();
 

@@ -8,6 +8,8 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 
+use crate::app::state::AppState;
+
 #[cfg(feature = "json")]
 use self::json_backend::{get_default_json_path, JsonBackend};
 #[cfg(feature = "sqlite")]
@@ -52,6 +54,8 @@ pub struct Settings {
     #[serde(default)]
     /// Sets the visibility options for the datum of journals when rendered in entries list.
     pub datum_visibility: DatumVisibility,
+    /// Overwrite the path for the directory used to persist the app state.
+    pub app_state_dir: Option<PathBuf>,
 }
 
 impl Default for Settings {
@@ -70,6 +74,7 @@ impl Default for Settings {
             history_limit: default_history_limit(),
             colored_tags: default_colored_tags(),
             datum_visibility: Default::default(),
+            app_state_dir: Default::default(),
         }
     }
 }
@@ -105,8 +110,13 @@ const fn default_colored_tags() -> bool {
 }
 
 impl Settings {
-    pub async fn new() -> anyhow::Result<Self> {
-        let settings_path = get_settings_path()?;
+    pub async fn new(custom_path: Option<PathBuf>) -> anyhow::Result<Self> {
+        let settings_path = if let Some(path) = custom_path {
+            path
+        } else {
+            settings_default_path()?
+        };
+
         let settings = if settings_path.exists() {
             let file_content = tokio::fs::read_to_string(settings_path)
                 .await
@@ -120,10 +130,17 @@ impl Settings {
         Ok(settings)
     }
 
-    pub async fn write_current_settings(&mut self) -> anyhow::Result<()> {
+    pub async fn write_current_settings(
+        &mut self,
+        custom_path: Option<PathBuf>,
+    ) -> anyhow::Result<()> {
         let toml = self.get_as_text()?;
 
-        let settings_path = get_settings_path()?;
+        let settings_path = if let Some(path) = custom_path {
+            path
+        } else {
+            settings_default_path()?
+        };
 
         if let Some(parent) = settings_path.parent() {
             tokio::fs::create_dir_all(parent).await?;
@@ -158,6 +175,7 @@ impl Settings {
             history_limit: _,
             colored_tags: _,
             datum_visibility: _,
+            app_state_dir: _,
         } = self;
 
         if self.backend_type.is_none() {
@@ -178,6 +196,10 @@ impl Settings {
             self.scroll_per_page = Some(DEFAULT_SCROLL_PER_PAGE);
         }
 
+        if self.app_state_dir.is_none() {
+            self.app_state_dir = Some(AppState::default_persist_dir()?);
+        }
+
         Ok(())
     }
 
@@ -186,7 +208,7 @@ impl Settings {
     }
 }
 
-fn get_settings_path() -> anyhow::Result<PathBuf> {
+pub fn settings_default_path() -> anyhow::Result<PathBuf> {
     BaseDirs::new()
         .map(|base_dirs| {
             base_dirs

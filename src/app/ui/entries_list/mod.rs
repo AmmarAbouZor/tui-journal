@@ -31,7 +31,7 @@ pub struct EntriesList {
     pub multi_select_mode: bool,
 }
 
-impl<'a> EntriesList {
+impl EntriesList {
     pub fn new() -> Self {
         Self {
             state: ListState::default(),
@@ -267,7 +267,7 @@ impl<'a> EntriesList {
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block(&self, has_filter: bool, entries_len: Option<usize>) -> Block<'a> {
+    fn get_list_block<'a>(&self, has_filter: bool, entries_len: Option<usize>) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",
             (true, false) => "Journals - Multi-Select",

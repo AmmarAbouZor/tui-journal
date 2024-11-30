@@ -226,6 +226,8 @@ Options:
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
   -w, --write-config                  write the current settings to config file (this will rewrite the whole config file)
+  -c, --config <FLIE PAHT>            Specifies the path for the configuration file
+                                      (default path: <config-dir>/tui-journal/config.toml)
   -v, --verbose...                    Increases logging verbosity each use for up to 3 times
   -l, --log <FILE PATH>               Specifies a file to use for logging
                                       (default file: <cache_dir>/tui-journal/tui-journal.log)
@@ -257,6 +259,10 @@ colored_tags = true   # Sets if automatically coloring for tags is enabled.
 #  - `hide`: Hide datum without providing an extra empty line for journal without `priority` value. 
 #  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
 datum_visibility = "show"  
+
+# Sets the directory where the application persists its state between sessions.
+# Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows 
+app_state_dir = "<STATE_DIRECTORY>/tui-journal/"
 
 [export]
 default_path = "<Absolute_path_to_export_directory>"   # Optional default path to export multiple journals or a single journal's content. Falls back to the current directory if not specified.

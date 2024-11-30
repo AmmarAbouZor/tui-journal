@@ -16,9 +16,9 @@ mod settings;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut settings = Settings::new().await?;
-
     let cli = cli::Cli::parse();
+
+    let mut settings = Settings::new(cli.config_path.clone()).await?;
 
     let mut pending_cmd = None;
 
