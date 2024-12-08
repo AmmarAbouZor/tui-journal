@@ -2679,7 +2679,7 @@ dependencies = [
 
 [[package]]
 name = "tui-journal"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "aho-corasick",
  "anyhow",
