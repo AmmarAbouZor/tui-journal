@@ -9,6 +9,25 @@
       version: (
         major: 0,
         minor: 13,
+        patch: 1,
+      ),
+      released: "2024-12-08T16:31:02.474273641Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "A new FreeBSD port was published for tui-journal.",
+            "Config path via CLI & State Path configurable & Fix default state path",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 13,
         patch: 0,
       ),
       released: "2024-11-25T18:59:38.861019821Z",
