@@ -293,9 +293,16 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
     use tokio::fs;
 
     if let Some(entry) = app.get_current_entry() {
-        const FILE_NAME: &str = "tui_journal.txt";
+        const TEMP_FILENAME: &str = "tui_journal";
+        let temp_extension = &app.settings.external_editor.temp_file_extension;
 
-        let file_path = env::temp_dir().join(FILE_NAME);
+        let file_name = if !temp_extension.is_empty() {
+            format!("{TEMP_FILENAME}.{temp_extension}")
+        } else {
+            String::from(TEMP_FILENAME)
+        };
+
+        let file_path = env::temp_dir().join(file_name);
 
         if file_path.exists() {
             fs::remove_file(&file_path).await?;
