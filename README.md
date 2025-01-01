@@ -275,6 +275,9 @@ scroll_per_page = 5    # Sets how many journals will be scrolled using Page-Up a
 command = "nvim"
 # Enabling this save the journal content automatically after closing the external editor
 auto_save = false
+# Set the extension of the temporary file used with the external editor. 
+# This influences syntax highlighting in external editor (e.g., "md" for Markdown support).
+temp_file_extension = "txt"
 
 # Note: external_editor can still be configured in one line to set the command. In that case, the default values for the other fields will be used
 # external_editor = "nvim"
