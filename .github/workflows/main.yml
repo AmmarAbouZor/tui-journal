@@ -42,7 +42,7 @@ jobs:
         rustup default ${{ matrix.rust-version  }}
 
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2.7.5
+      uses: Swatinem/rust-cache@v2.7.7
 
     - name: Check json
       run: cargo check --no-default-features -F json --verbose
