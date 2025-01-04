@@ -1,7 +1,7 @@
 use ratatui::style::{Color, Modifier, Style as RataStyle};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, Default)]
 /// Represents the style elements as they defined in [`ratatui`] lib but with more simple
 /// definitions for serialization so it's less confusing for users to define in custom themes.
 pub struct Style {

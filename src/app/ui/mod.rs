@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use backend::DataProvider;
+pub use themes::Styles;
 
 use self::{
     editor::{Editor, EditorMode},
@@ -50,9 +51,7 @@ pub use msg_box::MsgBoxResult;
 
 pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
-pub const EDITOR_MODE_COLOR: Color = Color::LightGreen;
 pub const INVALID_CONTROL_COLOR: Color = Color::LightRed;
-pub const VISUAL_MODE_COLOR: Color = Color::Blue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -78,6 +77,7 @@ pub enum PopupReturn<T> {
 }
 
 pub struct UIComponents<'a> {
+    styles: Styles,
     global_keymaps: Vec<Keymap>,
     entries_list_keymaps: Vec<Keymap>,
     editor_keymaps: Vec<Keymap>,
@@ -91,6 +91,9 @@ pub struct UIComponents<'a> {
 
 impl<'a, 'b> UIComponents<'a> {
     pub fn new() -> Self {
+        // TODO: I'm using defaults for now. This needs to be read from themes files
+        let styles = Styles::default();
+
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
         let editor_keymaps = get_editor_mode_keymaps();
@@ -102,6 +105,7 @@ impl<'a, 'b> UIComponents<'a> {
         entries_list.set_active(true);
 
         Self {
+            styles,
             global_keymaps,
             entries_list_keymaps,
             editor_keymaps,
@@ -147,7 +151,7 @@ impl<'a, 'b> UIComponents<'a> {
                         .render_widget(f, chunks[0], app, &self.entries_list_keymaps);
                 }
                 ControlType::EntryContentTxt => {
-                    self.editor.render_widget(f, chunks[0]);
+                    self.editor.render_widget(f, chunks[0], &self.styles);
                 }
             }
         } else {
@@ -157,7 +161,8 @@ impl<'a, 'b> UIComponents<'a> {
                 .split(chunks[0]);
             self.entries_list
                 .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
-            self.editor.render_widget(f, entries_chunks[1]);
+            self.editor
+                .render_widget(f, entries_chunks[1], &self.styles);
         }
 
         self.render_popup(f);
