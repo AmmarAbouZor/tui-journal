@@ -42,6 +42,7 @@ mod fuzz_find;
 mod help_popup;
 mod msg_box;
 mod sort_popup;
+pub mod themes;
 pub mod ui_functions;
 
 pub use commands::UICommand;
