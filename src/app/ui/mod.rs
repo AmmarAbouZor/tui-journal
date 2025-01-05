@@ -178,7 +178,7 @@ impl<'a, 'b> UIComponents<'a> {
             match popup {
                 Popup::Help(help_popup) => help_popup.render_widget(f, f.area()),
                 Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.area(), &self.styles),
-                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area()),
+                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area(), &self.styles),
                 Popup::Export(export_popup) => {
                     export_popup.render_widget(f, f.area(), &self.styles)
                 }
