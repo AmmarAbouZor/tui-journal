@@ -12,10 +12,7 @@ use tui_textarea::{CursorMove, TextArea};
 
 use crate::app::{keymap::Input, App};
 
-use super::{
-    ui_functions::centered_rect_exact_height, PopupReturn, ACTIVE_CONTROL_COLOR,
-    INVALID_CONTROL_COLOR,
-};
+use super::{ui_functions::centered_rect_exact_height, PopupReturn, Styles};
 
 type ExportPopupInputReturn = PopupReturn<(PathBuf, Option<u32>)>;
 
@@ -117,7 +114,7 @@ impl ExportPopup<'_> {
         self.entry_id.is_none()
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let mut area = centered_rect_exact_height(70, 11, area);
 
         if area.width < FOOTER_TEXT.len() as u16 + FOOTER_MARGINE {
@@ -155,21 +152,25 @@ impl ExportPopup<'_> {
         frame.render_widget(journal_paragraph, chunks[0]);
 
         if self.path_err_msg.is_empty() {
-            let active_color = Style::default().fg(ACTIVE_CONTROL_COLOR);
-            self.path_txt.set_style(active_color);
+            let block = Style::from(styles.general.input_block_active);
+            let cursor = Style::from(styles.general.input_corsur_active);
+            self.path_txt.set_style(block);
+            self.path_txt.set_cursor_style(cursor);
             self.path_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(active_color)
+                    .style(block)
                     .title("Path"),
             );
         } else {
-            let invalide_style = Style::default().fg(INVALID_CONTROL_COLOR);
-            self.path_txt.set_style(invalide_style);
+            let block = Style::from(styles.general.input_block_invalid);
+            let cursor = Style::from(styles.general.input_corsur_invalid);
+            self.path_txt.set_style(block);
+            self.path_txt.set_cursor_style(cursor);
             self.path_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(invalide_style)
+                    .style(block)
                     .title(format!("Path : {}", self.path_err_msg)),
             );
         }

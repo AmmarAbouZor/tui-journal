@@ -13,7 +13,7 @@ use tui_textarea::TextArea;
 
 use crate::app::keymap::Input;
 
-use super::ui_functions::centered_rect;
+use super::{ui_functions::centered_rect, Styles};
 
 const FOOTER_TEXT: &str = "Esc, Enter, <Ctrl-m>, <Ctrl-c>: Close | Up, Down, <Ctrl-n>, <Ctrl-p>: cycle through filtered list";
 const FOOTER_MARGINE: usize = 8;
@@ -61,7 +61,7 @@ impl FuzzFindPopup<'_> {
         }
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let area = centered_rect(60, 60, area);
 
         let block = Block::default()
@@ -92,12 +92,12 @@ impl FuzzFindPopup<'_> {
 
         frame.render_widget(&self.query_text_box, chunks[0]);
 
-        self.render_entries_list(frame, chunks[1]);
+        self.render_entries_list(frame, chunks[1], styles);
 
         self.render_footer(frame, chunks[2]);
     }
 
-    fn render_entries_list(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_entries_list(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let items: Vec<ListItem> = self
             .filtered_entries
             .iter()
@@ -134,7 +134,7 @@ impl FuzzFindPopup<'_> {
 
         let list = List::new(items)
             .block(block)
-            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
+            .highlight_style(styles.general.list_highlight_active)
             .highlight_symbol(">> ");
 
         frame.render_stateful_widget(list, area, &mut self.list_state);
