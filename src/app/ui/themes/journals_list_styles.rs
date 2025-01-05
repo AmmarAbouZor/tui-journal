@@ -1,8 +1,6 @@
 use ratatui::style::Modifier;
 use serde::{Deserialize, Serialize};
 
-use crate::app::ui::{ACTIVE_CONTROL_COLOR, INACTIVE_CONTROL_COLOR};
-
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

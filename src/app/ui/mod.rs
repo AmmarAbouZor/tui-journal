@@ -28,7 +28,6 @@ use anyhow::Result;
 
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    style::Color,
     Frame,
 };
 
@@ -48,10 +47,6 @@ pub mod ui_functions;
 
 pub use commands::UICommand;
 pub use msg_box::MsgBoxResult;
-
-pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
-pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
-pub const INVALID_CONTROL_COLOR: Color = Color::LightRed;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -191,7 +186,7 @@ impl<'a, 'b> UIComponents<'a> {
                     filter_popup.render_widget(f, f.area(), &self.styles)
                 }
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area(), &self.styles),
-                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area()),
+                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area(), &self.styles),
             }
         }
     }
