@@ -185,7 +185,9 @@ impl<'a, 'b> UIComponents<'a> {
                 Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.area()),
                 Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area()),
                 Popup::Export(export_popup) => export_popup.render_widget(f, f.area()),
-                Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.area()),
+                Popup::Filter(filter_popup) => {
+                    filter_popup.render_widget(f, f.area(), &self.styles)
+                }
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area()),
                 Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area()),
             }
