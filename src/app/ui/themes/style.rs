@@ -19,7 +19,7 @@ impl From<Style> for RataStyle {
             fg: style.fg,
             underline_color: style.underline_color,
             add_modifier: Modifier::empty(),
-            sub_modifier: Modifier::empty(),
+            sub_modifier: Modifier::all(),
         };
 
         // Modifiers needed to be added via this method to be involved in both add and sub modifier

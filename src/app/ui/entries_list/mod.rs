@@ -3,7 +3,7 @@ use chrono::Datelike;
 use ratatui::{
     layout::{Alignment, Rect},
     prelude::Margin,
-    style::{Color, Modifier, Style},
+    style::Style,
     symbols,
     text::{Line, Span},
     widgets::{
@@ -18,11 +18,9 @@ use backend::DataProvider;
 use crate::app::App;
 use crate::{app::keymap::Keymap, settings::DatumVisibility};
 
-use super::INACTIVE_CONTROL_COLOR;
-use super::{UICommand, ACTIVE_CONTROL_COLOR};
+use super::{Styles, UICommand};
 
 const LIST_INNER_MARGIN: usize = 5;
-const SELECTED_FOREGROUND_COLOR: Color = Color::Yellow;
 
 #[derive(Debug)]
 pub struct EntriesList {
@@ -40,12 +38,14 @@ impl EntriesList {
         }
     }
 
-    fn render_list<D: DataProvider>(&mut self, frame: &mut Frame, app: &App<D>, area: Rect) {
-        let (foreground_color, highlight_bg) = if self.is_active {
-            (ACTIVE_CONTROL_COLOR, Color::LightGreen)
-        } else {
-            (INACTIVE_CONTROL_COLOR, Color::LightBlue)
-        };
+    fn render_list<D: DataProvider>(
+        &mut self,
+        frame: &mut Frame,
+        app: &App<D>,
+        area: Rect,
+        styles: &Styles,
+    ) {
+        let jstyles = &styles.journals_list;
 
         let mut lines_count = 0;
 
@@ -68,20 +68,15 @@ impl EntriesList {
                 // tilte lines
                 lines_count += title_lines.len();
 
-                let fg_color = if highlight_selected {
-                    SELECTED_FOREGROUND_COLOR
-                } else {
-                    foreground_color
+                let title_style = match (self.is_active, highlight_selected) {
+                    (_, true) => jstyles.title_selected,
+                    (true, _) => jstyles.title_active,
+                    (false, _) => jstyles.title_inactive,
                 };
 
                 let mut spans: Vec<Line> = title_lines
                     .iter()
-                    .map(|line| {
-                        Line::from(Span::styled(
-                            line.to_string(),
-                            Style::default().fg(fg_color).add_modifier(Modifier::BOLD),
-                        ))
-                    })
+                    .map(|line| Line::from(Span::styled(line.to_string(), title_style)))
                     .collect();
 
                 // *** Date & Priority ***
@@ -124,14 +119,9 @@ impl EntriesList {
                     }
                 };
 
-                let date_lines = date_priority_lines.iter().map(|line| {
-                    Line::from(Span::styled(
-                        line.to_string(),
-                        Style::default()
-                            .fg(Color::LightBlue)
-                            .remove_modifier(Modifier::BOLD),
-                    ))
-                });
+                let date_lines = date_priority_lines
+                    .iter()
+                    .map(|line| Line::from(Span::styled(line.to_string(), jstyles.date_priority)));
                 spans.extend(date_lines);
 
                 // date & priority lines
@@ -140,9 +130,7 @@ impl EntriesList {
                 // *** Tags ***
                 if !entry.tags.is_empty() {
                     const TAGS_SEPARATOR: &str = " | ";
-                    let tags_default_style: Style = Style::default()
-                        .fg(Color::LightCyan)
-                        .add_modifier(Modifier::DIM);
+                    let tags_default_style: Style = jstyles.tags_default.into();
 
                     let mut added_lines = 1;
                     spans.push(Line::default());
@@ -183,14 +171,15 @@ impl EntriesList {
 
         let items_count = items.len();
 
+        let highlight_style = if self.is_active {
+            jstyles.highlight_active
+        } else {
+            jstyles.highlight_inactive
+        };
+
         let list = List::new(items)
-            .block(self.get_list_block(app.filter.is_some(), Some(items_count)))
-            .highlight_style(
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(highlight_bg)
-                    .add_modifier(Modifier::BOLD),
-            )
+            .block(self.get_list_block(app.filter.is_some(), Some(items_count), styles))
+            .highlight_style(highlight_style)
             .highlight_symbol("> ");
 
         frame.render_stateful_widget(list, area, &mut self.state);
@@ -246,6 +235,7 @@ impl EntriesList {
         area: Rect,
         list_keymaps: &[Keymap],
         has_filter: bool,
+        styles: &Styles,
     ) {
         let keys_text: Vec<String> = list_keymaps
             .iter()
@@ -262,12 +252,17 @@ impl EntriesList {
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block(has_filter, None));
+            .block(self.get_list_block(has_filter, None, styles));
 
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block<'a>(&self, has_filter: bool, entries_len: Option<usize>) -> Block<'a> {
+    fn get_list_block<'a>(
+        &self,
+        has_filter: bool,
+        entries_len: Option<usize>,
+        styles: &Styles,
+    ) -> Block<'a> {
         let title = match (self.multi_select_mode, has_filter) {
             (true, true) => "Journals - Multi-Select - Filtered",
             (true, false) => "Journals - Multi-Select",
@@ -276,14 +271,9 @@ impl EntriesList {
         };
 
         let border_style = match (self.is_active, self.multi_select_mode) {
-            (_, true) => Style::default()
-                .fg(SELECTED_FOREGROUND_COLOR)
-                .add_modifier(Modifier::BOLD)
-                .add_modifier(Modifier::ITALIC),
-            (true, _) => Style::default()
-                .fg(ACTIVE_CONTROL_COLOR)
-                .add_modifier(Modifier::BOLD),
-            (false, _) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+            (_, true) => styles.journals_list.block_multi_select,
+            (true, _) => styles.journals_list.block_active,
+            (false, _) => styles.journals_list.block_inactive,
         };
 
         let block = Block::default()
@@ -305,11 +295,12 @@ impl EntriesList {
         area: Rect,
         app: &App<D>,
         list_keymaps: &[Keymap],
+        styles: &Styles,
     ) {
         if app.get_active_entries().next().is_none() {
-            self.render_place_holder(frame, area, list_keymaps, app.filter.is_some());
+            self.render_place_holder(frame, area, list_keymaps, app.filter.is_some(), styles);
         } else {
-            self.render_list(frame, app, area);
+            self.render_list(frame, app, area, styles);
         }
     }
 

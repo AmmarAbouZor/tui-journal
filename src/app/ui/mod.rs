@@ -147,8 +147,13 @@ impl<'a, 'b> UIComponents<'a> {
         if app.state.full_screen {
             match self.active_control {
                 ControlType::EntriesList => {
-                    self.entries_list
-                        .render_widget(f, chunks[0], app, &self.entries_list_keymaps);
+                    self.entries_list.render_widget(
+                        f,
+                        chunks[0],
+                        app,
+                        &self.entries_list_keymaps,
+                        &self.styles,
+                    );
                 }
                 ControlType::EntryContentTxt => {
                     self.editor.render_widget(f, chunks[0], &self.styles);
@@ -159,8 +164,13 @@ impl<'a, 'b> UIComponents<'a> {
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
                 .split(chunks[0]);
-            self.entries_list
-                .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
+            self.entries_list.render_widget(
+                f,
+                entries_chunks[0],
+                app,
+                &self.entries_list_keymaps,
+                &self.styles,
+            );
             self.editor
                 .render_widget(f, entries_chunks[1], &self.styles);
         }
