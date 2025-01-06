@@ -24,7 +24,7 @@ use super::{
     runner::HandleInputReturnType,
     App,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use ratatui::{
     layout::{Constraint, Direction, Layout},
@@ -85,9 +85,8 @@ pub struct UIComponents<'a> {
 }
 
 impl<'a, 'b> UIComponents<'a> {
-    pub fn new() -> Self {
-        // TODO: I'm using defaults for now. This needs to be read from themes files
-        let styles = Styles::default();
+    pub fn new() -> anyhow::Result<Self> {
+        let styles = Styles::load().context("Error while retrieving app styles")?;
 
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
@@ -99,7 +98,7 @@ impl<'a, 'b> UIComponents<'a> {
         let active_control = ControlType::EntriesList;
         entries_list.set_active(true);
 
-        Self {
+        let ui = Self {
             styles,
             global_keymaps,
             entries_list_keymaps,
@@ -110,7 +109,9 @@ impl<'a, 'b> UIComponents<'a> {
             popup_stack: Vec::new(),
             active_control,
             pending_command: None,
-        }
+        };
+
+        Ok(ui)
     }
 
     pub fn has_popup(&self) -> bool {

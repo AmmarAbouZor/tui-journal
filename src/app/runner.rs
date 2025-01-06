@@ -75,7 +75,7 @@ where
     B: Backend,
     D: DataProvider,
 {
-    let mut ui_components = UIComponents::new();
+    let mut ui_components = UIComponents::new()?;
     let mut app = App::new(data_provider, settings);
     if let Some(cmd) = pending_cmd {
         if let Err(err) = exec_pending_cmd(terminal, &app, cmd).await {
