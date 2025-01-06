@@ -47,9 +47,12 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
   - [Alpine Linux](#alpine-linux)
   - [FreeBSD](#freebsd)
   - [NetBSD](#netbsd)
-  - [Build & Install via Cargo ](#build--install-via-cargo)
+  - [Nix](#nix)
+  - [Homebrew](@homebrew)
+  - [Build & Install via Cargo](#build--install-via-cargo)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Themes](#themes)
 - [Documentation](#documentation)
 - [Acknowledgments](#acknowledgments)
 - [Contributing](#contributing)
@@ -88,10 +91,10 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 #### Application:
 - [x]  Edit journals content with external text editor from within the app.
 - [x]  Filter & Search functionalities.
-- [ ]  Add mouse support
+- [x]  Customize themes.
 - [ ]  Preview mode for journals supporting Mark Down highlighting and word wrapping.
+- [ ]  Add mouse support
 - [ ]  Improve app input and rending cycle using app events to support real concurrency within the app.
-- [ ]  Customize themes and keybindings.
 
       
 ## Installation
@@ -216,10 +219,11 @@ $ tjournal --help
 Usage: tjournal [OPTIONS] [COMMAND]
 
 Commands:
-  print-config  Print the current settings including the paths for the backend files [aliases: pc]
+  print-config     Print the current settings including the paths for the backend files [aliases: pc]
   import-journals  Import journals from the given transfer JSON file to the current back-end file [aliases: imj]
   assign-priority  Assign priority for all the entires with empty priority field [aliases: ap]
-  help          Print this message or the help of the given subcommand(s)
+  theme            Provides commands regarding changing themes and styles of the app [aliases: style]
+  help             Print this message or the help of the given subcommand(s)
 
 Options:
   -j, --json-file-path <FILE PATH>    Sets the entries Json file path and starts using it
@@ -288,6 +292,10 @@ file_path = "<Documents-folder>/tui-journal/entries.json"
 [sqlite_backend]
 file_path = "<Documents-folder>/tui-journal/entries.db"
 ```
+
+## Themes
+
+Please refer to the [Themes Page](THEMES.md) for a detailed guide on customizing colors and styles within the app.
 
 ## Documentation
 

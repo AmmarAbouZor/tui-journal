@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use backend::DataProvider;
+pub use themes::Styles;
 
 use self::{
     editor::{Editor, EditorMode},
@@ -27,7 +28,6 @@ use anyhow::Result;
 
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    style::Color,
     Frame,
 };
 
@@ -42,16 +42,11 @@ mod fuzz_find;
 mod help_popup;
 mod msg_box;
 mod sort_popup;
+pub mod themes;
 pub mod ui_functions;
 
 pub use commands::UICommand;
 pub use msg_box::MsgBoxResult;
-
-pub const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
-pub const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
-pub const EDITOR_MODE_COLOR: Color = Color::LightGreen;
-pub const INVALID_CONTROL_COLOR: Color = Color::LightRed;
-pub const VISUAL_MODE_COLOR: Color = Color::Blue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -77,6 +72,7 @@ pub enum PopupReturn<T> {
 }
 
 pub struct UIComponents<'a> {
+    styles: Styles,
     global_keymaps: Vec<Keymap>,
     entries_list_keymaps: Vec<Keymap>,
     editor_keymaps: Vec<Keymap>,
@@ -89,7 +85,7 @@ pub struct UIComponents<'a> {
 }
 
 impl<'a, 'b> UIComponents<'a> {
-    pub fn new() -> Self {
+    pub fn new(styles: Styles) -> Self {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
         let editor_keymaps = get_editor_mode_keymaps();
@@ -101,6 +97,7 @@ impl<'a, 'b> UIComponents<'a> {
         entries_list.set_active(true);
 
         Self {
+            styles,
             global_keymaps,
             entries_list_keymaps,
             editor_keymaps,
@@ -142,11 +139,16 @@ impl<'a, 'b> UIComponents<'a> {
         if app.state.full_screen {
             match self.active_control {
                 ControlType::EntriesList => {
-                    self.entries_list
-                        .render_widget(f, chunks[0], app, &self.entries_list_keymaps);
+                    self.entries_list.render_widget(
+                        f,
+                        chunks[0],
+                        app,
+                        &self.entries_list_keymaps,
+                        &self.styles,
+                    );
                 }
                 ControlType::EntryContentTxt => {
-                    self.editor.render_widget(f, chunks[0]);
+                    self.editor.render_widget(f, chunks[0], &self.styles);
                 }
             }
         } else {
@@ -154,9 +156,15 @@ impl<'a, 'b> UIComponents<'a> {
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
                 .split(chunks[0]);
-            self.entries_list
-                .render_widget(f, entries_chunks[0], app, &self.entries_list_keymaps);
-            self.editor.render_widget(f, entries_chunks[1]);
+            self.entries_list.render_widget(
+                f,
+                entries_chunks[0],
+                app,
+                &self.entries_list_keymaps,
+                &self.styles,
+            );
+            self.editor
+                .render_widget(f, entries_chunks[1], &self.styles);
         }
 
         self.render_popup(f);
@@ -166,12 +174,16 @@ impl<'a, 'b> UIComponents<'a> {
         if let Some(popup) = self.popup_stack.last_mut() {
             match popup {
                 Popup::Help(help_popup) => help_popup.render_widget(f, f.area()),
-                Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.area()),
-                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area()),
-                Popup::Export(export_popup) => export_popup.render_widget(f, f.area()),
-                Popup::Filter(filter_popup) => filter_popup.render_widget(f, f.area()),
-                Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area()),
-                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area()),
+                Popup::Entry(entry_popup) => entry_popup.render_widget(f, f.area(), &self.styles),
+                Popup::MsgBox(msg_box) => msg_box.render_widget(f, f.area(), &self.styles),
+                Popup::Export(export_popup) => {
+                    export_popup.render_widget(f, f.area(), &self.styles)
+                }
+                Popup::Filter(filter_popup) => {
+                    filter_popup.render_widget(f, f.area(), &self.styles)
+                }
+                Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area(), &self.styles),
+                Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area(), &self.styles),
             }
         }
     }

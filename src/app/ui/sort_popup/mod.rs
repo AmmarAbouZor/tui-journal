@@ -1,7 +1,6 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
     prelude::*,
-    style::Color,
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
 };
@@ -11,14 +10,11 @@ use crate::app::{
     sorter::{SortCriteria, SortOrder, Sorter},
 };
 
-use super::{
-    ui_functions::centered_rect, PopupReturn, INACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
-};
+use super::{ui_functions::centered_rect, PopupReturn, Styles};
 
 type SortReturn = PopupReturn<SortResult>;
 
 const FOOTER_MARGIN: usize = 8;
-const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 const LIST_HIGHLIGHT_SYMBOL: &str = ">> ";
 
 pub struct SortPopup {
@@ -83,7 +79,7 @@ impl SortPopup {
         }
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let area = centered_rect(70, 80, area);
 
         let block = Block::default().borders(Borders::ALL).title("Sort");
@@ -116,8 +112,8 @@ impl SortPopup {
             .split(area);
 
         self.render_sort_order(frame, chunks[0]);
-        self.render_available_items(frame, chunks[1]);
-        self.render_applied_items(frame, chunks[2]);
+        self.render_available_items(frame, chunks[1], styles);
+        self.render_applied_items(frame, chunks[2], styles);
         self.render_footer(footer_text, frame, chunks[3]);
     }
 
@@ -131,15 +127,15 @@ impl SortPopup {
         frame.render_widget(order, area);
     }
 
-    fn render_available_items(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_available_items(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let items: Vec<ListItem> = self
             .available_criteria
             .iter()
-            .map(|cr| ListItem::new(cr.to_string()).style(Style::default().fg(Color::Reset)))
+            .map(|cr| ListItem::new(cr.to_string()).style(Style::reset()))
             .collect();
 
         let block_style = match self.active_control {
-            SortControl::AvailableList => Style::default().fg(ACTIVE_BORDER_COLOR),
+            SortControl::AvailableList => Style::from(styles.general.input_block_active),
             _ => Style::default(),
         };
 
@@ -151,25 +147,25 @@ impl SortPopup {
 
         let list = List::new(items)
             .block(list_block)
-            .highlight_style(Self::get_list_highlight_style(matches!(
-                self.active_control,
-                SortControl::AvailableList
-            )))
+            .highlight_style(Self::get_list_highlight_style(
+                matches!(self.active_control, SortControl::AvailableList),
+                styles,
+            ))
             .highlight_symbol(LIST_HIGHLIGHT_SYMBOL);
 
         frame.render_stateful_widget(list, area, &mut self.available_state);
     }
 
-    fn render_applied_items(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_applied_items(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let items: Vec<ListItem> = self
             .applied_criteria
             .iter()
-            .map(|cr| ListItem::new(cr.to_string()).style(Style::default().fg(Color::Reset)))
+            .map(|cr| ListItem::new(cr.to_string()).style(Style::reset()))
             .collect();
 
         let block_style = match (self.is_valid, self.active_control) {
-            (false, _) => Style::default().fg(INVALID_CONTROL_COLOR),
-            (true, SortControl::AppliedList) => Style::default().fg(ACTIVE_BORDER_COLOR),
+            (false, _) => Style::from(styles.general.input_block_invalid),
+            (true, SortControl::AppliedList) => Style::from(styles.general.input_block_active),
             _ => Style::default(),
         };
 
@@ -187,10 +183,10 @@ impl SortPopup {
 
         let list = List::new(items)
             .block(list_block)
-            .highlight_style(Self::get_list_highlight_style(matches!(
-                self.active_control,
-                SortControl::AppliedList
-            )))
+            .highlight_style(Self::get_list_highlight_style(
+                matches!(self.active_control, SortControl::AppliedList),
+                styles,
+            ))
             .highlight_symbol(LIST_HIGHLIGHT_SYMBOL);
 
         frame.render_stateful_widget(list, area, &mut self.applied_state);
@@ -205,12 +201,11 @@ impl SortPopup {
         frame.render_widget(footer, area);
     }
 
-    fn get_list_highlight_style(is_focused: bool) -> Style {
-        let base_style = Style::default().fg(Color::Black);
+    fn get_list_highlight_style(is_focused: bool, styles: &Styles) -> Style {
         if is_focused {
-            base_style.bg(Color::LightGreen)
+            styles.general.list_highlight_active.into()
         } else {
-            base_style.bg(INACTIVE_CONTROL_COLOR)
+            styles.general.list_highlight_inactive.into()
         }
     }
 

@@ -18,9 +18,7 @@ use backend::{DataProvider, Entry};
 
 use self::tags::{TagsPopup, TagsPopupReturn};
 
-use super::{
-    ui_functions::centered_rect_exact_height, ACTIVE_CONTROL_COLOR, INVALID_CONTROL_COLOR,
-};
+use super::{ui_functions::centered_rect_exact_height, Styles};
 
 mod tags;
 
@@ -134,7 +132,7 @@ impl<'a> EntryPopup<'a> {
         entry_popup
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let mut area = centered_rect_exact_height(70, 17, area);
 
         const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGIN;
@@ -175,112 +173,133 @@ impl<'a> EntryPopup<'a> {
         self.tags_txt.set_cursor_line_style(Style::default());
         self.priority_txt.set_cursor_line_style(Style::default());
 
-        let active_cursor_style = Style::default().bg(Color::White).fg(Color::Black);
+        let gstyles = &styles.general;
+
+        let active_block_style = Style::from(gstyles.input_block_active);
+        let reset_style = Style::reset();
+        let invalid_block_style = Style::from(gstyles.input_block_invalid);
+
+        let active_cursor_style = Style::from(gstyles.input_corsur_active);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
-
-        match self.active_txt {
-            ActiveText::Title => {
-                self.title_txt.set_cursor_style(active_cursor_style);
-                self.date_txt.set_cursor_style(deactivate_cursor_style);
-                self.tags_txt.set_cursor_style(deactivate_cursor_style);
-                self.priority_txt.set_cursor_style(deactivate_cursor_style);
-            }
-            ActiveText::Date => {
-                self.title_txt.set_cursor_style(deactivate_cursor_style);
-                self.date_txt.set_cursor_style(active_cursor_style);
-                self.tags_txt.set_cursor_style(deactivate_cursor_style);
-                self.priority_txt.set_cursor_style(deactivate_cursor_style);
-            }
-            ActiveText::Tags => {
-                self.title_txt.set_cursor_style(deactivate_cursor_style);
-                self.date_txt.set_cursor_style(deactivate_cursor_style);
-                self.tags_txt.set_cursor_style(active_cursor_style);
-                self.priority_txt.set_cursor_style(deactivate_cursor_style);
-            }
-            ActiveText::Priority => {
-                self.title_txt.set_cursor_style(deactivate_cursor_style);
-                self.date_txt.set_cursor_style(deactivate_cursor_style);
-                self.tags_txt.set_cursor_style(deactivate_cursor_style);
-                self.priority_txt.set_cursor_style(active_cursor_style);
-            }
-        };
-
-        let active_style = Style::default().fg(ACTIVE_CONTROL_COLOR);
-        let invalid_style = Style::default().fg(INVALID_CONTROL_COLOR);
+        let invalid_cursor_style = Style::from(gstyles.input_corsur_invalid);
 
         if self.title_err_msg.is_empty() {
-            self.title_txt.set_style(active_style);
+            let (block, cursor) = match self.active_txt {
+                ActiveText::Title => (active_block_style, active_cursor_style),
+                _ => (reset_style, deactivate_cursor_style),
+            };
+            self.title_txt.set_style(block);
+            self.title_txt.set_cursor_style(cursor);
             self.title_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(active_style)
+                    .style(block)
                     .title("Title"),
             );
         } else {
-            self.title_txt.set_style(invalid_style);
+            let cursor = if self.active_txt == ActiveText::Title {
+                invalid_cursor_style
+            } else {
+                deactivate_cursor_style
+            };
+
+            self.title_txt.set_style(invalid_block_style);
+            self.title_txt.set_cursor_style(cursor);
             self.title_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(invalid_style)
+                    .style(invalid_block_style)
                     .title(format!("Title : {}", self.title_err_msg)),
             );
         }
 
         if self.date_err_msg.is_empty() {
-            self.date_txt.set_style(active_style);
+            let (block, cursor) = match self.active_txt {
+                ActiveText::Date => (active_block_style, active_cursor_style),
+                _ => (reset_style, deactivate_cursor_style),
+            };
+            self.date_txt.set_style(block);
+            self.date_txt.set_cursor_style(cursor);
             self.date_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(active_style)
+                    .style(block)
                     .title("Date"),
             );
         } else {
-            self.date_txt.set_style(invalid_style);
+            let cursor = if self.active_txt == ActiveText::Date {
+                invalid_cursor_style
+            } else {
+                deactivate_cursor_style
+            };
+            self.date_txt.set_style(invalid_block_style);
+            self.date_txt.set_cursor_style(cursor);
             self.date_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(invalid_style)
+                    .style(invalid_block_style)
                     .title(format!("Date : {}", self.date_err_msg)),
             );
         }
 
         if self.tags_err_msg.is_empty() {
-            let title = if self.active_txt == ActiveText::Tags {
-                "Tags - A comma-separated list"
-            } else {
-                "Tags"
+            let (block, cursor, title) = match self.active_txt {
+                ActiveText::Tags => (
+                    active_block_style,
+                    active_cursor_style,
+                    "Tags - A comma-separated list",
+                ),
+                _ => (reset_style, deactivate_cursor_style, "Tags"),
             };
-            self.tags_txt.set_style(active_style);
+            self.tags_txt.set_style(block);
+            self.tags_txt.set_cursor_style(cursor);
             self.tags_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(active_style)
+                    .style(block)
                     .title(title),
             );
         } else {
-            self.tags_txt.set_style(invalid_style);
+            let cursor = if self.active_txt == ActiveText::Tags {
+                invalid_cursor_style
+            } else {
+                deactivate_cursor_style
+            };
+            self.tags_txt.set_style(invalid_block_style);
+            self.tags_txt.set_cursor_style(cursor);
             self.tags_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(invalid_style)
+                    .style(invalid_block_style)
                     .title(format!("Tags : {}", self.date_err_msg)),
             );
         }
 
         if self.priority_err_msg.is_empty() {
-            self.priority_txt.set_style(active_style);
+            let (block, cursor) = match self.active_txt {
+                ActiveText::Priority => (active_block_style, active_cursor_style),
+                _ => (reset_style, deactivate_cursor_style),
+            };
+            self.priority_txt.set_style(block);
+            self.priority_txt.set_cursor_style(cursor);
             self.priority_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(active_style)
+                    .style(block)
                     .title("Priority"),
             );
         } else {
-            self.priority_txt.set_style(invalid_style);
+            let cursor = if self.active_txt == ActiveText::Priority {
+                invalid_cursor_style
+            } else {
+                deactivate_cursor_style
+            };
+            self.priority_txt.set_style(invalid_block_style);
+            self.priority_txt.set_cursor_style(cursor);
             self.priority_txt.set_block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .style(invalid_style)
+                    .style(invalid_block_style)
                     .title(format!("Priority : {}", self.priority_err_msg)),
             );
         }
@@ -302,7 +321,7 @@ impl<'a> EntryPopup<'a> {
         frame.render_widget(footer, chunks[4]);
 
         if let Some(tags_popup) = self.tags_popup.as_mut() {
-            tags_popup.render_widget(frame, area)
+            tags_popup.render_widget(frame, area, styles)
         }
     }
 

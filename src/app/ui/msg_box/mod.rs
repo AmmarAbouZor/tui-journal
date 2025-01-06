@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    style::Style,
     text::Span,
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Frame,
@@ -9,7 +9,7 @@ use ratatui::{
 
 use crate::app::keymap::Input;
 
-use super::ui_functions::centered_rect_exact_height;
+use super::{ui_functions::centered_rect_exact_height, Styles};
 
 // Not all enums are used in this app at this point
 #[allow(dead_code)]
@@ -56,14 +56,16 @@ impl MsgBox {
         Self { msg_type, actions }
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let area = centered_rect_exact_height(55, 8, area);
 
+        let colors = &styles.msgbox;
+
         let (title, color, text) = match &self.msg_type {
-            MsgBoxType::Error(text) => ("Error", Color::LightRed, text),
-            MsgBoxType::Warning(text) => ("Warning", Color::Yellow, text),
-            MsgBoxType::Info(text) => ("Info", Color::LightGreen, text),
-            MsgBoxType::Question(text) => ("", Color::LightBlue, text),
+            MsgBoxType::Error(text) => ("Error", colors.error, text),
+            MsgBoxType::Warning(text) => ("Warning", colors.warning, text),
+            MsgBoxType::Info(text) => ("Info", colors.info, text),
+            MsgBoxType::Question(text) => ("", colors.question, text),
         };
 
         let border = Block::default()

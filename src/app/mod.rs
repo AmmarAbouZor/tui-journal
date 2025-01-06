@@ -26,7 +26,7 @@ mod sorter;
 pub mod state;
 #[cfg(test)]
 mod test;
-mod ui;
+pub mod ui;
 
 pub use runner::run;
 pub use runner::HandleInputReturnType;

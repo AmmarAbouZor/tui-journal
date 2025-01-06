@@ -15,6 +15,7 @@ use backend::SqliteDataProvide;
 
 use super::keymap::Input;
 use super::ui::ui_functions::render_message_centered;
+use super::ui::Styles;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {
@@ -27,6 +28,7 @@ pub enum HandleInputReturnType {
 pub async fn run<B: Backend>(
     terminal: &mut Terminal<B>,
     settings: Settings,
+    styles: Styles,
     pending_cmd: Option<PendingCliCommand>,
 ) -> Result<()> {
     match settings.backend_type.unwrap_or_default() {
@@ -38,7 +40,7 @@ pub async fn run<B: Backend>(
                 crate::settings::json_backend::get_default_json_path()?
             };
             let data_provider = JsonDataProvide::new(path);
-            run_intern(terminal, data_provider, settings, pending_cmd).await
+            run_intern(terminal, data_provider, settings, styles, pending_cmd).await
         }
         #[cfg(not(feature = "json"))]
         BackendType::Json => {
@@ -54,7 +56,7 @@ pub async fn run<B: Backend>(
                 crate::settings::sqlite_backend::get_default_sqlite_path()?
             };
             let data_provider = SqliteDataProvide::from_file(path).await?;
-            run_intern(terminal, data_provider, settings, pending_cmd).await
+            run_intern(terminal, data_provider, settings, styles, pending_cmd).await
         }
         #[cfg(not(feature = "sqlite"))]
         BackendType::Sqlite => {
@@ -69,13 +71,14 @@ async fn run_intern<B, D>(
     terminal: &mut Terminal<B>,
     data_provider: D,
     settings: Settings,
+    styles: Styles,
     pending_cmd: Option<PendingCliCommand>,
 ) -> anyhow::Result<()>
 where
     B: Backend,
     D: DataProvider,
 {
-    let mut ui_components = UIComponents::new();
+    let mut ui_components = UIComponents::new(styles);
     let mut app = App::new(data_provider, settings);
     if let Some(cmd) = pending_cmd {
         if let Err(err) = exec_pending_cmd(terminal, &app, cmd).await {

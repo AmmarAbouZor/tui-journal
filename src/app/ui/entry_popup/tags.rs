@@ -3,14 +3,14 @@ use std::collections::BTreeSet;
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::Style,
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
 };
 
 use crate::app::{
     keymap::Input,
-    ui::{entry_popup::tags_to_text, ui_functions::centered_rect},
+    ui::{entry_popup::tags_to_text, ui_functions::centered_rect, Styles},
 };
 
 use super::text_to_tags;
@@ -61,7 +61,7 @@ impl TagsPopup {
         tags_popup
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let mut area = centered_rect(70, 100, area);
         area.y += 1;
         area.height -= 2;
@@ -90,7 +90,7 @@ impl TagsPopup {
         if self.tags.is_empty() {
             self.render_tags_place_holder(frame, chunks[0]);
         } else {
-            self.render_tags_list(frame, chunks[0]);
+            self.render_tags_list(frame, chunks[0], styles);
         }
 
         let footer = Paragraph::new(FOOTER_TEXT)
@@ -105,7 +105,9 @@ impl TagsPopup {
         frame.render_widget(footer, chunks[1]);
     }
 
-    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
+        let gstyles = &styles.general;
+        let selected_style = Style::from(gstyles.list_item_selected);
         let items: Vec<ListItem> = self
             .tags
             .iter()
@@ -113,14 +115,9 @@ impl TagsPopup {
                 let is_selected = self.selected_tags.contains(tag);
 
                 let (tag_text, style) = if is_selected {
-                    (
-                        format!("* {tag}"),
-                        Style::default()
-                            .fg(Color::LightYellow)
-                            .add_modifier(Modifier::BOLD),
-                    )
+                    (format!("* {tag}"), selected_style)
                 } else {
-                    (tag.to_owned(), Style::default())
+                    (tag.to_owned(), Style::reset())
                 };
 
                 ListItem::new(tag_text).style(style)
@@ -128,7 +125,7 @@ impl TagsPopup {
             .collect();
 
         let list = List::new(items)
-            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
+            .highlight_style(gstyles.list_highlight_active)
             .highlight_symbol(">> ");
 
         frame.render_stateful_widget(list, area, &mut self.state);

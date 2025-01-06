@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifi
 use ratatui::{
     layout::Rect,
     prelude::Margin,
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     symbols,
     widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState},
     Frame,
@@ -15,9 +15,8 @@ use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
-use super::INACTIVE_CONTROL_COLOR;
-use super::{commands::ClipboardOperation, EDITOR_MODE_COLOR};
-use super::{ACTIVE_CONTROL_COLOR, VISUAL_MODE_COLOR};
+use super::commands::ClipboardOperation;
+use super::Styles;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditorMode {
@@ -328,7 +327,7 @@ impl<'a> Editor<'a> {
         self.mode = mode;
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let mut title = "Content".to_owned();
         if self.is_active {
             let mode_caption = match self.mode {
@@ -342,17 +341,13 @@ impl<'a> Editor<'a> {
             title.push_str(" *");
         }
 
+        let estyles = &styles.editor;
+
         let text_block_style = match (self.mode, self.is_active) {
-            (EditorMode::Insert, _) => Style::default()
-                .fg(EDITOR_MODE_COLOR)
-                .add_modifier(Modifier::BOLD),
-            (EditorMode::Visual, _) => Style::default()
-                .fg(VISUAL_MODE_COLOR)
-                .add_modifier(Modifier::BOLD),
-            (EditorMode::Normal, true) => Style::default()
-                .fg(ACTIVE_CONTROL_COLOR)
-                .add_modifier(Modifier::BOLD),
-            (EditorMode::Normal, false) => Style::default().fg(INACTIVE_CONTROL_COLOR),
+            (EditorMode::Insert, _) => estyles.block_insert,
+            (EditorMode::Visual, _) => estyles.block_visual,
+            (EditorMode::Normal, true) => estyles.block_normal_active,
+            (EditorMode::Normal, false) => estyles.block_normal_inactive,
         };
 
         self.text_area.set_block(
@@ -362,23 +357,21 @@ impl<'a> Editor<'a> {
                 .title(title),
         );
 
-        let mut cursor_style = Style::default();
-        if self.is_active {
-            cursor_style = match self.mode {
-                EditorMode::Normal => cursor_style.bg(Color::White).fg(Color::Black),
-                EditorMode::Insert => cursor_style.bg(EDITOR_MODE_COLOR).fg(Color::Black),
-                EditorMode::Visual => cursor_style.bg(VISUAL_MODE_COLOR).fg(Color::Black),
+        let cursor_style = if self.is_active {
+            let s = match self.mode {
+                EditorMode::Normal => estyles.cursor_normal,
+                EditorMode::Insert => estyles.cursor_insert,
+                EditorMode::Visual => estyles.cursor_visual,
             };
-        }
+            Style::from(s)
+        } else {
+            Style::reset()
+        };
         self.text_area.set_cursor_style(cursor_style);
 
-        self.text_area.set_cursor_line_style(Style::default());
+        self.text_area.set_cursor_line_style(Style::reset());
 
-        self.text_area.set_style(
-            Style::default()
-                .fg(Color::Reset)
-                .remove_modifier(Modifier::BOLD),
-        );
+        self.text_area.set_style(Style::reset());
 
         self.text_area
             .set_selection_style(Style::default().bg(Color::White).fg(Color::Black));

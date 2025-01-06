@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame,
 };
@@ -14,13 +14,12 @@ use crate::app::{
     keymap::Input,
 };
 
-use super::{ui_functions::centered_rect, PopupReturn, INVALID_CONTROL_COLOR};
+use super::{ui_functions::centered_rect, PopupReturn, Styles};
 
 type FilterPopupReturn = PopupReturn<Option<Filter>>;
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
 const FOOTER_MARGIN: usize = 8;
-const ACTIVE_BORDER_COLOR: Color = Color::LightYellow;
 
 pub struct FilterPopup<'a> {
     active_control: FilterControl,
@@ -92,7 +91,7 @@ impl FilterPopup<'_> {
         filter_popup
     }
 
-    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect) {
+    pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let area = centered_rect(70, 80, area);
 
         let block = Block::default().borders(Borders::ALL).title("Filter");
@@ -122,12 +121,12 @@ impl FilterPopup<'_> {
 
         self.render_relations(frame, chunks[0]);
 
-        self.render_text_boxes(frame, chunks[1], chunks[2], chunks[3]);
+        self.render_text_boxes(frame, chunks[1], chunks[2], chunks[3], styles);
 
         if self.tags.is_empty() {
-            self.render_tags_place_holder(frame, chunks[4]);
+            self.render_tags_place_holder(frame, chunks[4], styles);
         } else {
-            self.render_tags_list(frame, chunks[4]);
+            self.render_tags_list(frame, chunks[4], styles);
         }
 
         self.render_footer(frame, chunks[5]);
@@ -157,9 +156,11 @@ impl FilterPopup<'_> {
         title_area: Rect,
         content_area: Rect,
         priority_area: Rect,
+        styles: &Styles,
     ) {
-        let active_cursor_style = Style::default().bg(ACTIVE_BORDER_COLOR).fg(Color::Black);
-        let invalid_cursor_style = Style::default().bg(INVALID_CONTROL_COLOR).fg(Color::Black);
+        let gstyles = &styles.general;
+        let active_cursor_style: Style = gstyles.input_corsur_active.into();
+        let invalid_cursor_style: Style = gstyles.input_corsur_invalid.into();
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         let mut title_txt_block = Block::default().title("Title").borders(Borders::ALL);
@@ -170,7 +171,7 @@ impl FilterPopup<'_> {
             Block::default()
                 .title(format!("Priority : {}", self.priority_err_msg))
                 .borders(Borders::ALL)
-                .style(Style::default().fg(INVALID_CONTROL_COLOR))
+                .style(gstyles.input_block_invalid)
         };
 
         match self.active_control {
@@ -178,14 +179,13 @@ impl FilterPopup<'_> {
                 self.title_txt.set_cursor_style(active_cursor_style);
                 self.content_txt.set_cursor_style(deactivate_cursor_style);
                 self.priority_txt.set_cursor_style(deactivate_cursor_style);
-                title_txt_block = title_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
+                title_txt_block = title_txt_block.style(gstyles.input_block_active);
             }
             FilterControl::ContentTxt => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
                 self.content_txt.set_cursor_style(active_cursor_style);
                 self.priority_txt.set_cursor_style(deactivate_cursor_style);
-                content_txt_block =
-                    content_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
+                content_txt_block = content_txt_block.style(gstyles.input_block_active);
             }
             FilterControl::TagsList => {
                 self.title_txt.set_cursor_style(deactivate_cursor_style);
@@ -197,8 +197,7 @@ impl FilterPopup<'_> {
                 self.content_txt.set_cursor_style(deactivate_cursor_style);
                 if self.priority_err_msg.is_empty() {
                     self.priority_txt.set_cursor_style(active_cursor_style);
-                    priority_txt_block =
-                        priority_txt_block.style(Style::default().fg(ACTIVE_BORDER_COLOR));
+                    priority_txt_block = priority_txt_block.style(gstyles.input_block_active);
                 } else {
                     self.priority_txt.set_cursor_style(invalid_cursor_style);
                 }
@@ -218,7 +217,9 @@ impl FilterPopup<'_> {
         frame.render_widget(&self.priority_txt, priority_area);
     }
 
-    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_tags_list(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
+        let gstyles = &styles.general;
+        let selected_style = Style::from(gstyles.list_item_selected);
         let items: Vec<ListItem> = self
             .tags
             .iter()
@@ -226,42 +227,42 @@ impl FilterPopup<'_> {
                 let is_selected = self.selected_tags.contains(tag);
 
                 let (tag_text, style) = if is_selected {
-                    (
-                        format!("* {tag}"),
-                        Style::default()
-                            .fg(Color::LightYellow)
-                            .add_modifier(Modifier::BOLD),
-                    )
+                    (format!("* {tag}"), selected_style)
                 } else {
-                    (tag.to_owned(), Style::default().fg(Color::Reset))
+                    (tag.to_owned(), Style::reset())
                 };
 
                 ListItem::new(tag_text).style(style)
             })
             .collect();
 
+        let highlight_style = match self.active_control {
+            FilterControl::TagsList => gstyles.list_highlight_active,
+            _ => gstyles.list_highlight_inactive,
+        };
+
         let list = List::new(items)
-            .block(self.get_list_block())
-            .highlight_style(Style::default().fg(Color::Black).bg(Color::LightGreen))
+            .block(self.get_list_block(styles))
+            .highlight_style(highlight_style)
             .highlight_symbol(">> ");
 
         frame.render_stateful_widget(list, area, &mut self.tags_state);
     }
 
-    fn render_tags_place_holder(&mut self, frame: &mut Frame, area: Rect) {
+    fn render_tags_place_holder(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let place_holder_text = String::from("\nNo journals with tags provided");
 
         let place_holder = Paragraph::new(place_holder_text)
             .wrap(Wrap { trim: false })
             .alignment(Alignment::Center)
-            .block(self.get_list_block());
+            .block(self.get_list_block(styles));
 
         frame.render_widget(place_holder, area);
     }
 
-    fn get_list_block<'b>(&self) -> Block<'b> {
+    fn get_list_block<'b>(&self, styles: &Styles) -> Block<'b> {
         let style = match self.active_control {
-            FilterControl::TagsList => Style::default().fg(ACTIVE_BORDER_COLOR),
+            FilterControl::TagsList => Style::from(styles.general.input_block_active),
             _ => Style::default(),
         };
         Block::default()
