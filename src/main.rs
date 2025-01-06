@@ -1,6 +1,7 @@
 use std::io;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use app::ui::Styles;
 use clap::Parser;
 use crossterm::{
     execute,
@@ -28,6 +29,7 @@ async fn main() -> Result<()> {
         cli::CliResult::PendingCommand(cmd) => pending_cmd = Some(cmd),
     }
 
+    let styles = Styles::load().context("Error while retrieving app styles")?;
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -36,7 +38,7 @@ async fn main() -> Result<()> {
 
     chain_panic_hook();
 
-    app::run(&mut terminal, settings, pending_cmd)
+    app::run(&mut terminal, settings, styles, pending_cmd)
         .await
         .inspect_err(|err| {
             log::error!("[PANIC] {}", err.to_string());

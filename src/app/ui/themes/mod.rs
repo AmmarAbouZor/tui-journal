@@ -69,13 +69,18 @@ impl Styles {
             )
         })?;
 
-        Self::deserialize(&file_content)
+        Self::deserialize(&file_content).with_context(|| {
+            format!(
+                "Error while desrializing toml text to styles. File path: {}",
+                file_path.display()
+            )
+        })
     }
 
     /// Deserialize [`Styles`] from the given text, filling the missing items from default
     /// implementation.
     fn deserialize(input: &str) -> anyhow::Result<Self> {
-        toml::from_str(input).context("Error while desrializing toml text to styles")
+        toml::from_str(input).map_err(|err| err.into())
     }
 }
 
