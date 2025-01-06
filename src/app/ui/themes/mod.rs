@@ -2,8 +2,13 @@ mod editor_styles;
 mod general_styles;
 mod journals_list_styles;
 mod msgbox;
+mod serialization;
 mod style;
 
+use std::path::PathBuf;
+
+use anyhow::Context;
+use directories::BaseDirs;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 
@@ -27,4 +32,24 @@ pub struct Styles {
     pub journals_list: JournalsListStyles,
     pub editor: EditorStyles,
     pub msgbox: MsgBoxColors,
+}
+
+impl Styles {
+    pub fn file_path() -> anyhow::Result<PathBuf> {
+        BaseDirs::new()
+            .map(|base_dirs| {
+                base_dirs
+                    .config_dir()
+                    .join("tui-journal")
+                    .join("themes.toml")
+            })
+            .context("Themes file path couldn't be retrieved")
+    }
+
+    /// Serialize default themes to `toml` format.
+    pub fn serialize_default() -> anyhow::Result<String> {
+        let def_style = Self::default();
+        toml::to_string_pretty(&def_style)
+            .context("Error while serializing default styles to toml format")
+    }
 }

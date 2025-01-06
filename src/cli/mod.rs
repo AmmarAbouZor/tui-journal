@@ -83,7 +83,7 @@ impl Cli {
         setup_logging(self.verbose, self.log_file)?;
 
         if let Some(cmd) = self.command.take() {
-            cmd.exec(settings).await
+            cmd.exec(settings)
         } else {
             Ok(CliResult::Continue)
         }

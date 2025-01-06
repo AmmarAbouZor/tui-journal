@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use anyhow::{ensure, Context};
 use clap::Subcommand;
 
-use crate::settings::Settings;
+use crate::{app::ui::Styles, settings::Settings};
 
 use super::*;
 
@@ -25,6 +26,24 @@ pub enum CliCommand {
         #[arg(required = true, value_name = "PRIORITY", index = 1)]
         priority: u32,
     },
+    /// Provides commands regarding changing themes and styles of the app.
+    #[clap(visible_alias = "style")]
+    #[command(subcommand)]
+    Theme(Themes),
+}
+
+#[derive(Debug, Clone, Subcommand, Eq, PartialEq)]
+pub enum Themes {
+    #[clap(visible_alias = "path")]
+    /// Prints the path to the user themes file.
+    PrintPath,
+    #[clap(name = "print-default", visible_alias = "default")]
+    /// Dumps the styles with the default values to be used as a reference and base for
+    /// user custom themes.
+    DumpDefaults,
+    #[clap(name = "write-defaults", visible_alias = "write")]
+    /// Creates user custom themes file if doesn't exist then writes the default styles to it.
+    WriteDefaults,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,23 +53,63 @@ pub enum PendingCliCommand {
 }
 
 impl CliCommand {
-    pub async fn exec(self, settings: &mut Settings) -> anyhow::Result<CliResult> {
+    pub fn exec(self, settings: &mut Settings) -> anyhow::Result<CliResult> {
         match self {
-            CliCommand::PrintConfig => exec_print_config(settings).await,
+            CliCommand::PrintConfig => exec_print_config(settings),
             CliCommand::ImportJournals { file_path: path } => Ok(CliResult::PendingCommand(
                 PendingCliCommand::ImportJournals(path),
             )),
             CliCommand::AssignPriority { priority } => Ok(CliResult::PendingCommand(
                 PendingCliCommand::AssignPriority(priority),
             )),
+            CliCommand::Theme(cmd) => match cmd {
+                Themes::PrintPath => exec_print_themes_path(),
+                Themes::DumpDefaults => exec_print_themes_defaults(),
+                Themes::WriteDefaults => exec_write_themes_defaults(),
+            },
         }
     }
 }
 
-async fn exec_print_config(settings: &mut Settings) -> anyhow::Result<CliResult> {
+fn exec_print_config(settings: &mut Settings) -> anyhow::Result<CliResult> {
     let settings_text = settings.get_as_text()?;
 
     println!("{settings_text}");
+
+    Ok(CliResult::Return)
+}
+
+fn exec_print_themes_path() -> anyhow::Result<CliResult> {
+    let themes_path = Styles::file_path()?;
+
+    println!("{}", themes_path.display());
+
+    Ok(CliResult::Return)
+}
+
+fn exec_print_themes_defaults() -> anyhow::Result<CliResult> {
+    let themes_txt = Styles::serialize_default()?;
+    println!("{themes_txt}");
+
+    Ok(CliResult::Return)
+}
+
+fn exec_write_themes_defaults() -> anyhow::Result<CliResult> {
+    let themes_path = Styles::file_path()?;
+    ensure!(
+        !themes_path.exists(),
+        "Themes file already exists. Path: {}",
+        themes_path.display()
+    );
+
+    let themes_txt = Styles::serialize_default()?;
+
+    fs::write(&themes_path, themes_txt).context("Error while writing default themes to file")?;
+
+    println!(
+        "Default themes have been written to {}",
+        themes_path.display()
+    );
 
     Ok(CliResult::Return)
 }
