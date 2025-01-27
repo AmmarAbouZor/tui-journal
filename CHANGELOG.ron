@@ -8,6 +8,25 @@
       references: {},
       version: (
         major: 0,
+        minor: 14,
+        patch: 0,
+      ),
+      released: "2025-01-27T20:20:42.013390589Z",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Configuration to set the extension of the temporary file used\r\nwith the external editor.",
+            "Custom themes on user level & Styles improvements",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 13,
         patch: 1,
       ),
