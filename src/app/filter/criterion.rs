@@ -13,7 +13,13 @@ impl FilterCriterion {
     /// Checks if the entry meets the criterion
     pub fn check_entry(&self, entry: &Entry) -> bool {
         match self {
-            FilterCriterion::Tag(tag) => entry.tags.contains(tag),
+            FilterCriterion::Tag(tag) => {
+                if entry.tags.is_empty() {
+                    tag.is_empty()
+                } else {
+                    entry.tags.contains(tag)
+                }
+            }
             FilterCriterion::Title(search) => {
                 // Use simple smart-case search for title
                 if search.chars().any(|c| c.is_uppercase()) {

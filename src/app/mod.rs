@@ -419,10 +419,11 @@ where
     }
 
     pub fn cycle_tags_in_filter(&mut self) {
-        let all_tags = self.get_all_tags();
+        let mut all_tags = self.get_all_tags();
         if all_tags.len() <= 1 {
             return;
         }
+        all_tags.push("".to_owned());
 
         if let Some(mut filter) = self.filter.take() {
             let applied_tags: Vec<String> = filter
