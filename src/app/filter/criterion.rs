@@ -2,17 +2,17 @@ use aho_corasick::AhoCorasick;
 use backend::Entry;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TagFilterOption {
-    Tag(String),
-    NoTags,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterCriterion {
     Tag(TagFilterOption),
     Title(String),
     Content(String),
     Priority(u32),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TagFilterOption {
+    Tag(String),
+    NoTags,
 }
 
 impl FilterCriterion {
