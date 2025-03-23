@@ -197,7 +197,9 @@ async fn test_sorter_with_filter() {
     let mut filter = Filter::default();
     filter
         .criteria
-        .push(FilterCriterion::Tag(String::from("Tag 2")));
+        .push(FilterCriterion::Tag(TagFilterOption::Tag(String::from(
+            "Tag 2",
+        ))));
     app.apply_filter(Some(filter));
 
     let mut sorter = Sorter::default();
@@ -218,7 +220,9 @@ async fn test_sorter_with_filter() {
     let mut filter = Filter::default();
     filter
         .criteria
-        .push(FilterCriterion::Tag(String::from("Tag 1")));
+        .push(FilterCriterion::Tag(TagFilterOption::Tag(String::from(
+            "Tag 1",
+        ))));
     app.apply_filter(Some(filter));
 
     let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();

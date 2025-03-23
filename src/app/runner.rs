@@ -170,10 +170,10 @@ fn draw_ui<B: Backend, D: DataProvider>(
     Ok(())
 }
 
-async fn handle_input<'a, D: DataProvider>(
+async fn handle_input<D: DataProvider>(
     event: Event,
     app: &mut App<D>,
-    ui_components: &mut UIComponents<'a>,
+    ui_components: &mut UIComponents<'_>,
 ) -> Result<HandleInputReturnType> {
     if let Event::Key(key) = event {
         match key.kind {
