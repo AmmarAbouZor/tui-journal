@@ -374,7 +374,7 @@ where
 
             filter.criteria.retain(|cr| match cr {
                 FilterCriterion::Tag(TagFilterOption::Tag(tag)) => all_tags.contains(tag),
-                FilterCriterion::Tag(TagFilterOption::NoTags) => true,
+                FilterCriterion::Tag(TagFilterOption::NoTags) => !all_tags.is_empty(),
                 FilterCriterion::Title(_) => true,
                 FilterCriterion::Content(_) => true,
                 FilterCriterion::Priority(_) => true,
