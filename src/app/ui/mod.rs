@@ -84,7 +84,7 @@ pub struct UIComponents<'a> {
     pending_command: Option<UICommand>,
 }
 
-impl<'a, 'b> UIComponents<'a> {
+impl UIComponents<'_> {
     pub fn new(styles: Styles) -> Self {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
@@ -124,7 +124,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.editor.set_current_entry(entry_id, app);
     }
 
-    pub fn render_ui<D>(&mut self, f: &mut Frame, app: &'b App<D>)
+    pub fn render_ui<D>(&mut self, f: &mut Frame, app: &App<D>)
     where
         D: DataProvider,
     {

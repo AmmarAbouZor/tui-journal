@@ -229,9 +229,9 @@ impl UICommand {
         }
     }
 
-    pub async fn execute<'a, D: DataProvider>(
+    pub async fn execute<D: DataProvider>(
         &self,
-        ui_components: &mut UIComponents<'a>,
+        ui_components: &mut UIComponents<'_>,
         app: &mut App<D>,
     ) -> CmdResult {
         match self {
@@ -288,9 +288,9 @@ impl UICommand {
         }
     }
 
-    pub async fn continue_executing<'a, D: DataProvider>(
+    pub async fn continue_executing<D: DataProvider>(
         &self,
-        ui_components: &mut UIComponents<'a>,
+        ui_components: &mut UIComponents<'_>,
         app: &mut App<D>,
         msg_box_result: MsgBoxResult,
     ) -> CmdResult {
@@ -419,9 +419,9 @@ where
 }
 
 /// Calls save entry content if wanted then calls `cmd_func`
-pub async fn continue_cmd_after_check_unsaved<'a, D, F>(
+pub async fn continue_cmd_after_check_unsaved<D, F>(
     cmd_func: F,
-    ui_components: &mut UIComponents<'a>,
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult

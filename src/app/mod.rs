@@ -422,12 +422,12 @@ where
 
     pub fn cycle_tags_in_filter(&mut self) {
         let all_tags = self.get_all_tags();
-        if all_tags.len() < 1 {
+        if all_tags.is_empty() {
             return;
         }
         let all_tags_criteria: Vec<_> = all_tags
             .into_iter()
-            .map(|tag| TagFilterOption::Tag(tag))
+            .map(TagFilterOption::Tag)
             .chain(std::iter::once(TagFilterOption::NoTags))
             .collect();
 

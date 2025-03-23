@@ -33,8 +33,8 @@ fn enter_select_mode(ui_components: &mut UIComponents) {
     ui_components.entries_list.multi_select_mode = true;
 }
 
-pub async fn continue_enter_select_mode<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_enter_select_mode<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -128,7 +128,7 @@ pub fn exec_delete_selected_entries<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn continue_delete_selected_entries<'a, D: DataProvider>(
+pub async fn continue_delete_selected_entries<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {

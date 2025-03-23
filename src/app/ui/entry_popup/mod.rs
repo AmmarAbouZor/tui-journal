@@ -56,7 +56,7 @@ pub enum EntryPopupInputReturn {
     UpdateCurrentEntry,
 }
 
-impl<'a> EntryPopup<'a> {
+impl EntryPopup<'_> {
     pub fn new_entry(settings: &Settings) -> Self {
         let title_txt = TextArea::default();
 
