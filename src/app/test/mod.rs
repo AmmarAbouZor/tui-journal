@@ -62,10 +62,11 @@ async fn test_data_provider_errors() {
     assert!(app.get_active_entries().next().is_none());
     assert!(app.get_entry(0).is_none());
     assert!(app.get_all_tags().is_empty());
-    assert!(app
-        .add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
-        .await
-        .is_err());
+    assert!(
+        app.add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
+            .await
+            .is_err()
+    );
     assert!(app.delete_entry(0).await.is_err());
     assert!(app.get_current_entry().is_none());
     assert!(app.export_entries(PathBuf::default()).await.is_err());

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use crossterm::event::{Event, EventStream, KeyEventKind};
-use ratatui::{backend::Backend, Terminal};
+use ratatui::{Terminal, backend::Backend};
 
 use crate::app::{App, UIComponents};
 use crate::cli::PendingCliCommand;
@@ -14,8 +14,8 @@ use backend::JsonDataProvide;
 use backend::SqliteDataProvide;
 
 use super::keymap::Input;
-use super::ui::ui_functions::render_message_centered;
 use super::ui::Styles;
+use super::ui::ui_functions::render_message_centered;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandleInputReturnType {

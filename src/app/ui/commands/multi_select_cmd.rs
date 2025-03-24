@@ -1,17 +1,17 @@
 use backend::DataProvider;
 
 use crate::app::{
+    App, HandleInputReturnType, UIComponents,
     ui::{
+        MsgBoxResult, Popup,
         export_popup::ExportPopup,
         msg_box::{MsgBoxActions, MsgBoxType},
-        MsgBoxResult, Popup,
     },
-    App, HandleInputReturnType, UIComponents,
 };
 
 use super::{
-    editor_cmd::{discard_current_content, exec_save_entry_content},
     CmdResult, UICommand,
+    editor_cmd::{discard_current_content, exec_save_entry_content},
 };
 
 pub fn exec_enter_select_mode(ui_components: &mut UIComponents) -> CmdResult {

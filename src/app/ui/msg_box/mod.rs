@@ -1,15 +1,15 @@
 use crossterm::event::KeyCode;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     text::Span,
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
-    Frame,
 };
 
 use crate::app::keymap::Input;
 
-use super::{ui_functions::centered_rect_exact_height, Styles};
+use super::{Styles, ui_functions::centered_rect_exact_height};
 
 // Not all enums are used in this app at this point
 #[allow(dead_code)]

@@ -4,7 +4,7 @@ use self::{
     state::AppState,
 };
 use crate::settings::Settings;
-use anyhow::{anyhow, bail, Context};
+use anyhow::{Context, anyhow, bail};
 use backend::{DataProvider, EntriesDTO, Entry, EntryDraft};
 use chrono::{DateTime, Utc};
 use colored_tags::ColoredTagsManager;
@@ -29,8 +29,8 @@ pub mod state;
 mod test;
 pub mod ui;
 
-pub use runner::run;
 pub use runner::HandleInputReturnType;
+pub use runner::run;
 pub use ui::UIComponents;
 
 pub use colored_tags::TagColors;

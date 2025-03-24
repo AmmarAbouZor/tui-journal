@@ -1,11 +1,11 @@
 use crate::app::{
-    ui::{help_popup::KeybindingsTabs, *},
     App, HandleInputReturnType, UIComponents,
+    ui::{help_popup::KeybindingsTabs, *},
 };
 
 use backend::DataProvider;
 
-use super::{editor_cmd::exec_save_entry_content, CmdResult};
+use super::{CmdResult, editor_cmd::exec_save_entry_content};
 
 pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
     if ui_components.has_unsaved() {

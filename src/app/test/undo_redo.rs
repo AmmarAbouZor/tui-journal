@@ -25,9 +25,10 @@ async fn add() {
     let _id = app.redo().await.unwrap().unwrap();
 
     assert_eq!(app.get_active_entries().count(), original_count + 1);
-    assert!(app
-        .get_entry(id)
-        .is_some_and(|entry| entry.title == added_title))
+    assert!(
+        app.get_entry(id)
+            .is_some_and(|entry| entry.title == added_title)
+    )
 }
 
 #[tokio::test]

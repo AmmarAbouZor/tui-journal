@@ -3,8 +3,8 @@ use std::{env, ffi::OsStr, io, path::Path};
 use anyhow::{anyhow, bail};
 
 use crossterm::{
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use scopeguard::defer;
 use tokio::process::Command;

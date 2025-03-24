@@ -2,19 +2,19 @@ use std::collections::HashSet;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
 
 use crate::app::{
-    filter::{criterion::TagFilterOption, CriteriaRelation, Filter, FilterCriterion},
+    filter::{CriteriaRelation, Filter, FilterCriterion, criterion::TagFilterOption},
     keymap::Input,
 };
 
-use super::{ui_functions::centered_rect, PopupReturn, Styles};
+use super::{PopupReturn, Styles, ui_functions::centered_rect};
 
 type FilterPopupReturn = PopupReturn<Option<Filter>>;
 

@@ -1,14 +1,14 @@
 use std::{collections::HashMap, env};
 
-use crate::app::{external_editor, ui::*, App, UIComponents};
+use crate::app::{App, UIComponents, external_editor, ui::*};
 
 use backend::DataProvider;
 
 use scopeguard::defer;
 
 use super::{
-    editor_cmd::{discard_current_content, exec_save_entry_content},
     CmdResult,
+    editor_cmd::{discard_current_content, exec_save_entry_content},
 };
 
 pub fn exec_select_prev_entry<D: DataProvider>(
