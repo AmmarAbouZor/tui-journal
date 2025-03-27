@@ -2,15 +2,15 @@ use std::collections::BTreeSet;
 
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 
 use crate::app::{
     keymap::Input,
-    ui::{entry_popup::tags_to_text, ui_functions::centered_rect, Styles},
+    ui::{Styles, entry_popup::tags_to_text, ui_functions::centered_rect},
 };
 
 use super::text_to_tags;

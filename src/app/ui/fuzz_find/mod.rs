@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 use tui_textarea::TextArea;
 
 use crate::app::keymap::Input;
 
-use super::{ui_functions::centered_rect, Styles};
+use super::{Styles, ui_functions::centered_rect};
 
 const FOOTER_TEXT: &str = "Esc, Enter, <Ctrl-m>, <Ctrl-c>: Close | Up, Down, <Ctrl-n>, <Ctrl-p>: cycle through filtered list";
 const FOOTER_MARGINE: usize = 8;

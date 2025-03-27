@@ -1,11 +1,11 @@
 use crate::app::{
-    ui::{help_popup::KeybindingsTabs, *},
     App, HandleInputReturnType, UIComponents,
+    ui::{help_popup::KeybindingsTabs, *},
 };
 
 use backend::DataProvider;
 
-use super::{editor_cmd::exec_save_entry_content, CmdResult};
+use super::{CmdResult, editor_cmd::exec_save_entry_content};
 
 pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
     if ui_components.has_unsaved() {
@@ -16,8 +16,8 @@ pub fn exec_quit(ui_components: &mut UIComponents) -> CmdResult {
     }
 }
 
-pub async fn continue_quit<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_quit<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -75,8 +75,8 @@ pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn exec_reload_all<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn exec_reload_all<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
@@ -88,8 +88,8 @@ pub async fn exec_reload_all<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-async fn reload_all<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+async fn reload_all<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> anyhow::Result<()> {
     app.load_entries().await?;
@@ -98,8 +98,8 @@ async fn reload_all<'a, D: DataProvider>(
     Ok(())
 }
 
-pub async fn continue_reload_all<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_reload_all<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
