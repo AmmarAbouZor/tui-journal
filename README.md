@@ -230,7 +230,7 @@ Options:
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
   -w, --write-config                  write the current settings to config file (this will rewrite the whole config file)
-  -c, --config <FLIE PAHT>            Specifies the path for the configuration file
+  -c, --config <FLIE PATH>            Specifies the path for the configuration file
                                       (default path: <config-dir>/tui-journal/config.toml)
   -v, --verbose...                    Increases logging verbosity each use for up to 3 times
   -l, --log <FILE PATH>               Specifies a file to use for logging
