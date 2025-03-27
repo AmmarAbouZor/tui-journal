@@ -1,19 +1,26 @@
 use aho_corasick::AhoCorasick;
 use backend::Entry;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterCriterion {
-    Tag(String),
+    Tag(TagFilterOption),
     Title(String),
     Content(String),
     Priority(u32),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TagFilterOption {
+    Tag(String),
+    NoTags,
 }
 
 impl FilterCriterion {
     /// Checks if the entry meets the criterion
     pub fn check_entry(&self, entry: &Entry) -> bool {
         match self {
-            FilterCriterion::Tag(tag) => entry.tags.contains(tag),
+            FilterCriterion::Tag(TagFilterOption::Tag(tag)) => entry.tags.contains(tag),
+            FilterCriterion::Tag(TagFilterOption::NoTags) => entry.tags.is_empty(),
             FilterCriterion::Title(search) => {
                 // Use simple smart-case search for title
                 if search.chars().any(|c| c.is_uppercase()) {

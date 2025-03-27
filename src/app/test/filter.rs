@@ -176,7 +176,7 @@ async fn cycle_tag_exact() {
         .and_then(|f| f.criteria.first())
         .unwrap()
     {
-        FilterCriterion::Tag(s) => assert_eq!(s, "Tag 1"),
+        FilterCriterion::Tag(TagFilterOption::Tag(s)) => assert_eq!(s, "Tag 1"),
         invalid => panic!("Invalid criteria: {invalid:?}"),
     }
 
@@ -189,20 +189,32 @@ async fn cycle_tag_exact() {
         .and_then(|f| f.criteria.first())
         .unwrap()
     {
-        FilterCriterion::Tag(s) => assert_eq!(s, "Tag 2"),
+        FilterCriterion::Tag(TagFilterOption::Tag(s)) => assert_eq!(s, "Tag 2"),
         invalid => panic!("Invalid criteria: {invalid:?}"),
     }
 
+    // 3rd iteration is for untagged entries
     app.cycle_tags_in_filter();
 
-    // Third iteration must go back to first tag
     match app
         .filter
         .as_ref()
         .and_then(|f| f.criteria.first())
         .unwrap()
     {
-        FilterCriterion::Tag(s) => assert_eq!(s, "Tag 1"),
+        FilterCriterion::Tag(TagFilterOption::NoTags) => {}
+        invalid => panic!("Invalid criteria: {invalid:?}"),
+    }
+
+    // 4th iteration must go back to first tag
+    app.cycle_tags_in_filter();
+    match app
+        .filter
+        .as_ref()
+        .and_then(|f| f.criteria.first())
+        .unwrap()
+    {
+        FilterCriterion::Tag(TagFilterOption::Tag(s)) => assert_eq!(s, "Tag 1"),
         invalid => panic!("Invalid criteria: {invalid:?}"),
     }
 }

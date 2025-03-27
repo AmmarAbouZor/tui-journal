@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use ratatui::widgets::TableState;
 
 use crate::app::{
-    keymap::{get_multi_select_keymaps, Input},
+    keymap::{Input, get_multi_select_keymaps},
     ui::UICommand,
 };
 

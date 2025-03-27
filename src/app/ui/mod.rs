@@ -17,18 +17,18 @@ use self::{
 };
 
 use super::{
+    App,
     keymap::{
-        get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps,
-        get_multi_select_keymaps, Input, Keymap,
+        Input, Keymap, get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps,
+        get_multi_select_keymaps,
     },
     runner::HandleInputReturnType,
-    App,
 };
 use anyhow::Result;
 
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
     Frame,
+    layout::{Constraint, Direction, Layout},
 };
 
 mod commands;
@@ -84,7 +84,7 @@ pub struct UIComponents<'a> {
     pending_command: Option<UICommand>,
 }
 
-impl<'a, 'b> UIComponents<'a> {
+impl UIComponents<'_> {
     pub fn new(styles: Styles) -> Self {
         let global_keymaps = get_global_keymaps();
         let entries_list_keymaps = get_entries_list_keymaps();
@@ -124,7 +124,7 @@ impl<'a, 'b> UIComponents<'a> {
         self.editor.set_current_entry(entry_id, app);
     }
 
-    pub fn render_ui<D>(&mut self, f: &mut Frame, app: &'b App<D>)
+    pub fn render_ui<D>(&mut self, f: &mut Frame, app: &App<D>)
     where
         D: DataProvider,
     {
@@ -249,97 +249,99 @@ impl<'a, 'b> UIComponents<'a> {
         input: &Input,
         app: &mut App<D>,
     ) -> Result<HandleInputReturnType> {
-        if let Some(popup) = self.popup_stack.last_mut() {
-            match popup {
-                Popup::Help(help_popup) => {
-                    if help_popup.handle_input(input) == HelpInputInputReturn::Close {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
+        match self.popup_stack.last_mut() {
+            Some(popup) => {
+                match popup {
+                    Popup::Help(help_popup) => {
+                        if help_popup.handle_input(input) == HelpInputInputReturn::Close {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                        }
                     }
-                }
-                Popup::Entry(entry_popup) => {
-                    let close_popup = match entry_popup.handle_input(input, app).await? {
-                        EntryPopupInputReturn::Cancel => true,
-                        EntryPopupInputReturn::KeepPopup => false,
-                        EntryPopupInputReturn::AddEntry(entry_id) => {
-                            self.set_current_entry(Some(entry_id), app);
-                            true
-                        }
-                        EntryPopupInputReturn::UpdateCurrentEntry => {
-                            self.set_current_entry(app.current_entry_id, app);
-                            true
-                        }
-                    };
+                    Popup::Entry(entry_popup) => {
+                        let close_popup = match entry_popup.handle_input(input, app).await? {
+                            EntryPopupInputReturn::Cancel => true,
+                            EntryPopupInputReturn::KeepPopup => false,
+                            EntryPopupInputReturn::AddEntry(entry_id) => {
+                                self.set_current_entry(Some(entry_id), app);
+                                true
+                            }
+                            EntryPopupInputReturn::UpdateCurrentEntry => {
+                                self.set_current_entry(app.current_entry_id, app);
+                                true
+                            }
+                        };
 
-                    if close_popup {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-                    }
-                }
-                Popup::MsgBox(msg_box) => match msg_box.handle_input(input) {
-                    msg_box::MsgBoxInputResult::Keep => {}
-                    msg_box::MsgBoxInputResult::Close(msg_box_result) => {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-                        if let Some(cmd) = self.pending_command.take() {
-                            return cmd.continue_executing(self, app, msg_box_result).await;
+                        if close_popup {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
                         }
                     }
-                },
-                Popup::Export(export_popup) => {
-                    match export_popup.handle_input(input) {
+                    Popup::MsgBox(msg_box) => match msg_box.handle_input(input) {
+                        msg_box::MsgBoxInputResult::Keep => {}
+                        msg_box::MsgBoxInputResult::Close(msg_box_result) => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                            if let Some(cmd) = self.pending_command.take() {
+                                return cmd.continue_executing(self, app, msg_box_result).await;
+                            }
+                        }
+                    },
+                    Popup::Export(export_popup) => {
+                        match export_popup.handle_input(input) {
+                            PopupReturn::KeepPopup => {}
+                            PopupReturn::Cancel => {
+                                self.popup_stack.pop().expect("popup stack isn't empty");
+                            }
+                            PopupReturn::Apply((path, entry_id)) => {
+                                self.handle_export_popup_return(path, entry_id, app).await;
+                            }
+                        };
+                    }
+                    Popup::Filter(filter_popup) => match filter_popup.handle_input(input) {
                         PopupReturn::KeepPopup => {}
                         PopupReturn::Cancel => {
                             self.popup_stack.pop().expect("popup stack isn't empty");
                         }
-                        PopupReturn::Apply((path, entry_id)) => {
-                            self.handle_export_popup_return(path, entry_id, app).await;
+                        PopupReturn::Apply(filter) => {
+                            app.apply_filter(filter);
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+
+                            // This fixes the bug: Entry will not be highlighted when the result of the filter is one entry only
+                            if app.get_active_entries().count() == 1 {
+                                let entry_id =
+                                    app.get_active_entries().next().map(|entry| entry.id);
+                                self.set_current_entry(entry_id, app);
+                            }
                         }
-                    };
+                    },
+                    Popup::FuzzFind(fuzz_find) => match fuzz_find.handle_input(input) {
+                        fuzz_find::FuzzFindReturn::Close => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                        }
+                        fuzz_find::FuzzFindReturn::SelectEntry(entry_id) => {
+                            if entry_id.is_some() {
+                                self.set_current_entry(entry_id, app);
+                            }
+                        }
+                    },
+                    Popup::Sort(sort_popup) => match sort_popup.handle_input(input) {
+                        PopupReturn::KeepPopup => {}
+                        PopupReturn::Cancel => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                        }
+                        PopupReturn::Apply(sort_result) => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+
+                            // Preserve current entry
+                            let current_entry_id = app.current_entry_id;
+
+                            app.apply_sort(sort_result.applied_criteria, sort_result.order);
+
+                            self.set_current_entry(current_entry_id, app);
+                        }
+                    },
                 }
-                Popup::Filter(filter_popup) => match filter_popup.handle_input(input) {
-                    PopupReturn::KeepPopup => {}
-                    PopupReturn::Cancel => {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-                    }
-                    PopupReturn::Apply(filter) => {
-                        app.apply_filter(filter);
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-
-                        // This fixes the bug: Entry will not be highlighted when the result of the filter is one entry only
-                        if app.get_active_entries().count() == 1 {
-                            let entry_id = app.get_active_entries().next().map(|entry| entry.id);
-                            self.set_current_entry(entry_id, app);
-                        }
-                    }
-                },
-                Popup::FuzzFind(fuzz_find) => match fuzz_find.handle_input(input) {
-                    fuzz_find::FuzzFindReturn::Close => {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-                    }
-                    fuzz_find::FuzzFindReturn::SelectEntry(entry_id) => {
-                        if entry_id.is_some() {
-                            self.set_current_entry(entry_id, app);
-                        }
-                    }
-                },
-                Popup::Sort(sort_popup) => match sort_popup.handle_input(input) {
-                    PopupReturn::KeepPopup => {}
-                    PopupReturn::Cancel => {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-                    }
-                    PopupReturn::Apply(sort_result) => {
-                        self.popup_stack.pop().expect("popup stack isn't empty");
-
-                        // Preserve current entry
-                        let current_entry_id = app.current_entry_id;
-
-                        app.apply_sort(sort_result.applied_criteria, sort_result.order);
-
-                        self.set_current_entry(current_entry_id, app);
-                    }
-                },
+                Ok(HandleInputReturnType::Handled)
             }
-            Ok(HandleInputReturnType::Handled)
-        } else {
-            Ok(HandleInputReturnType::NotFound)
+            _ => Ok(HandleInputReturnType::NotFound),
         }
     }
 

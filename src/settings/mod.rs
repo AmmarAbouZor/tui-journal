@@ -1,19 +1,19 @@
 use std::{convert::Infallible, fmt, marker::PhantomData, path::PathBuf, str::FromStr};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
 use serde::{
-    de::{self, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize,
+    de::{self, MapAccess, Visitor},
 };
 
 use crate::app::state::AppState;
 
 #[cfg(feature = "json")]
-use self::json_backend::{get_default_json_path, JsonBackend};
+use self::json_backend::{JsonBackend, get_default_json_path};
 #[cfg(feature = "sqlite")]
-use self::sqlite_backend::{get_default_sqlite_path, SqliteBackend};
+use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
 use self::{export::ExportSettings, external_editor::ExternalEditor};
 
 #[cfg(feature = "json")]

@@ -62,10 +62,11 @@ async fn test_data_provider_errors() {
     assert!(app.get_active_entries().next().is_none());
     assert!(app.get_entry(0).is_none());
     assert!(app.get_all_tags().is_empty());
-    assert!(app
-        .add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
-        .await
-        .is_err());
+    assert!(
+        app.add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
+            .await
+            .is_err()
+    );
     assert!(app.delete_entry(0).await.is_err());
     assert!(app.get_current_entry().is_none());
     assert!(app.export_entries(PathBuf::default()).await.is_err());
@@ -197,7 +198,9 @@ async fn test_sorter_with_filter() {
     let mut filter = Filter::default();
     filter
         .criteria
-        .push(FilterCriterion::Tag(String::from("Tag 2")));
+        .push(FilterCriterion::Tag(TagFilterOption::Tag(String::from(
+            "Tag 2",
+        ))));
     app.apply_filter(Some(filter));
 
     let mut sorter = Sorter::default();
@@ -218,7 +221,9 @@ async fn test_sorter_with_filter() {
     let mut filter = Filter::default();
     filter
         .criteria
-        .push(FilterCriterion::Tag(String::from("Tag 1")));
+        .push(FilterCriterion::Tag(TagFilterOption::Tag(String::from(
+            "Tag 1",
+        ))));
     app.apply_filter(Some(filter));
 
     let ids: Vec<u32> = app.get_active_entries().map(|entry| entry.id).collect();
