@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         # Run on latest and minimal supported rust versions.
-        rust-version: ["stable", "1.81.0"]
+        rust-version: ["stable", "1.85.0"]
 
     steps:
     - uses: actions/checkout@v4
@@ -44,8 +44,8 @@ jobs:
     - name: Rust Cache
       uses: Swatinem/rust-cache@v2.7.7
 
-    - name: Check json
-      run: cargo check --no-default-features -F json --verbose
+    - name: Check General
+      run: cargo check --verbose
 
     - name: Check sqlite
       run: cargo check --no-default-features -F sqlite --verbose
@@ -55,6 +55,7 @@ jobs:
       run: cargo clippy --verbose
 
     - name: Build
+      if: ${{ matrix.rust-version == 'stable' }}
       run: cargo build --verbose
 
     - name: Run tests

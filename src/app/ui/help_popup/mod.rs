@@ -1,5 +1,6 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Margin,
     style::{Color, Modifier, Style},
@@ -9,7 +10,6 @@ use ratatui::{
         Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, Tabs, Wrap,
     },
-    Frame,
 };
 
 use crate::app::keymap::Input;

@@ -1,4 +1,4 @@
-use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
+use crate::app::{App, HandleInputReturnType, UIComponents, ui::*};
 
 use backend::DataProvider;
 

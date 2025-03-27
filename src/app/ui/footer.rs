@@ -1,12 +1,12 @@
 use backend::DataProvider;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::Style,
     widgets::{Block, Borders, Paragraph, Wrap},
-    Frame,
 };
 
-use crate::app::{keymap::Keymap, App};
+use crate::app::{App, keymap::Keymap};
 
 use super::{ControlType, UICommand, UIComponents};
 

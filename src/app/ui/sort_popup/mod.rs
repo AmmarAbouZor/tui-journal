@@ -1,8 +1,8 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
+    Frame,
     prelude::*,
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 
 use crate::app::{
@@ -10,7 +10,7 @@ use crate::app::{
     sorter::{SortCriteria, SortOrder, Sorter},
 };
 
-use super::{ui_functions::centered_rect, PopupReturn, Styles};
+use super::{PopupReturn, Styles, ui_functions::centered_rect};
 
 type SortReturn = PopupReturn<SortResult>;
 
@@ -400,6 +400,9 @@ impl SortPopup {
             SortControl::AppliedList => " <Ctrl-j/k> or <Ctrl-Up/Down> Move criteria up/down |",
         };
 
-        format!("Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move criteria to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default", move_mapping)
+        format!(
+            "Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move criteria to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default",
+            move_mapping
+        )
     }
 }

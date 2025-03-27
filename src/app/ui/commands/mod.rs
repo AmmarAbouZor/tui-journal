@@ -118,9 +118,10 @@ impl UICommand {
                 "Edit journal content",
                 "Start editing current journal entry content in editor",
             ),
-            UICommand::BackEditorNormalMode => {
-                CommandInfo::new("Back to Editor Normal Mode", "Exit editor special modes (insert, visual) and go back to normal mode")
-            }
+            UICommand::BackEditorNormalMode => CommandInfo::new(
+                "Back to Editor Normal Mode",
+                "Exit editor special modes (insert, visual) and go back to normal mode",
+            ),
             UICommand::SaveEntryContent => {
                 CommandInfo::new("Save", "Save changes on journal content")
             }
@@ -167,22 +168,18 @@ impl UICommand {
                 "Export selection",
                 "Export selected journals to a transfer JSON file, which can be imported to other back-end files",
             ),
-            UICommand::ShowFilter => CommandInfo::new(
-                "Open filter",
-                "Open filter popup for journals",
-            ),
-            UICommand::ResetFilter => CommandInfo::new(
-                "Reset filter",
-                "Reset the applied filter on journals",
-            ),
-            UICommand::CycleTagFilter => CommandInfo::new(
-                "Cycle Tag Filter",
-                "Cycle through the tag filters",
-            ),
-            UICommand::ShowFuzzyFind => CommandInfo::new(
-                "Fuzzy find",
-                "Open fuzzy find popup for journals",
-            ),
+            UICommand::ShowFilter => {
+                CommandInfo::new("Open filter", "Open filter popup for journals")
+            }
+            UICommand::ResetFilter => {
+                CommandInfo::new("Reset filter", "Reset the applied filter on journals")
+            }
+            UICommand::CycleTagFilter => {
+                CommandInfo::new("Cycle Tag Filter", "Cycle through the tag filters")
+            }
+            UICommand::ShowFuzzyFind => {
+                CommandInfo::new("Fuzzy find", "Open fuzzy find popup for journals")
+            }
             UICommand::ToggleEditorVisualMode => CommandInfo::new(
                 "Toggle Editor Visual Mode",
                 "Toggle Editor Visual(Select) Mode when editor is in focus",
@@ -215,17 +212,15 @@ impl UICommand {
                 "Go to bottom journal",
                 "Go to the bottom entry in the journals' list",
             ),
-            UICommand::PageUpEntries => CommandInfo::new(
-                "Page Up journals",
-                "Go one page up in the journals' list",
-            ),
+            UICommand::PageUpEntries => {
+                CommandInfo::new("Page Up journals", "Go one page up in the journals' list")
+            }
             UICommand::PageDownEntries => CommandInfo::new(
                 "Page Down journals",
                 "Go one page down in the journals' list",
             ),
             UICommand::Undo => CommandInfo::new("Undo", "Undo the latest change on journals"),
             UICommand::Redo => CommandInfo::new("Redo", "Redo the latest change on journals"),
-
         }
     }
 
