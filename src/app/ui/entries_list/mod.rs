@@ -1,6 +1,7 @@
 use chrono::Datelike;
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     prelude::Margin,
     style::Style,
@@ -10,7 +11,6 @@ use ratatui::{
         Block, Borders, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Wrap,
     },
-    Frame,
 };
 
 use backend::DataProvider;

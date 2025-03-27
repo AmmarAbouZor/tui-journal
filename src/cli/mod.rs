@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     logging::{get_default_path as defaul_log_path, setup_logging},
-    settings::{settings_default_path, BackendType, Settings},
+    settings::{BackendType, Settings, settings_default_path},
 };
 
 pub mod commands;

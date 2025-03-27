@@ -2,15 +2,15 @@ use anyhow::Ok;
 use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
-    Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
 
 use crate::{
-    app::{keymap::Input, App},
+    app::{App, keymap::Input},
     settings::Settings,
 };
 
@@ -18,12 +18,11 @@ use backend::{DataProvider, Entry};
 
 use self::tags::{TagsPopup, TagsPopupReturn};
 
-use super::{ui_functions::centered_rect_exact_height, Styles};
+use super::{Styles, ui_functions::centered_rect_exact_height};
 
 mod tags;
 
-const FOOTER_TEXT: &str =
-    "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Open tags";
+const FOOTER_TEXT: &str = "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Open tags";
 const FOOTER_MARGIN: u16 = 15;
 
 pub struct EntryPopup<'a> {
@@ -56,7 +55,7 @@ pub enum EntryPopupInputReturn {
     UpdateCurrentEntry,
 }
 
-impl<'a> EntryPopup<'a> {
+impl EntryPopup<'_> {
     pub fn new_entry(settings: &Settings) -> Self {
         let title_txt = TextArea::default();
 

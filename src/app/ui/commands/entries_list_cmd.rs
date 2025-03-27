@@ -1,14 +1,14 @@
 use std::{collections::HashMap, env};
 
-use crate::app::{external_editor, ui::*, App, UIComponents};
+use crate::app::{App, UIComponents, external_editor, ui::*};
 
 use backend::DataProvider;
 
 use scopeguard::defer;
 
 use super::{
-    editor_cmd::{discard_current_content, exec_save_entry_content},
     CmdResult,
+    editor_cmd::{discard_current_content, exec_save_entry_content},
 };
 
 pub fn exec_select_prev_entry<D: DataProvider>(
@@ -45,8 +45,8 @@ fn select_prev_entry<D: DataProvider>(
     }
 }
 
-pub async fn continue_select_prev_entry<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_select_prev_entry<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -97,8 +97,8 @@ fn select_next_entry<D: DataProvider>(
     }
 }
 
-pub async fn continue_select_next_entry<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_select_next_entry<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -133,8 +133,8 @@ pub fn create_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &App
         .push(Popup::Entry(Box::new(EntryPopup::new_entry(&app.settings))));
 }
 
-pub async fn continue_create_entry<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_create_entry<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -171,8 +171,8 @@ fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &m
     }
 }
 
-pub async fn continue_edit_current_entry<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_edit_current_entry<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -204,7 +204,7 @@ pub fn exec_delete_current_entry<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn continue_delete_current_entry<'a, D: DataProvider>(
+pub async fn continue_delete_current_entry<D: DataProvider>(
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -253,8 +253,8 @@ pub fn export_entry_content<D: DataProvider>(ui_components: &mut UIComponents, a
     }
 }
 
-pub async fn continue_export_entry_content<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_export_entry_content<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -273,8 +273,8 @@ pub async fn continue_export_entry_content<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn exec_edit_in_external_editor<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn exec_edit_in_external_editor<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> CmdResult {
     if ui_components.has_unsaved() {
@@ -286,8 +286,8 @@ pub async fn exec_edit_in_external_editor<'a, D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn edit_in_external_editor<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn edit_in_external_editor<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> anyhow::Result<()> {
     use tokio::fs;
@@ -332,8 +332,8 @@ pub async fn edit_in_external_editor<'a, D: DataProvider>(
     Ok(())
 }
 
-pub async fn continue_edit_in_external_editor<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_edit_in_external_editor<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -372,8 +372,8 @@ fn show_filter<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<
         ))));
 }
 
-pub async fn continue_show_filter<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_show_filter<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -411,8 +411,8 @@ pub fn exec_cycle_tag_filter<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn continue_cycle_tag_filter<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_cycle_tag_filter<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -454,8 +454,8 @@ fn show_fuzzy_find<D: DataProvider>(ui_components: &mut UIComponents, app: &mut 
         .push(Popup::FuzzFind(Box::new(FuzzFindPopup::new(entries))));
 }
 
-pub async fn continue_fuzzy_find<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_fuzzy_find<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {
@@ -498,8 +498,8 @@ fn show_sort_options<D: DataProvider>(ui_components: &mut UIComponents, app: &mu
         .push(Popup::Sort(Box::new(SortPopup::new(&app.state.sorter))));
 }
 
-pub async fn continue_show_sort_options<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn continue_show_sort_options<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
     msg_box_result: MsgBoxResult,
 ) -> CmdResult {

@@ -1,4 +1,4 @@
-use crate::app::{ui::*, App, HandleInputReturnType, UIComponents};
+use crate::app::{App, HandleInputReturnType, UIComponents, ui::*};
 
 use backend::DataProvider;
 
@@ -14,8 +14,8 @@ pub fn exec_back_editor_to_normal_mode(ui_components: &mut UIComponents) -> CmdR
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn exec_save_entry_content<'a, D: DataProvider>(
-    ui_components: &mut UIComponents<'a>,
+pub async fn exec_save_entry_content<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> CmdResult {
     let entry_content = ui_components.editor.get_content();
