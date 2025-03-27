@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    logging::{get_default_path as defaul_log_path, setup_logging},
+    logging::{get_default_path as default_log_path, setup_logging},
     settings::{BackendType, Settings, settings_default_path},
 };
 
@@ -31,7 +31,7 @@ pub struct Cli {
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
 
-    #[arg(short = 'c', long = "config", value_name = "FLIE PAHT", help = config_help())]
+    #[arg(short = 'c', long = "config", value_name = "FILE PATH", help = config_help())]
     pub config_path: Option<PathBuf>,
 
     /// write the current settings to config file (this will rewrite the whole config file)
@@ -128,7 +128,7 @@ fn set_backend_type(backend: BackendType, settings: &mut Settings) {
 fn log_help() -> String {
     format!(
         "Specifies a file to use for logging\n(default file: {})",
-        defaul_log_path()
+        default_log_path()
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default()
     )
