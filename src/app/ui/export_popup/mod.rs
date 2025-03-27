@@ -3,16 +3,16 @@ use std::{env, path::PathBuf};
 use backend::{DataProvider, Entry};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
-    Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
 
-use crate::app::{keymap::Input, App};
+use crate::app::{App, keymap::Input};
 
-use super::{ui_functions::centered_rect_exact_height, PopupReturn, Styles};
+use super::{PopupReturn, Styles, ui_functions::centered_rect_exact_height};
 
 type ExportPopupInputReturn = PopupReturn<(PathBuf, Option<u32>)>;
 

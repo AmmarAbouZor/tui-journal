@@ -2,21 +2,21 @@ use anyhow::{anyhow, bail};
 use arboard::Clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::Rect,
     prelude::Margin,
     style::{Color, Style},
     symbols,
     widgets::{Block, Borders, Scrollbar, ScrollbarOrientation, ScrollbarState},
-    Frame,
 };
 
-use crate::app::{keymap::Input, runner::HandleInputReturnType, App};
+use crate::app::{App, keymap::Input, runner::HandleInputReturnType};
 
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
-use super::commands::ClipboardOperation;
 use super::Styles;
+use super::commands::ClipboardOperation;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditorMode {

@@ -6,9 +6,9 @@ use super::*;
 use anyhow::anyhow;
 use path_absolutize::Absolutize;
 use sqlx::{
+    Row, Sqlite, SqlitePool,
     migrate::MigrateDatabase,
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
-    Row, Sqlite, SqlitePool,
 };
 
 mod sqlite_helper;

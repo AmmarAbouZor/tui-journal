@@ -4,7 +4,7 @@ use ratatui::widgets::TableState;
 
 use crate::app::{
     keymap::{
-        get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps, Input, Keymap,
+        Input, Keymap, get_editor_mode_keymaps, get_entries_list_keymaps, get_global_keymaps,
     },
     ui::UICommand,
 };

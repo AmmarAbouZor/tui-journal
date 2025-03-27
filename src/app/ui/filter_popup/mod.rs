@@ -2,24 +2,31 @@ use std::collections::HashSet;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
-    Frame,
 };
 use tui_textarea::{CursorMove, TextArea};
 
 use crate::app::{
-    filter::{CriteriaRelation, Filter, FilterCriterion},
+    filter::{CriteriaRelation, Filter, FilterCriterion, criterion::TagFilterOption},
     keymap::Input,
 };
 
-use super::{ui_functions::centered_rect, PopupReturn, Styles};
+use super::{PopupReturn, Styles, ui_functions::centered_rect};
 
 type FilterPopupReturn = PopupReturn<Option<Filter>>;
 
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
 const FOOTER_MARGIN: usize = 8;
+
+/// Text to show in tags list indicating that none tagged entires are included.
+///
+/// # Note:
+/// This name used as identifier for this option and the trailing white spaces are added
+/// intentionally to avoid clashing the users adding the same text as their own tag.
+const NO_TAGS_TEXT: &str = "NO_TAGS (Entries with no tags)  ";
 
 pub struct FilterPopup<'a> {
     active_control: FilterControl,
@@ -42,8 +49,12 @@ enum FilterControl {
 }
 
 impl FilterPopup<'_> {
-    pub fn new(tags: Vec<String>, filter: Option<Filter>) -> Self {
+    pub fn new(mut tags: Vec<String>, filter: Option<Filter>) -> Self {
         let filter = filter.unwrap_or_default();
+        // Add no tags option to list of tags in case we have some tags.
+        if !tags.is_empty() {
+            tags.push(NO_TAGS_TEXT.into());
+        }
 
         let relation = filter.relation;
 
@@ -53,8 +64,11 @@ impl FilterPopup<'_> {
         let mut priority_text = String::default();
 
         filter.criteria.into_iter().for_each(|cr| match cr {
-            FilterCriterion::Tag(tag) => {
+            FilterCriterion::Tag(TagFilterOption::Tag(tag)) => {
                 selected_tags.insert(tag);
+            }
+            FilterCriterion::Tag(TagFilterOption::NoTags) => {
+                selected_tags.insert(NO_TAGS_TEXT.into());
             }
             FilterCriterion::Title(title_search) => title_text = title_search,
             FilterCriterion::Content(content_search) => content_text = content_search,
@@ -428,7 +442,15 @@ impl FilterPopup<'_> {
         let mut critria: Vec<_> = self
             .selected_tags
             .iter()
-            .map(|tag| FilterCriterion::Tag(tag.into()))
+            .map(|tag| {
+                // Text `NO_TAGS_TEXT` is used to identify if users wants to include none tagged
+                // items, to avoid adding much more complexity to the code and the UI.
+                if tag == NO_TAGS_TEXT {
+                    FilterCriterion::Tag(TagFilterOption::NoTags)
+                } else {
+                    FilterCriterion::Tag(TagFilterOption::Tag(tag.into()))
+                }
+            })
             .collect();
 
         let title_filter = self

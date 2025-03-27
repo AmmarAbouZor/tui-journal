@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{ensure, Context};
+use anyhow::{Context, ensure};
 use clap::Subcommand;
 
 use crate::{app::ui::Styles, settings::Settings};
