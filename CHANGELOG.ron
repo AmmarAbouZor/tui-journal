@@ -8,10 +8,31 @@
       references: {},
       version: (
         major: 0,
+        minor: 15,
+        patch: 0,
+      ),
+      released: "2025-03-28T15:22:15.483997358+01:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Added": [
+            "Filter and cycle through untagged items",
+          ],
+          "Changed": [
+            "Update rust edition to 2024 + Adjust CI Checks",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 14,
         patch: 0,
       ),
-      released: "2025-01-27T20:20:42.013390589Z",
+      released: "2025-01-27T21:20:42.013390589+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -30,7 +51,7 @@
         minor: 13,
         patch: 1,
       ),
-      released: "2024-12-08T16:31:02.474273641Z",
+      released: "2024-12-08T17:31:02.474273641+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -49,7 +70,7 @@
         minor: 13,
         patch: 0,
       ),
-      released: "2024-11-25T18:59:38.861019821Z",
+      released: "2024-11-25T19:59:38.861019821+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -74,7 +95,7 @@
         minor: 12,
         patch: 1,
       ),
-      released: "2024-11-10T18:10:57.516434462Z",
+      released: "2024-11-10T19:10:57.516434462+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -92,7 +113,7 @@
         minor: 12,
         patch: 0,
       ),
-      released: "2024-09-27T18:16:58.361361032Z",
+      released: "2024-09-27T20:16:58.361361032+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -111,7 +132,7 @@
         minor: 11,
         patch: 0,
       ),
-      released: "2024-09-08T11:49:56.679586845Z",
+      released: "2024-09-08T13:49:56.679586845+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -129,7 +150,7 @@
         minor: 10,
         patch: 0,
       ),
-      released: "2024-09-01T09:08:52.944615158Z",
+      released: "2024-09-01T11:08:52.944615158+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -150,7 +171,7 @@
         minor: 9,
         patch: 1,
       ),
-      released: "2024-07-20T12:47:37.742190046Z",
+      released: "2024-07-20T14:47:37.742190046+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -169,7 +190,7 @@
         minor: 9,
         patch: 0,
       ),
-      released: "2024-05-30T07:37:23.951738395Z",
+      released: "2024-05-30T09:37:23.951738395+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -187,7 +208,7 @@
         minor: 8,
         patch: 4,
       ),
-      released: "2024-05-12T20:08:06.170693783Z",
+      released: "2024-05-12T22:08:06.170693783+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -201,7 +222,7 @@
         minor: 8,
         patch: 3,
       ),
-      released: "2024-04-28T10:15:14.417876165Z",
+      released: "2024-04-28T12:15:14.417876165+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -223,7 +244,7 @@
         minor: 8,
         patch: 2,
       ),
-      released: "2024-02-01T20:04:46.038043673Z",
+      released: "2024-02-01T21:04:46.038043673+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -241,7 +262,7 @@
         minor: 8,
         patch: 1,
       ),
-      released: "2024-01-19T20:48:57.138308625Z",
+      released: "2024-01-19T21:48:57.138308625+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -262,7 +283,7 @@
         minor: 8,
         patch: 0,
       ),
-      released: "2024-01-16T20:26:03.747337975Z",
+      released: "2024-01-16T21:26:03.747337975+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -289,7 +310,7 @@
         minor: 7,
         patch: 0,
       ),
-      released: "2024-01-05T22:30:44.217266031Z",
+      released: "2024-01-05T23:30:44.217266031+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -318,7 +339,7 @@
         minor: 6,
         patch: 1,
       ),
-      released: "2024-01-01T11:44:46.668154806Z",
+      released: "2024-01-01T12:44:46.668154806+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -339,7 +360,7 @@
         minor: 6,
         patch: 0,
       ),
-      released: "2023-12-16T19:21:36.914576942Z",
+      released: "2023-12-16T20:21:36.914576942+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -357,7 +378,7 @@
         minor: 5,
         patch: 1,
       ),
-      released: "2023-11-28T19:57:47.819849239Z",
+      released: "2023-11-28T20:57:47.819849239+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -378,7 +399,7 @@
         minor: 5,
         patch: 0,
       ),
-      released: "2023-11-26T13:07:58.282458357Z",
+      released: "2023-11-26T14:07:58.282458357+01:00",
       introduction: None,
       changes: (
         references: {},
@@ -403,7 +424,7 @@
         minor: 4,
         patch: 0,
       ),
-      released: "2023-10-14T13:31:02.923857748Z",
+      released: "2023-10-14T15:31:02.923857748+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -425,7 +446,7 @@
         minor: 3,
         patch: 3,
       ),
-      released: "2023-10-08T10:26:15.746460198Z",
+      released: "2023-10-08T12:26:15.746460198+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -448,7 +469,7 @@
         minor: 3,
         patch: 2,
       ),
-      released: "2023-10-02T18:31:36.885416778Z",
+      released: "2023-10-02T20:31:36.885416778+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -475,7 +496,7 @@
         minor: 3,
         patch: 1,
       ),
-      released: "2023-08-16T18:10:45.172936899Z",
+      released: "2023-08-16T20:10:45.172936899+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -498,7 +519,7 @@
         minor: 3,
         patch: 0,
       ),
-      released: "2023-07-13T17:56:17.860700035Z",
+      released: "2023-07-13T19:56:17.860700035+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -525,7 +546,7 @@
         minor: 2,
         patch: 0,
       ),
-      released: "2023-06-24T19:05:58.025030712Z",
+      released: "2023-06-24T21:05:58.025030712+02:00",
       introduction: None,
       changes: (
         references: {},
@@ -554,7 +575,7 @@
         minor: 1,
         patch: 4,
       ),
-      released: "2023-06-11T18:52:52.732030789Z",
+      released: "2023-06-11T20:52:52.732030789+02:00",
       introduction: None,
       changes: (
         references: {},

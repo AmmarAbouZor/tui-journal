@@ -1,6 +1,6 @@
 [package]
 name = "tui-journal"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2024"
 authors = ["Ammar Abou Zor"]
 license = "MIT"
