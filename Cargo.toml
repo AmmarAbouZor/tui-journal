@@ -21,7 +21,7 @@ log = "0.4"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
 crossterm = {version =  "0.28", features = ["event-stream"]}
-directories = "5"
+directories = "6"
 simplelog = "0.12"
 textwrap = "0.16"
 thiserror = "2"
