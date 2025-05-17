@@ -41,12 +41,12 @@ async fn main() -> Result<()> {
     app::run(&mut terminal, settings, styles, pending_cmd)
         .await
         .inspect_err(|err| {
-            log::error!("[PANIC] {}", err.to_string());
+            log::error!("[PANIC] {}", err);
         })?;
 
     // restore terminal
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
 
     Ok(())
