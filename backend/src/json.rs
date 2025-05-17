@@ -51,7 +51,7 @@ impl DataProvider for JsonDataProvide {
             .await
             .map_err(|err| anyhow!(err))?;
 
-        Ok(entries.into_iter().last().unwrap())
+        Ok(entries.into_iter().next_back().unwrap())
     }
 
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
