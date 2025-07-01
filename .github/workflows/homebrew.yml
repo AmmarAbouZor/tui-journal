@@ -21,7 +21,7 @@ jobs:
         echo "-------------------------------------------------------------"
 
     - name: Bump Homebrew Formula
-      uses: dawidd6/action-homebrew-bump-formula@v4
+      uses: dawidd6/action-homebrew-bump-formula@v5
       with:
         token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
         tap: AmmarAbouZor/homebrew-tui-journal
