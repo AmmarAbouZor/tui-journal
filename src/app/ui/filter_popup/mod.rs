@@ -21,7 +21,7 @@ type FilterPopupReturn = PopupReturn<Option<Filter>>;
 const FOOTER_TEXT: &str = r"Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <Ctrl-r>: Change Matching Logic | <Space>: Tags Toggle Selected";
 const FOOTER_MARGIN: usize = 8;
 
-/// Text to show in tags list indicating that none tagged entires are included.
+/// Text to show in tags list indicating that none tagged entries are included.
 ///
 /// # Note:
 /// This name used as identifier for this option and the trailing white spaces are added

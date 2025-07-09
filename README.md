@@ -221,7 +221,7 @@ Usage: tjournal [OPTIONS] [COMMAND]
 Commands:
   print-config     Print the current settings including the paths for the backend files [aliases: pc]
   import-journals  Import journals from the given transfer JSON file to the current back-end file [aliases: imj]
-  assign-priority  Assign priority for all the entires with empty priority field [aliases: ap]
+  assign-priority  Assign priority for all the entries with empty priority field [aliases: ap]
   theme            Provides commands regarding changing themes and styles of the app [aliases: style]
   help             Print this message or the help of the given subcommand(s)
 
