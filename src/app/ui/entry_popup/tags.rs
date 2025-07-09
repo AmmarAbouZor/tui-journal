@@ -204,7 +204,7 @@ impl TagsPopup {
     }
 
     fn confirm(&self) -> TagsPopupReturn {
-        // We must take the tags from the tags vector becuase it matches the order in the tags list
+        // We must take the tags from the tags vector because it matches the order in the tags list
         let selected_tags: Vec<String> = self
             .tags
             .iter()

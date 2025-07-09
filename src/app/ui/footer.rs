@@ -12,7 +12,7 @@ use super::{ControlType, UICommand, UIComponents};
 
 const SEPARATOR: &str = " | ";
 
-pub fn get_footer_heigh<D: DataProvider>(
+pub fn get_footer_height<D: DataProvider>(
     width: u16,
     ui_components: &UIComponents,
     app: &App<D>,
@@ -41,11 +41,11 @@ pub fn render_footer<D: DataProvider>(
 }
 
 fn get_footer_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>) -> String {
-    let (edior_mode, multi_select_mode) = (
+    let (editor_mode, multi_select_mode) = (
         ui_components.editor.is_insert_mode(),
         ui_components.entries_list.multi_select_mode,
     );
-    match (edior_mode, multi_select_mode) {
+    match (editor_mode, multi_select_mode) {
         (true, false) => get_editor_mode_text(ui_components),
         (false, true) => get_multi_select_text(ui_components),
         _ => get_standard_text(ui_components, app),

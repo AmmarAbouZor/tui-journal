@@ -36,7 +36,7 @@ impl SortCriteria {
     pub fn iterator() -> impl Iterator<Item = SortCriteria> {
         use SortCriteria as S;
 
-        // Static assertions to make sure all sort criteria are invloved in the iterator
+        // Static assertions to make sure all sort criteria are involved in the iterator
         if cfg!(debug_assertions) {
             match S::Date {
                 S::Date => (),

@@ -19,7 +19,7 @@ pub enum CliCommand {
         #[arg(short = 'p', long = "path", required = true, value_name = "FILE PATH")]
         file_path: PathBuf,
     },
-    /// Assign priority for all the entires with empty priority field
+    /// Assign priority for all the entries with empty priority field
     #[clap(visible_alias = "ap")]
     AssignPriority {
         /// Priority value (Positive number)

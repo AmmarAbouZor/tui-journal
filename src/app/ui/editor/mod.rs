@@ -105,7 +105,7 @@ impl<'a> Editor<'a> {
             if app.settings.sync_os_clipboard {
                 let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
                 // Keymaps are taken from `text_area` source code
-                let handeld = match input.key_code {
+                let handled = match input.key_code {
                     KeyCode::Char('x') if has_ctrl => {
                         self.exec_os_clipboard(ClipboardOperation::Cut)?;
                         true
@@ -121,7 +121,7 @@ impl<'a> Editor<'a> {
                     _ => false,
                 };
 
-                if handeld {
+                if handled {
                     return Ok(HandleInputReturnType::Handled);
                 }
             }
