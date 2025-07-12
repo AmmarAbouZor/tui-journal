@@ -33,7 +33,7 @@ impl SqliteDataProvide {
 
     pub async fn create(db_url: &str) -> anyhow::Result<Self> {
         if !Sqlite::database_exists(db_url).await? {
-            log::trace!("Creating Database with the URL '{}'", db_url);
+            log::trace!("Creating Database with the URL '{db_url}'");
             Sqlite::create_database(db_url)
                 .await
                 .map_err(|err| anyhow!("Creating database failed. Error info: {err}"))?;
@@ -94,7 +94,7 @@ impl DataProvider for SqliteDataProvide {
         .fetch_one(&self.pool)
         .await
         .map_err(|err| {
-            log::error!("Add entry failed. Error info: {}", err);
+            log::error!("Add entry failed. Error info: {err}");
             anyhow!(err)
         })?;
 
@@ -110,7 +110,7 @@ impl DataProvider for SqliteDataProvide {
             .execute(&self.pool)
             .await
             .map_err(|err| {
-                log::error!("Add entry tags failed. Error info:{}", err);
+                log::error!("Add entry tags failed. Error info:{err}");
                 anyhow!(err)
             })?;
         }
@@ -207,10 +207,9 @@ impl DataProvider for SqliteDataProvide {
             r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
             LEFT JOIN tags ON entries.id = tags.entry_id
-            WHERE entries.id IN ({})
+            WHERE entries.id IN ({ids_text})
             GROUP BY entries.id
-            ORDER BY date DESC",
-            ids_text
+            ORDER BY date DESC"
         );
 
         let entries: Vec<EntryIntermediate> = sqlx::query_as(sql.as_str())
@@ -233,9 +232,8 @@ impl DataProvider for SqliteDataProvide {
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         let sql = format!(
             r"UPDATE entries
-            SET priority = '{}'
-            WHERE priority IS NULL;",
-            priority
+            SET priority = '{priority}'
+            WHERE priority IS NULL;"
         );
 
         sqlx::query(sql.as_str())

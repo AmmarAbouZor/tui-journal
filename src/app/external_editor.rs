@@ -68,11 +68,7 @@ pub async fn open_editor(file_path: &Path, settings: &Settings) -> anyhow::Resul
         .status()
         .await
         .map_err(|err| {
-            anyhow!(
-                "Error while opening the editor. Editor command: '{}'. Error: {}",
-                editor_cmd,
-                err
-            )
+            anyhow!("Error while opening the editor. Editor command: '{editor_cmd}'. Error: {err}")
         })?;
 
     Ok(())
@@ -86,7 +82,7 @@ fn get_git_editor() -> anyhow::Result<String> {
         err
     })?;
 
-    log::trace!("Git editor is: {}", editor);
+    log::trace!("Git editor is: {editor}");
 
     Ok(editor)
 }
