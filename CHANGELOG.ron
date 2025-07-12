@@ -8,6 +8,26 @@
       references: {},
       version: (
         major: 0,
+        minor: 16,
+        patch: 0,
+      ),
+      released: "2025-07-12T21:10:52.760762041+02:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Use CLI arg --config for configuration directory and themes",
+            "Remove write configuration CLI argument",
+            "Update Dependencies",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
         minor: 15,
         patch: 0,
       ),
