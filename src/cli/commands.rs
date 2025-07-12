@@ -53,7 +53,11 @@ pub enum PendingCliCommand {
 }
 
 impl CliCommand {
-    pub fn exec(self, settings: &mut Settings) -> anyhow::Result<CliResult> {
+    pub fn exec(
+        self,
+        settings: &mut Settings,
+        custom_config_dir: Option<&PathBuf>,
+    ) -> anyhow::Result<CliResult> {
         match self {
             CliCommand::PrintConfig => exec_print_config(settings),
             CliCommand::ImportJournals { file_path: path } => Ok(CliResult::PendingCommand(
@@ -63,9 +67,9 @@ impl CliCommand {
                 PendingCliCommand::AssignPriority(priority),
             )),
             CliCommand::Theme(cmd) => match cmd {
-                Themes::PrintPath => exec_print_themes_path(),
+                Themes::PrintPath => exec_print_themes_path(custom_config_dir),
                 Themes::DumpDefaults => exec_print_themes_defaults(),
-                Themes::WriteDefaults => exec_write_themes_defaults(),
+                Themes::WriteDefaults => exec_write_themes_defaults(custom_config_dir),
             },
         }
     }
@@ -79,8 +83,8 @@ fn exec_print_config(settings: &mut Settings) -> anyhow::Result<CliResult> {
     Ok(CliResult::Return)
 }
 
-fn exec_print_themes_path() -> anyhow::Result<CliResult> {
-    let themes_path = Styles::file_path()?;
+fn exec_print_themes_path(custom_config_dir: Option<&PathBuf>) -> anyhow::Result<CliResult> {
+    let themes_path = Styles::file_path(custom_config_dir)?;
 
     println!("{}", themes_path.display());
 
@@ -94,8 +98,8 @@ fn exec_print_themes_defaults() -> anyhow::Result<CliResult> {
     Ok(CliResult::Return)
 }
 
-fn exec_write_themes_defaults() -> anyhow::Result<CliResult> {
-    let themes_path = Styles::file_path()?;
+fn exec_write_themes_defaults(custom_config_dir: Option<&PathBuf>) -> anyhow::Result<CliResult> {
+    let themes_path = Styles::file_path(custom_config_dir)?;
     ensure!(
         !themes_path.exists(),
         "Themes file already exists. Path: {}",

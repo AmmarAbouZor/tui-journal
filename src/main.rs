@@ -19,7 +19,8 @@ mod settings;
 async fn main() -> Result<()> {
     let cli = cli::Cli::parse();
 
-    let mut settings = Settings::new(cli.config_path.clone()).await?;
+    let custom_config = cli.config_path.clone();
+    let mut settings = Settings::new(custom_config.clone()).await?;
 
     let mut pending_cmd = None;
 
@@ -29,7 +30,8 @@ async fn main() -> Result<()> {
         cli::CliResult::PendingCommand(cmd) => pending_cmd = Some(cmd),
     }
 
-    let styles = Styles::load().context("Error while retrieving app styles")?;
+    let styles =
+        Styles::load(custom_config.as_ref()).context("Error while retrieving app styles")?;
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;

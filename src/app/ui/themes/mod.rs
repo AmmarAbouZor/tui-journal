@@ -7,7 +7,6 @@ mod style;
 use std::{fs, path::PathBuf};
 
 use anyhow::Context;
-use directories::BaseDirs;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +15,8 @@ pub use general_styles::GeneralStyles;
 pub use journals_list_styles::JournalsListStyles;
 pub use msgbox::MsgBoxColors;
 pub use style::Style;
+
+use crate::settings::settings_default_dir_path;
 
 const ACTIVE_CONTROL_COLOR: Color = Color::Reset;
 const INACTIVE_CONTROL_COLOR: Color = Color::Rgb(170, 170, 200);
@@ -38,15 +39,26 @@ pub struct Styles {
 }
 
 impl Styles {
-    pub fn file_path() -> anyhow::Result<PathBuf> {
-        BaseDirs::new()
-            .map(|base_dirs| {
-                base_dirs
-                    .config_dir()
-                    .join("tui-journal")
-                    .join("themes.toml")
-            })
-            .context("Themes file path couldn't be retrieved")
+    pub fn file_path(custom_config_dir: Option<&PathBuf>) -> anyhow::Result<PathBuf> {
+        let config_dir = match custom_config_dir {
+            Some(dir) if dir.is_dir() => dir,
+            Some(_path) => {
+                // It's possible for users to provide path for configuration file instead of
+                // directory because this was the previous API.
+                // In this situation it's enough to warn them and ignore the path in themes.
+                eprintln!(
+                    "INFO: Custom config directory is ignored in themese because it's not a directory."
+                );
+                log::warn!(
+                    "Custom config directory is ignored in themese because it's not a directory"
+                );
+                &settings_default_dir_path()?
+            }
+            None => &settings_default_dir_path()?,
+        };
+        let path = config_dir.join("themes.toml");
+
+        Ok(path)
     }
 
     /// Serialize default themes to `toml` format.
@@ -56,8 +68,8 @@ impl Styles {
             .context("Error while serializing default styles to toml format")
     }
 
-    pub fn load() -> anyhow::Result<Self> {
-        let file_path = Self::file_path()?;
+    pub fn load(custom_config_dir: Option<&PathBuf>) -> anyhow::Result<Self> {
+        let file_path = Self::file_path(custom_config_dir)?;
         if !file_path.exists() {
             return Ok(Self::default());
         }
