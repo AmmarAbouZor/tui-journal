@@ -130,29 +130,6 @@ impl Settings {
         Ok(settings)
     }
 
-    pub async fn write_current_settings(
-        &mut self,
-        custom_path: Option<PathBuf>,
-    ) -> anyhow::Result<()> {
-        let toml = self.get_as_text()?;
-
-        let settings_path = if let Some(path) = custom_path {
-            path
-        } else {
-            settings_default_path()?
-        };
-
-        if let Some(parent) = settings_path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
-
-        tokio::fs::write(settings_path, toml)
-            .await
-            .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
-
-        Ok(())
-    }
-
     pub fn get_as_text(&mut self) -> anyhow::Result<String> {
         self.complete_missing_options()?;
 

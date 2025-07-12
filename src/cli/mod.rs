@@ -34,10 +34,6 @@ pub struct Cli {
     #[arg(short = 'c', long = "config", value_name = "FILE PATH", help = config_help())]
     pub config_path: Option<PathBuf>,
 
-    /// write the current settings to config file (this will rewrite the whole config file)
-    #[arg(short, long)]
-    write_config: bool,
-
     /// Increases logging verbosity each use for up to 3 times.
     #[arg(short = 'v', long, action = clap::ArgAction::Count)]
     verbose: u8,
@@ -72,12 +68,6 @@ impl Cli {
 
         if let Some(backend) = self.backend_type.take() {
             set_backend_type(backend, settings);
-        }
-
-        if self.write_config {
-            settings
-                .write_current_settings(self.config_path.clone())
-                .await?;
         }
 
         setup_logging(self.verbose, self.log_file)?;
