@@ -401,8 +401,9 @@ impl SortPopup {
         };
 
         format!(
-            "Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel | <o>: Change Sort Order | <Space>: Move criteria to other list | <j/k> or <up/down> cycle between criteria |{} <Ctrl-d> Load default",
-            move_mapping
+            "Tab: Change focused control | Enter or <Ctrl-m>: Confirm | Esc or <Ctrl-c>: Cancel |\
+                <o>: Change Sort Order | <Space>: Move criteria to other list |\
+                <j/k> or <up/down> cycle between criteria |{move_mapping} <Ctrl-d> Load default"
         )
     }
 }

@@ -169,10 +169,9 @@ pub fn exec_export_selected_entries<D: DataProvider>(
         Ok(popup) => ui_components
             .popup_stack
             .push(Popup::Export(Box::new(popup))),
-        Err(err) => ui_components.show_err_msg(format!(
-            "Error while creating export dialog.\n Err: {}",
-            err
-        )),
+        Err(err) => {
+            ui_components.show_err_msg(format!("Error while creating export dialog.\n Err: {err}"))
+        }
     }
 
     Ok(HandleInputReturnType::Handled)

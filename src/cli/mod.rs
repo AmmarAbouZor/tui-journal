@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     logging::{get_default_path as default_log_path, setup_logging},
-    settings::{BackendType, Settings, settings_default_path},
+    settings::{BackendType, Settings, settings_default_dir_path},
 };
 
 pub mod commands;
@@ -31,12 +31,8 @@ pub struct Cli {
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
 
-    #[arg(short = 'c', long = "config", value_name = "FILE PATH", help = config_help())]
+    #[arg(short = 'c', long = "config", value_name = "DIR PATH", help = config_help())]
     pub config_path: Option<PathBuf>,
-
-    /// write the current settings to config file (this will rewrite the whole config file)
-    #[arg(short, long)]
-    write_config: bool,
 
     /// Increases logging verbosity each use for up to 3 times.
     #[arg(short = 'v', long, action = clap::ArgAction::Count)]
@@ -74,16 +70,10 @@ impl Cli {
             set_backend_type(backend, settings);
         }
 
-        if self.write_config {
-            settings
-                .write_current_settings(self.config_path.clone())
-                .await?;
-        }
-
-        setup_logging(self.verbose, self.log_file)?;
+        setup_logging(self.verbose, self.log_file.take())?;
 
         if let Some(cmd) = self.command.take() {
-            cmd.exec(settings)
+            cmd.exec(settings, self.config_path.as_ref())
         } else {
             Ok(CliResult::Continue)
         }
@@ -136,8 +126,11 @@ fn log_help() -> String {
 
 fn config_help() -> String {
     format!(
-        "Specifies the path for the configuration file\n(default path: {})",
-        settings_default_path()
+        "Specifies the path for the configuration directory.\n\
+            Configuration files is considered as root for themes file too.\n\
+            It still accepts the path for configuration file for backward compatibility.\n\
+            (default path: {})",
+        settings_default_dir_path()
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default()
     )

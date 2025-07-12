@@ -1,6 +1,12 @@
-use std::{convert::Infallible, fmt, marker::PhantomData, path::PathBuf, str::FromStr};
+use std::{
+    convert::Infallible,
+    fmt,
+    marker::PhantomData,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-use anyhow::{Context, anyhow};
+use anyhow::{Context, anyhow, bail, ensure};
 use clap::ValueEnum;
 use directories::{BaseDirs, UserDirs};
 use serde::{
@@ -110,47 +116,38 @@ const fn default_colored_tags() -> bool {
 }
 
 impl Settings {
-    pub async fn new(custom_path: Option<PathBuf>) -> anyhow::Result<Self> {
-        let settings_path = if let Some(path) = custom_path {
-            path
+    pub async fn new(custom_config_dir: Option<PathBuf>) -> anyhow::Result<Self> {
+        let config_file = if let Some(path) = custom_config_dir {
+            ensure!(
+                path.exists(),
+                "Provided custom directory doesn't exit. Path: {}",
+                path.display()
+            );
+
+            // Accept path configuration file for backward compatibility.
+            if path.is_file() {
+                path
+            } else if path.is_dir() {
+                settings_file_path(&path)
+            } else {
+                bail!("Provided configuration files is nighter file nor directory");
+            }
         } else {
-            settings_default_path()?
+            let default_dir = settings_default_dir_path()?;
+            settings_file_path(&default_dir)
         };
 
-        let settings = if settings_path.exists() {
-            let file_content = tokio::fs::read_to_string(settings_path)
+        let settings = if config_file.exists() {
+            let file_content = tokio::fs::read_to_string(config_file)
                 .await
-                .map_err(|err| anyhow!("Failed to load settings file. Error infos: {err}"))?;
+                .map_err(|err| anyhow!("Failed to load configuration file. Error infos: {err}"))?;
             toml::from_str(file_content.as_str())
-                .map_err(|err| anyhow!("Failed to read settings file. Error infos: {err}"))?
+                .map_err(|err| anyhow!("Failed to read configuration file. Error infos: {err}"))?
         } else {
             Settings::default()
         };
 
         Ok(settings)
-    }
-
-    pub async fn write_current_settings(
-        &mut self,
-        custom_path: Option<PathBuf>,
-    ) -> anyhow::Result<()> {
-        let toml = self.get_as_text()?;
-
-        let settings_path = if let Some(path) = custom_path {
-            path
-        } else {
-            settings_default_path()?
-        };
-
-        if let Some(parent) = settings_path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
-
-        tokio::fs::write(settings_path, toml)
-            .await
-            .map_err(|err| anyhow!("Settings couldn't be written\nError info: {}", err))?;
-
-        Ok(())
     }
 
     pub fn get_as_text(&mut self) -> anyhow::Result<String> {
@@ -208,15 +205,14 @@ impl Settings {
     }
 }
 
-pub fn settings_default_path() -> anyhow::Result<PathBuf> {
+pub fn settings_default_dir_path() -> anyhow::Result<PathBuf> {
     BaseDirs::new()
-        .map(|base_dirs| {
-            base_dirs
-                .config_dir()
-                .join("tui-journal")
-                .join("config.toml")
-        })
-        .context("Config file path couldn't be retrieved")
+        .map(|base_dirs| base_dirs.config_dir().join("tui-journal"))
+        .context("Config directory path couldn't be retrieved")
+}
+
+fn settings_file_path(config_dir: &Path) -> PathBuf {
+    config_dir.join("config.toml")
 }
 
 fn get_default_data_dir() -> anyhow::Result<PathBuf> {

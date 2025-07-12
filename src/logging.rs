@@ -10,7 +10,10 @@ use simplelog::{Config, WriteLogger};
 const LOG_MAX_SIZE: u64 = 1_000;
 
 pub fn setup_logging(level: u8, path: Option<PathBuf>) -> anyhow::Result<()> {
-    let path = path.unwrap_or(get_default_path()?);
+    let path = match path {
+        Some(path) => path,
+        None => get_default_path()?,
+    };
 
     let mut append = false;
 

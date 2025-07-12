@@ -1,6 +1,6 @@
 # TUI-Journal Custom Themes:
 
-It's possible to override the styles used in the app or parts of them. Custom themes will be read from the file `theme.toml` in the configuration directory within the `tui-journal` directory.
+It's possible to override the styles used in the app or parts of them. Custom themes will be read from the file `theme.toml` in the configuration directory of `tui-journal`.
 
 ## Table of Contents
 
