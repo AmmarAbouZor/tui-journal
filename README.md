@@ -158,23 +158,7 @@ brew install AmmarAbouZor/homebrew-tui-journal/tui-journal
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
 
-The minimum required Rust version is `1.75.0` 
-
-#### Linux Dependencies:
-
-Make sure the OpenSSL development package is installed on your system.
-
-- Ubuntu/Debian:
-   ```bash
-   sudo apt install -y libssl-dev 
-   ```
-- Fedora:
-    ```bash
-    sudo dnf install openssl-devel
-    ```
-
 #### Install with default features:
-
 
 To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from [crates.io](https://crates.io/crates/tui-journal):
 
