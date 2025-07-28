@@ -9,6 +9,25 @@
       version: (
         major: 0,
         minor: 16,
+        patch: 1,
+      ),
+      released: "2025-07-28T17:55:08.407699768+02:00",
+      introduction: None,
+      changes: (
+        references: {},
+        changes: {
+          "Changed": [
+            "Remove dependency for Native TLS and OpenSSL on Linux",
+            "Update Dependencies",
+          ],
+        },
+      ),
+    ),
+    (
+      references: {},
+      version: (
+        major: 0,
+        minor: 16,
         patch: 0,
       ),
       released: "2025-07-12T21:10:52.760762041+02:00",
