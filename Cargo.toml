@@ -26,7 +26,7 @@ simplelog = "0.12"
 textwrap = "0.16"
 thiserror = "2"
 toml = "0.8"
-sqlx = {version = "0.8", features = ["runtime-tokio-native-tls", "sqlite", "chrono"], optional = true}
+sqlx = {version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 aho-corasick = "1"
 
