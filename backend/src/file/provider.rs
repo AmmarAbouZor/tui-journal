@@ -1,12 +1,10 @@
 use std::path::PathBuf;
 
-use anyhow::Context;
-
-use crate::file::path::EntryFilePathBuf;
 use crate::EntriesDTO;
 use crate::Entry;
 use crate::EntryDraft;
 use crate::ModifyEntryError;
+use crate::file::path::EntryFilePathBuf;
 
 pub struct FileDataProvide {
     storage_root: PathBuf,
@@ -18,18 +16,10 @@ impl FileDataProvide {
     }
 
     async fn write_entry_to_file(&self, entry: &Entry) -> anyhow::Result<()> {
-        let entry_text = serde_json::to_string(&entry)?;
-        let entry_path =
-            EntryFilePathBuf::of_entry(entry, &self.storage_root)?.get_full_path();
-
-        if !entry_path.exists() {
-            if let Some(parent) = entry_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
-        }
-        tokio::fs::write(&entry_path, entry_text).await?;
-
-        Ok(())
+        super::entry::Entry::from_entry(entry)?
+            .write_to_disk()
+            .await
+            .map_err(anyhow::Error::from)
     }
 }
 
@@ -53,13 +43,10 @@ impl crate::DataProvider for FileDataProvide {
 
         let mut entries = Vec::new();
         // TODO: Do this in parallel
-        for filepath in files {
+        for filepath in files.into_iter() {
             let path = filepath?;
             let path = EntryFilePathBuf::from_path(path, self.storage_root.to_path_buf())?;
-
-            let entry_str = tokio::fs::read_to_string(path.get_full_path()).await?;
-            let entry: Entry =
-                serde_json::from_str(&entry_str).context("Error while parsing entry json data")?;
+            let entry: crate::Entry = super::entry::Entry::load(path).await?.as_entry()?;
             entries.push(entry);
         }
 
