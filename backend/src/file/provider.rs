@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 
+use crate::file::path::EntryFilePathBuf;
 use crate::EntriesDTO;
 use crate::Entry;
 use crate::EntryDraft;
@@ -18,7 +19,8 @@ impl FileDataProvide {
 
     async fn write_entry_to_file(&self, entry: &Entry) -> anyhow::Result<()> {
         let entry_text = serde_json::to_string(&entry)?;
-        let entry_path = file_path_for_entry(&self.storage_root, entry);
+        let entry_path =
+            EntryFilePathBuf::of_entry(entry, &self.storage_root)?.get_full_path();
 
         if !entry_path.exists() {
             if let Some(parent) = entry_path.parent() {
@@ -53,8 +55,9 @@ impl crate::DataProvider for FileDataProvide {
         // TODO: Do this in parallel
         for filepath in files {
             let path = filepath?;
+            let path = EntryFilePathBuf::from_path(path, self.storage_root.to_path_buf())?;
 
-            let entry_str = tokio::fs::read_to_string(path).await?;
+            let entry_str = tokio::fs::read_to_string(path.get_full_path()).await?;
             let entry: Entry =
                 serde_json::from_str(&entry_str).context("Error while parsing entry json data")?;
             entries.push(entry);
@@ -84,8 +87,8 @@ impl crate::DataProvider for FileDataProvide {
         let entries = self.load_all_entries().await?;
 
         if let Some(entry) = entries.iter().find(|e| e.id == entry_id) {
-            let path = file_path_for_entry(&self.storage_root, entry);
-            tokio::fs::remove_file(&path).await?;
+            let path = EntryFilePathBuf::of_entry(entry, &self.storage_root)?;
+            tokio::fs::remove_file(path.get_full_path()).await?;
         }
 
         Ok(())
@@ -125,35 +128,5 @@ impl crate::DataProvider for FileDataProvide {
         }
 
         Ok(())
-    }
-}
-
-fn file_path_for_entry(root: &std::path::Path, entry: &Entry) -> PathBuf {
-    use chrono::Datelike;
-    root.join(entry.date.date_naive().year().to_string())
-        .join(entry.date.date_naive().month().to_string())
-        .join(entry.date.date_naive().day().to_string())
-        .join(format!("{}.json", entry.id))
-}
-
-#[cfg(test)]
-mod tests {
-    use chrono::TimeZone;
-
-    #[test]
-    fn test_path_constructing() {
-        let entry = crate::Entry {
-            id: 1,
-            date: chrono::Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap(),
-            title: String::new(),
-            content: String::new(),
-            tags: Vec::new(),
-            priority: None,
-        };
-
-        assert_eq!(
-            super::file_path_for_entry(&std::path::Path::new("/tmp"), &entry),
-            std::path::PathBuf::from("/tmp/2010/01/01/1.json")
-        )
     }
 }
