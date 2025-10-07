@@ -2,6 +2,11 @@ use chrono::{DateTime, Utc};
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "file")]
+mod file;
+#[cfg(feature = "file")]
+pub use file::FileDataProvide;
+
 #[cfg(feature = "json")]
 mod json;
 #[cfg(feature = "json")]
