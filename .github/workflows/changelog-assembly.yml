@@ -47,7 +47,7 @@ jobs:
             -e Cargo.toml
           aeruginous ronlog release -i changelog.d/ -v "$(cat .version)"
 
-      - uses: peter-evans/create-pull-request@v7.0.8
+      - uses: peter-evans/create-pull-request@v8.1.0
         with:
           assignees: |
             AmmarAbouZor
