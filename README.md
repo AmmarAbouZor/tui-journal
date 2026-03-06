@@ -169,7 +169,7 @@ cargo install tui-journal --locked
 To use the current nightly version, you can install it directly from the GitHub repository
 
 ```bash
-cargo install --git https://github.com/ammarabouzor/tui-journal
+cargo install --git https://github.com/AmmarAbouZor/tui-journal
 ```
 
 #### Install with Specific Features:
@@ -297,11 +297,12 @@ TUI-Journal would not have been possible without the following open-source crate
 - [sqlx](https://crates.io/crates/sqlx): TUI-Journal benefits from the `sqlx` crate, which is a Rust library for interacting with databases. It enables seamless integration with SQLite, allowing TUI-Journal to store journal entries and notes in a reliable and efficient manner.
 
 These crates have greatly contributed to the development of TUI-Journal, and the project extends its gratitude to the maintainers and contributors of these fantastic open-source libraries.
+
 ## Contributing
 
 As the author of TUI-Journal and being new to the open-source community, I would greatly appreciate any contributions from experienced developers. Your contributions can help enhance the functionality, usability, and overall quality of TUI-Journal.
 
-If you have any ideas, bug reports, or feature requests, please don't hesitate to open an issue on the [TUI-Journal](https://github.com/ammarabouzor/tui-journal/issues). Your feedback and input are invaluable in improving the application.
+If you have any ideas, bug reports, or feature requests, please don't hesitate to open an issue on the [TUI-Journal](https://github.com/AmmarAbouZor/tui-journal/issues). Your feedback and input are invaluable in improving the application.
 
 If you would like to contribute code, documentation, or any other form of assistance, I am open to collaboration. Please reach out through the GitHub repository and let's discuss how you can contribute to TUI-Journal.
 
