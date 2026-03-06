@@ -22,7 +22,7 @@
 [![][lst]][repository]
 [![][lcns]][repository]
 
-TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite. 
+TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite.
 
 ## Demo
 <p align="center">
@@ -31,7 +31,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 
 <details>
   <summary><h3>Fuzzy Finder</h3></summary>
-  
+
 <p align="center">
    <img src="assets/fuzzy_find.gif">
 </p>
@@ -74,7 +74,7 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - Keybindings is a combination of VIM and Emacs motions (VIM for navigation and Emacs for editing texts in edit-mode).
 - Utilize Editor's Visual Mode for VIM-style text selection, copying, and deletion.
 - Export and Import journals between different back-end files.
-- Export the current journal's content to a predefined export path or the current directory 
+- Export the current journal's content to a predefined export path or the current directory
 - Transfer text between the built-in editor and the system clipboard using Cut, Copy, and Paste.
 - Optionally sync the clipboard between the built-in editor and the operating system, with vim and emacs keybindings.
 - Sorting and full-screen preferences in the App State will be retained.
@@ -96,7 +96,6 @@ TUI-Journal is a terminal-based application written in Rust that allows you to w
 - [ ]  Add mouse support
 - [ ]  Improve app input and rending cycle using app events to support real concurrency within the app.
 
-      
 ## Installation
 
 Grab the most recent pre-built binaries for your platform from the [Releases page](https://github.com/AmmarAbouZor/tui-journal/releases), or utilize the available package managers.
@@ -154,7 +153,7 @@ For macOS and Linux users, TUI-Journal can be installed via Homebrew using a dir
 brew install AmmarAbouZor/homebrew-tui-journal/tui-journal
 ```
 
-### Build & Install via Cargo 
+### Build & Install via Cargo
 
 Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on your system.
 
@@ -237,7 +236,7 @@ default_journal_priority = 3  # Sets the suggested priority while creating a new
 
 scroll_per_page = 5  # Sets how many journals will be scrolled when using page up/down commands
 
-sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard 
+sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard
 
 history_limit = 10  # Sets the maximum changes limit for the undo & redo stacks. Use 0 to disable it.
 
@@ -245,12 +244,12 @@ colored_tags = true   # Sets if automatically coloring for tags is enabled.
 
 # Sets the visibility option for the datum of journals. Available options:
 #  - `show`: Render datum in journals list.
-#  - `hide`: Hide datum without providing an extra empty line for journal without `priority` value. 
+#  - `hide`: Hide datum without providing an extra empty line for journal without `priority` value.
 #  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
-datum_visibility = "show"  
+datum_visibility = "show"
 
 # Sets the directory where the application persists its state between sessions.
-# Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows 
+# Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows
 app_state_dir = "<STATE_DIRECTORY>/tui-journal/"
 
 [export]
@@ -260,11 +259,11 @@ scroll_per_page = 5    # Sets how many journals will be scrolled using Page-Up a
 
 [external_editor]
 # Set the external terminal editor to use from within the app.
-# If the value isn't set the app will try to retrieve the editor from git global configurations then It'll try with the environment variables VISUAL, EDITOR then it'll fallback to vi.  
+# If the value isn't set the app will try to retrieve the editor from git global configurations then It'll try with the environment variables VISUAL, EDITOR then it'll fallback to vi.
 command = "nvim"
 # Enabling this save the journal content automatically after closing the external editor
 auto_save = false
-# Set the extension of the temporary file used with the external editor. 
+# Set the extension of the temporary file used with the external editor.
 # This influences syntax highlighting in external editor (e.g., "md" for Markdown support).
 temp_file_extension = "txt"
 
