@@ -90,4 +90,24 @@ bg = "#4F11BA"
 
         assert_eq!(style, serialized);
     }
+
+    #[test]
+    fn convert_to_ratatui_style() {
+        let style = Style {
+            fg: Some(Color::Yellow),
+            bg: Some(Color::Blue),
+            modifiers: Modifier::BOLD | Modifier::UNDERLINED,
+            underline_color: Some(Color::Red),
+        };
+
+        let rata_style: RataStyle = style.into();
+
+        assert_eq!(rata_style.fg, Some(Color::Yellow));
+        assert_eq!(rata_style.bg, Some(Color::Blue));
+        assert_eq!(rata_style.underline_color, Some(Color::Red));
+        assert_eq!(
+            rata_style.add_modifier,
+            Modifier::BOLD | Modifier::UNDERLINED
+        );
+    }
 }

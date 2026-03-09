@@ -98,9 +98,86 @@ impl Styles {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
     use ratatui::style::Modifier;
 
     use super::*;
+
+    struct TestDir {
+        path: PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
+            fs::create_dir_all(&path).unwrap();
+            Self { path }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    #[test]
+    fn file_path_uses_directory() {
+        let dir = TestDir::new("themes-dir");
+
+        let path = Styles::file_path(Some(&dir.path().to_path_buf())).unwrap();
+
+        assert_eq!(path, dir.path().join("themes.toml"));
+    }
+
+    #[test]
+    fn file_path_ignores_file_input() {
+        let dir = TestDir::new("themes-file");
+        let config_file = dir.path().join("config.toml");
+        fs::write(&config_file, "").unwrap();
+
+        // Config file paths stay backward compatible, but themes still resolve from the default dir.
+        let path = Styles::file_path(Some(&config_file)).unwrap();
+
+        assert!(path.ends_with("themes.toml"));
+        assert!(!path.starts_with(&config_file));
+    }
+
+    #[test]
+    fn load_missing_returns_default() {
+        let dir = TestDir::new("themes-load");
+
+        let styles = Styles::load(Some(&dir.path().to_path_buf())).unwrap();
+
+        assert_eq!(styles.general, GeneralStyles::default());
+        assert_eq!(styles.journals_list, JournalsListStyles::default());
+        assert_eq!(styles.editor, EditorStyles::default());
+        assert_eq!(styles.msgbox, MsgBoxColors::default());
+    }
+
+    #[test]
+    fn serialize_default_round_trips() {
+        let text = Styles::serialize_default().unwrap();
+        let styles = Styles::deserialize(&text).unwrap();
+
+        assert_eq!(styles.general, GeneralStyles::default());
+        assert_eq!(styles.journals_list, JournalsListStyles::default());
+        assert_eq!(styles.editor, EditorStyles::default());
+        assert_eq!(styles.msgbox, MsgBoxColors::default());
+    }
 
     #[test]
     fn full_general_only() {

@@ -13,3 +13,20 @@ pub struct JsonBackend {
 pub fn get_default_json_path() -> anyhow::Result<PathBuf> {
     Ok(get_default_data_dir()?.join("entries.json"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_path_is_empty() {
+        assert_eq!(JsonBackend::default().file_path, None);
+    }
+
+    #[test]
+    fn default_path_uses_json_name() {
+        let path = get_default_json_path().unwrap();
+
+        assert!(path.ends_with("entries.json"));
+    }
+}

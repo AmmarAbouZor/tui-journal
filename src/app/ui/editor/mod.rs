@@ -551,8 +551,5 @@ fn is_default_navigation(input: &Input) -> bool {
 }
 
 fn map_clipboard_error(err: arboard::Error) -> anyhow::Error {
-    anyhow!(
-        "Error while communicating with the operation system clipboard.\nError Details: {}",
-        err.to_string()
-    )
+    anyhow!("Error while communicating with the operation system clipboard.\nError Details: {err}",)
 }

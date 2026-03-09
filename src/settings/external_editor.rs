@@ -39,3 +39,26 @@ impl FromStr for ExternalEditor {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn defaults_are_stable() {
+        let editor = ExternalEditor::default();
+
+        assert_eq!(editor.command, None);
+        assert!(!editor.auto_save);
+        assert_eq!(editor.temp_file_extension, "txt");
+    }
+
+    #[test]
+    fn from_str_keeps_defaults() {
+        let editor: ExternalEditor = "nvim -f".parse().unwrap();
+
+        assert_eq!(editor.command, Some(String::from("nvim -f")));
+        assert!(!editor.auto_save);
+        assert_eq!(editor.temp_file_extension, "txt");
+    }
+}

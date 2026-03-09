@@ -117,3 +117,125 @@ fn exec_write_themes_defaults(custom_config_dir: Option<&PathBuf>) -> anyhow::Re
 
     Ok(CliResult::Return)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use clap::Parser;
+
+    use super::*;
+    use crate::cli::Cli;
+
+    struct TestDir {
+        path: PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
+            fs::create_dir_all(&path).unwrap();
+            Self { path }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    #[test]
+    fn aliases_parse() {
+        let print = Cli::parse_from(["tjournal", "pc"]);
+        let import = Cli::parse_from(["tjournal", "imj", "--path", "/tmp/in.json"]);
+        let priority = Cli::parse_from(["tjournal", "ap", "7"]);
+        let theme = Cli::parse_from(["tjournal", "style", "path"]);
+
+        assert_eq!(print.command, Some(CliCommand::PrintConfig));
+        assert_eq!(
+            import.command,
+            Some(CliCommand::ImportJournals {
+                file_path: PathBuf::from("/tmp/in.json"),
+            })
+        );
+        assert_eq!(
+            priority.command,
+            Some(CliCommand::AssignPriority { priority: 7 })
+        );
+        assert_eq!(theme.command, Some(CliCommand::Theme(Themes::PrintPath)));
+    }
+
+    #[test]
+    fn import_exec_returns_pending() {
+        let mut settings = Settings::default();
+
+        let result = CliCommand::ImportJournals {
+            file_path: PathBuf::from("/tmp/import.json"),
+        }
+        .exec(&mut settings, None)
+        .unwrap();
+
+        assert_eq!(
+            result,
+            CliResult::PendingCommand(PendingCliCommand::ImportJournals(PathBuf::from(
+                "/tmp/import.json"
+            )))
+        );
+    }
+
+    #[test]
+    fn assign_exec_returns_pending() {
+        let mut settings = Settings::default();
+
+        let result = CliCommand::AssignPriority { priority: 5 }
+            .exec(&mut settings, None)
+            .unwrap();
+
+        assert_eq!(
+            result,
+            CliResult::PendingCommand(PendingCliCommand::AssignPriority(5))
+        );
+    }
+
+    #[test]
+    fn theme_commands_return() {
+        let mut settings = Settings::default();
+        let dir = TestDir::new("themes-return");
+
+        let print_path = CliCommand::Theme(Themes::PrintPath)
+            .exec(&mut settings, Some(&dir.path().to_path_buf()))
+            .unwrap();
+        let dump_defaults = CliCommand::Theme(Themes::DumpDefaults)
+            .exec(&mut settings, Some(&dir.path().to_path_buf()))
+            .unwrap();
+
+        assert_eq!(print_path, CliResult::Return);
+        assert_eq!(dump_defaults, CliResult::Return);
+    }
+
+    #[test]
+    fn write_defaults_fails_if_exists() {
+        let mut settings = Settings::default();
+        let dir = TestDir::new("themes-exists");
+        fs::write(dir.path().join("themes.toml"), "already here").unwrap();
+
+        let err = CliCommand::Theme(Themes::WriteDefaults)
+            .exec(&mut settings, Some(&dir.path().to_path_buf()))
+            .unwrap_err();
+
+        assert!(err.to_string().contains("Themes file already exists"));
+    }
+}

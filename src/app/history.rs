@@ -126,3 +126,95 @@ impl From<&Entry> for EntryAttributes {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use chrono::TimeZone;
+
+    use super::*;
+
+    fn sample_entry(id: u32) -> Entry {
+        Entry::new(
+            id,
+            Utc.with_ymd_and_hms(2024, 2, id + 1, 10, 11, 12).unwrap(),
+            format!("Title {id}"),
+            format!("Content {id}"),
+            vec![format!("tag-{id}")],
+            Some(id),
+        )
+    }
+
+    #[test]
+    fn undo_limit_keeps_newest() {
+        let mut history = HistoryManager::new(2);
+
+        history.register_add(HistoryStack::Undo, &sample_entry(1));
+        history.register_add(HistoryStack::Undo, &sample_entry(2));
+        history.register_add(HistoryStack::Undo, &sample_entry(3));
+
+        match history.pop_undo().unwrap() {
+            Change::AddEntry { id } => assert_eq!(id, 3),
+            change => panic!("unexpected change: {change:?}"),
+        }
+        match history.pop_undo().unwrap() {
+            Change::AddEntry { id } => assert_eq!(id, 2),
+            change => panic!("unexpected change: {change:?}"),
+        }
+        assert!(history.pop_undo().is_none());
+    }
+
+    #[test]
+    fn redo_stack_is_independent() {
+        let mut history = HistoryManager::new(3);
+
+        history.register_add(HistoryStack::Undo, &sample_entry(1));
+        history.register_add(HistoryStack::Redo, &sample_entry(2));
+
+        match history.pop_undo().unwrap() {
+            Change::AddEntry { id } => assert_eq!(id, 1),
+            change => panic!("unexpected change: {change:?}"),
+        }
+        match history.pop_redo().unwrap() {
+            Change::AddEntry { id } => assert_eq!(id, 2),
+            change => panic!("unexpected change: {change:?}"),
+        }
+    }
+
+    #[test]
+    fn attribute_snapshot_is_cloned() {
+        let mut history = HistoryManager::new(2);
+        let mut entry = sample_entry(5);
+
+        history.register_change_attributes(HistoryStack::Undo, &entry);
+
+        entry.title = String::from("Changed");
+        entry.tags.push(String::from("new"));
+        entry.priority = None;
+
+        match history.pop_undo().unwrap() {
+            Change::EntryAttribute(attributes) => {
+                assert_eq!(attributes.title, "Title 5");
+                assert_eq!(attributes.tags, vec![String::from("tag-5")]);
+                assert_eq!(attributes.priority, Some(5));
+            }
+            change => panic!("unexpected change: {change:?}"),
+        }
+    }
+
+    #[test]
+    fn content_snapshot_keeps_previous() {
+        let mut history = HistoryManager::new(2);
+        let mut entry = sample_entry(9);
+
+        history.register_change_content(HistoryStack::Redo, &entry);
+        entry.content = String::from("Changed");
+
+        match history.pop_redo().unwrap() {
+            Change::EntryContent { id, content } => {
+                assert_eq!(id, 9);
+                assert_eq!(content, "Content 9");
+            }
+            change => panic!("unexpected change: {change:?}"),
+        }
+    }
+}

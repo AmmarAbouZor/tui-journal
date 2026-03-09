@@ -271,3 +271,177 @@ where
 
     deserializer.deserialize_any(StringOrStruct(PhantomData))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use super::*;
+
+    struct TestDir {
+        path: PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
+            fs::create_dir_all(&path).unwrap();
+            Self { path }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    fn config_dir_with(content: &str) -> TestDir {
+        let dir = TestDir::new("settings");
+        fs::write(dir.path().join("config.toml"), content).unwrap();
+        dir
+    }
+
+    #[tokio::test]
+    async fn loads_default_without_config() {
+        let dir = TestDir::new("settings-empty");
+
+        let settings = Settings::new(Some(dir.path().to_path_buf())).await.unwrap();
+
+        assert_eq!(settings.backend_type, None);
+        assert_eq!(settings.scroll_per_page, None);
+        assert_eq!(settings.history_limit, 10);
+        assert!(settings.colored_tags);
+    }
+
+    #[tokio::test]
+    async fn reads_direct_file_path() {
+        let dir = TestDir::new("settings-file");
+        let config_path = dir.path().join("legacy.toml");
+        fs::write(&config_path, "scroll_per_page = 9\nhistory_limit = 4\n").unwrap();
+
+        let settings = Settings::new(Some(config_path)).await.unwrap();
+
+        assert_eq!(settings.scroll_per_page, Some(9));
+        assert_eq!(settings.history_limit, 4);
+    }
+
+    #[tokio::test]
+    async fn reads_directory_config() {
+        let dir = config_dir_with(
+            r#"
+scroll_per_page = 7
+datum_visibility = "empty_line"
+"#,
+        );
+
+        let settings = Settings::new(Some(dir.path().to_path_buf())).await.unwrap();
+
+        assert_eq!(settings.scroll_per_page, Some(7));
+        assert_eq!(settings.datum_visibility, DatumVisibility::EmptyLine);
+    }
+
+    #[tokio::test]
+    async fn missing_custom_path_errors() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("tjournal-missing-{unique}"));
+
+        let err = Settings::new(Some(path)).await.unwrap_err();
+
+        assert!(
+            err.to_string()
+                .contains("Provided custom directory doesn't exit")
+        );
+    }
+
+    #[test]
+    fn external_editor_accepts_string() {
+        let settings: Settings = toml::from_str(r#"external_editor = "nvim""#).unwrap();
+
+        assert_eq!(settings.external_editor.command, Some(String::from("nvim")));
+        assert!(!settings.external_editor.auto_save);
+        assert_eq!(settings.external_editor.temp_file_extension, "txt");
+    }
+
+    #[test]
+    fn external_editor_accepts_struct() {
+        let settings: Settings = toml::from_str(
+            r#"
+[external_editor]
+command = "helix"
+auto_save = true
+temp_file_extension = "md"
+"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            settings.external_editor.command,
+            Some(String::from("helix"))
+        );
+        assert!(settings.external_editor.auto_save);
+        assert_eq!(settings.external_editor.temp_file_extension, "md");
+    }
+
+    #[test]
+    fn complete_missing_preserves_values() {
+        let app_state_dir = PathBuf::from("/tmp/app-state");
+        let json_path = PathBuf::from("/tmp/entries.json");
+        let sqlite_path = PathBuf::from("/tmp/entries.db");
+        let mut settings = Settings {
+            backend_type: Some(BackendType::Json),
+            scroll_per_page: Some(9),
+            app_state_dir: Some(app_state_dir.clone()),
+            #[cfg(feature = "json")]
+            json_backend: JsonBackend {
+                file_path: Some(json_path.clone()),
+            },
+            #[cfg(feature = "sqlite")]
+            sqlite_backend: SqliteBackend {
+                file_path: Some(sqlite_path.clone()),
+            },
+            ..Default::default()
+        };
+
+        settings.complete_missing_options().unwrap();
+
+        assert_eq!(settings.backend_type, Some(BackendType::Json));
+        assert_eq!(settings.scroll_per_page, Some(9));
+        assert_eq!(settings.app_state_dir, Some(app_state_dir));
+        #[cfg(feature = "json")]
+        assert_eq!(settings.json_backend.file_path, Some(json_path));
+        #[cfg(feature = "sqlite")]
+        assert_eq!(settings.sqlite_backend.file_path, Some(sqlite_path));
+    }
+
+    #[test]
+    fn get_scroll_falls_back() {
+        assert_eq!(Settings::default().get_scroll_per_page(), 5);
+    }
+
+    #[test]
+    fn get_as_text_completes_missing() {
+        let mut settings = Settings::default();
+
+        let text = settings.get_as_text().unwrap();
+
+        assert!(text.contains("scroll_per_page = 5"));
+        assert!(text.contains("history_limit = 10"));
+        assert!(text.contains("colored_tags = true"));
+    }
+}
