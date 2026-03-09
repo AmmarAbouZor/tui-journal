@@ -144,3 +144,94 @@ impl AppState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use super::*;
+
+    struct TestDir {
+        path: PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
+            fs::create_dir_all(&path).unwrap();
+            Self { path }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    #[test]
+    fn missing_state_loads_default() {
+        let dir = TestDir::new("state-empty");
+        let settings = Settings {
+            app_state_dir: Some(dir.path().to_path_buf()),
+            ..Default::default()
+        };
+
+        let state = AppState::load(&settings).unwrap();
+
+        assert!(!state.full_screen);
+        assert_eq!(
+            state.sorter.get_criteria(),
+            Sorter::default().get_criteria()
+        );
+        assert!(matches!(state.sorter.order, SortOrder::Descending));
+    }
+
+    #[test]
+    fn save_then_load_round_trips() {
+        let dir = TestDir::new("state-save");
+        let settings = Settings {
+            app_state_dir: Some(dir.path().to_path_buf()),
+            ..Default::default()
+        };
+        let mut sorter = Sorter::default();
+        sorter.set_criteria(vec![SortCriteria::Title]);
+        sorter.order = SortOrder::Ascending;
+
+        let state = AppState {
+            sorter,
+            full_screen: true,
+        };
+
+        state.save(&settings).unwrap();
+        let loaded = AppState::load(&settings).unwrap();
+
+        assert!(loaded.full_screen);
+        assert_eq!(loaded.sorter.get_criteria(), &[SortCriteria::Title]);
+        assert!(matches!(loaded.sorter.order, SortOrder::Ascending));
+    }
+
+    #[test]
+    fn custom_dir_sets_path() {
+        let settings = Settings {
+            app_state_dir: Some(PathBuf::from("/tmp/custom-state")),
+            ..Default::default()
+        };
+
+        let state_path = AppState::get_persist_path(&settings).unwrap();
+
+        assert_eq!(state_path, PathBuf::from("/tmp/custom-state/state.json"));
+    }
+}

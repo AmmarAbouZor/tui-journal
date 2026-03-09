@@ -217,3 +217,77 @@ impl TagsPopup {
         TagsPopupReturn::Apply(tags_text)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_prepends_unsaved_tags() {
+        let popup = TagsPopup::new(
+            "fresh, saved",
+            vec![String::from("saved"), String::from("old")],
+        );
+
+        assert_eq!(
+            popup.tags,
+            vec![
+                String::from("fresh"),
+                String::from("saved"),
+                String::from("old")
+            ]
+        );
+        assert_eq!(popup.state.selected(), Some(0));
+        assert!(popup.selected_tags.contains("fresh"));
+        assert!(popup.selected_tags.contains("saved"));
+    }
+
+    #[test]
+    fn navigation_wraps_both_ways() {
+        let mut popup = TagsPopup::new("one", vec![String::from("one"), String::from("two")]);
+
+        popup.cycle_prev_tag();
+        assert_eq!(popup.state.selected(), Some(1));
+
+        popup.cycle_next_tag();
+        assert_eq!(popup.state.selected(), Some(0));
+    }
+
+    #[test]
+    fn toggle_adds_and_removes() {
+        let mut popup = TagsPopup::new("", vec![String::from("one"), String::from("two")]);
+
+        assert_eq!(popup.state.selected(), Some(0));
+        assert!(!popup.selected_tags.contains("one"));
+
+        popup.toggle_selected();
+        assert!(popup.selected_tags.contains("one"));
+
+        popup.toggle_selected();
+        assert!(!popup.selected_tags.contains("one"));
+    }
+
+    #[test]
+    fn confirm_keeps_list_order() {
+        let mut popup = TagsPopup::new("beta", vec![String::from("alpha"), String::from("beta")]);
+        // Start with beta selected, then add alpha to verify confirmation follows list order.
+        popup.toggle_selected();
+
+        match popup.confirm() {
+            TagsPopupReturn::Apply(tags) => assert_eq!(tags, "alpha, beta"),
+            TagsPopupReturn::Keep | TagsPopupReturn::Cancel => {
+                panic!("confirm should apply the selected tags")
+            }
+        }
+    }
+
+    #[test]
+    fn empty_popup_stays_stable() {
+        let mut popup = TagsPopup::new("", Vec::new());
+
+        assert_eq!(popup.state.selected(), None);
+        assert!(matches!(popup.cycle_next_tag(), TagsPopupReturn::Keep));
+        assert!(matches!(popup.cycle_prev_tag(), TagsPopupReturn::Keep));
+        assert_eq!(popup.state.selected(), None);
+    }
+}

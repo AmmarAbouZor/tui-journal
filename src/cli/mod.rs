@@ -135,3 +135,139 @@ fn config_help() -> String {
             .unwrap_or_default()
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use clap::Parser;
+
+    use super::*;
+
+    struct TestDir {
+        path: PathBuf,
+    }
+
+    impl TestDir {
+        fn new(name: &str) -> Self {
+            let unique = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
+            fs::create_dir_all(&path).unwrap();
+            Self { path }
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for TestDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+
+    #[test]
+    fn parse_backend_and_config() {
+        let cli = Cli::parse_from([
+            "tjournal",
+            "--backend-type",
+            "json",
+            "--config",
+            "/tmp/config",
+            "-vv",
+            "assign-priority",
+            "4",
+        ]);
+
+        assert_eq!(cli.backend_type, Some(BackendType::Json));
+        assert_eq!(cli.config_path, Some(PathBuf::from("/tmp/config")));
+        assert_eq!(cli.verbose, 2);
+        assert_eq!(
+            cli.command,
+            Some(CliCommand::AssignPriority { priority: 4 })
+        );
+    }
+
+    #[test]
+    fn parse_rejects_bad_backend() {
+        let err = Cli::try_parse_from(["tjournal", "--backend-type", "bogus"]).unwrap_err();
+
+        assert!(err.to_string().contains("invalid value"));
+    }
+
+    #[tokio::test]
+    async fn handle_cli_without_command() {
+        let dir = TestDir::new("cli-log");
+        let mut settings = Settings::default();
+        let cli = Cli::parse_from([
+            "tjournal",
+            "--log",
+            dir.path().join("journal.log").to_str().unwrap(),
+        ]);
+
+        let result = cli.handle_cli(&mut settings).await.unwrap();
+
+        assert_eq!(result, CliResult::Continue);
+    }
+
+    #[tokio::test]
+    async fn ensure_path_creates_parent() {
+        let dir = TestDir::new("cli-parent");
+        let file_path = dir.path().join("nested").join("entries.json");
+
+        ensure_path_exists(&file_path).await.unwrap();
+
+        assert!(file_path.parent().unwrap().exists());
+    }
+
+    #[cfg(feature = "json")]
+    #[tokio::test]
+    async fn set_json_path_absolutizes() {
+        let dir = TestDir::new("cli-json");
+        let mut settings = Settings::default();
+        let file_path = dir.path().join("entries.json");
+
+        set_json_path(file_path.clone(), &mut settings)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            settings.json_backend.file_path,
+            Some(file_path.absolutize().unwrap().into_owned())
+        );
+    }
+
+    #[cfg(feature = "sqlite")]
+    #[tokio::test]
+    async fn set_sqlite_path_absolutizes() {
+        let dir = TestDir::new("cli-sqlite");
+        let mut settings = Settings::default();
+        let file_path = dir.path().join("entries.db");
+
+        set_sqlite_path(file_path.clone(), &mut settings)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            settings.sqlite_backend.file_path,
+            Some(file_path.absolutize().unwrap().into_owned())
+        );
+    }
+
+    #[test]
+    fn backend_type_sets_value() {
+        let mut settings = Settings::default();
+
+        set_backend_type(BackendType::default(), &mut settings);
+
+        assert_eq!(settings.backend_type, Some(BackendType::default()));
+    }
+}

@@ -30,3 +30,42 @@ impl From<EntryIntermediate> for Entry {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use chrono::TimeZone;
+
+    use super::*;
+
+    fn sample_intermediate(tags: Option<&str>) -> EntryIntermediate {
+        EntryIntermediate {
+            id: 4,
+            date: Utc.with_ymd_and_hms(2024, 3, 4, 5, 6, 7).unwrap(),
+            title: String::from("Title"),
+            content: String::from("Content"),
+            priority: Some(2),
+            tags: tags.map(String::from),
+        }
+    }
+
+    #[test]
+    fn none_tags_become_empty() {
+        let entry: Entry = sample_intermediate(None).into();
+
+        assert!(entry.tags.is_empty());
+    }
+
+    #[test]
+    fn comma_tags_preserve_order() {
+        let entry: Entry = sample_intermediate(Some("rust,tests,sqlite")).into();
+
+        assert_eq!(entry.tags, vec!["rust", "tests", "sqlite"]);
+    }
+
+    #[test]
+    fn empty_tags_stay_empty() {
+        let entry: Entry = sample_intermediate(Some("")).into();
+
+        assert!(entry.tags.is_empty());
+    }
+}

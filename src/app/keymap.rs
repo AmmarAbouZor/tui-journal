@@ -375,3 +375,56 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
         ),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use crossterm::event::KeyEvent;
+
+    use super::*;
+
+    #[test]
+    fn display_plain_space() {
+        assert_eq!(
+            Input::new(KeyCode::Char(' '), KeyModifiers::NONE).to_string(),
+            "<Space>"
+        );
+        assert_eq!(
+            Input::new(KeyCode::Left, KeyModifiers::NONE).to_string(),
+            "Left"
+        );
+    }
+
+    #[test]
+    fn display_with_modifiers() {
+        let input = Input::new(
+            KeyCode::Char('x'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT | KeyModifiers::ALT,
+        );
+
+        assert_eq!(input.to_string(), "<Ctrl-Shift-Alt-x>");
+    }
+
+    #[test]
+    fn from_key_event() {
+        let event = KeyEvent::new(KeyCode::PageDown, KeyModifiers::ALT);
+
+        let input = Input::from(&event);
+
+        assert_eq!(input.key_code, KeyCode::PageDown);
+        assert_eq!(input.modifiers, KeyModifiers::ALT);
+    }
+
+    #[test]
+    fn global_bindings_include_undo_redo() {
+        let keymaps = get_global_keymaps();
+
+        assert!(keymaps.iter().any(|keymap| {
+            keymap.key == Input::new(KeyCode::Char('u'), KeyModifiers::NONE)
+                && keymap.command == UICommand::Undo
+        }));
+        assert!(keymaps.iter().any(|keymap| {
+            keymap.key == Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT)
+                && keymap.command == UICommand::Redo
+        }));
+    }
+}

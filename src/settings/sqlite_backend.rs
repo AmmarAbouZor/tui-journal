@@ -13,3 +13,20 @@ pub struct SqliteBackend {
 pub fn get_default_sqlite_path() -> anyhow::Result<PathBuf> {
     Ok(get_default_data_dir()?.join("entries.db"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_path_is_empty() {
+        assert_eq!(SqliteBackend::default().file_path, None);
+    }
+
+    #[test]
+    fn default_path_uses_db_name() {
+        let path = get_default_sqlite_path().unwrap();
+
+        assert!(path.ends_with("entries.db"));
+    }
+}

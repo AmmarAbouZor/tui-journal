@@ -55,3 +55,76 @@ impl FilterCriterion {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use chrono::{TimeZone, Utc};
+
+    use super::*;
+
+    fn sample_entry(tags: Vec<&str>, priority: Option<u32>) -> Entry {
+        Entry::new(
+            1,
+            Utc.with_ymd_and_hms(2024, 1, 2, 3, 4, 5).unwrap(),
+            String::from("Rust Search"),
+            String::from("Searching CONTENT with Mixed Case"),
+            tags.into_iter().map(String::from).collect(),
+            priority,
+        )
+    }
+
+    #[test]
+    fn tag_checks_match_exactly() {
+        let entry = sample_entry(vec!["rust", "tests"], Some(2));
+
+        assert!(
+            FilterCriterion::Tag(TagFilterOption::Tag(String::from("rust"))).check_entry(&entry)
+        );
+        assert!(
+            !FilterCriterion::Tag(TagFilterOption::Tag(String::from("Rust"))).check_entry(&entry)
+        );
+    }
+
+    #[test]
+    fn no_tags_requires_empty_list() {
+        let entry = sample_entry(vec![], Some(1));
+        let tagged_entry = sample_entry(vec!["tag"], Some(1));
+
+        assert!(FilterCriterion::Tag(TagFilterOption::NoTags).check_entry(&entry));
+        assert!(!FilterCriterion::Tag(TagFilterOption::NoTags).check_entry(&tagged_entry));
+    }
+
+    #[test]
+    fn title_search_uses_smart_case() {
+        let entry = sample_entry(vec!["tag"], Some(4));
+
+        assert!(FilterCriterion::Title(String::from("rust")).check_entry(&entry));
+        assert!(FilterCriterion::Title(String::from("Rust")).check_entry(&entry));
+        assert!(!FilterCriterion::Title(String::from("SEARCH")).check_entry(&entry));
+    }
+
+    #[test]
+    fn content_search_uses_smart_case() {
+        let entry = sample_entry(vec!["tag"], Some(4));
+
+        assert!(FilterCriterion::Content(String::from("content")).check_entry(&entry));
+        assert!(FilterCriterion::Content(String::from("Mixed")).check_entry(&entry));
+        assert!(
+            !FilterCriterion::Content(String::from("mixed")).check_entry(&Entry::new(
+                2,
+                entry.date,
+                entry.title.clone(),
+                String::from("UPPERCASE ONLY"),
+                entry.tags.clone(),
+                entry.priority
+            ))
+        );
+    }
+
+    #[test]
+    fn priority_none_never_matches() {
+        let entry = sample_entry(vec!["tag"], None);
+
+        assert!(!FilterCriterion::Priority(3).check_entry(&entry));
+    }
+}
