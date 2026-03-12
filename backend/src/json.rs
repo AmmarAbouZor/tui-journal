@@ -39,9 +39,7 @@ impl DataProvider for JsonDataProvide {
 
         let mut entries = self.load_all_entries().await?;
 
-        entries.sort_by_key(|e| e.id);
-
-        let id: u32 = entries.last().map(|entry| entry.id + 1).unwrap_or(0);
+        let id: u32 = entries.iter().map(|e| e.id + 1).max().unwrap_or(0);
 
         let new_entry = Entry::from_draft(id, entry);
 
@@ -107,12 +105,19 @@ impl DataProvider for JsonDataProvide {
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
 
+        let mut modified = false;
+
         entries
             .iter_mut()
             .filter(|entry| entry.priority.is_none())
-            .for_each(|entry| entry.priority = Some(priority));
+            .for_each(|entry| {
+                entry.priority = Some(priority);
+                modified = true;
+            });
 
-        self.write_entries_to_file(&entries).await?;
+        if modified {
+            self.write_entries_to_file(&entries).await?;
+        }
 
         Ok(())
     }
