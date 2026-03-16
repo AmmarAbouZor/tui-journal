@@ -16,12 +16,16 @@ use serde::{
 
 use crate::app::state::AppState;
 
+#[cfg(feature = "file")]
+use self::file_backend::{FileBackend, get_default_storage_root};
 #[cfg(feature = "json")]
 use self::json_backend::{JsonBackend, get_default_json_path};
 #[cfg(feature = "sqlite")]
 use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
 use self::{export::ExportSettings, external_editor::ExternalEditor};
 
+#[cfg(feature = "file")]
+pub mod file_backend;
 #[cfg(feature = "json")]
 pub mod json_backend;
 #[cfg(feature = "sqlite")]
@@ -40,6 +44,9 @@ pub struct Settings {
     pub backend_type: Option<BackendType>,
     #[serde(default, deserialize_with = "string_or_struct")]
     pub external_editor: ExternalEditor,
+    #[cfg(feature = "file")]
+    #[serde(default)]
+    pub file_backend: FileBackend,
     #[cfg(feature = "json")]
     #[serde(default)]
     pub json_backend: JsonBackend,
@@ -70,6 +77,8 @@ impl Default for Settings {
             export: Default::default(),
             backend_type: Default::default(),
             external_editor: Default::default(),
+            #[cfg(feature = "file")]
+            file_backend: Default::default(),
             #[cfg(feature = "json")]
             json_backend: Default::default(),
             #[cfg(feature = "sqlite")]
@@ -101,7 +110,9 @@ pub enum DatumVisibility {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ValueEnum, Clone, Copy, Default)]
 pub enum BackendType {
-    #[cfg_attr(all(feature = "json", not(feature = "sqlite")), default)]
+    #[cfg_attr(all(feature = "file", not(feature = "sqlite"), not(feature = "json")), default)]
+    File,
+    #[cfg_attr(all(feature = "json", not(feature = "sqlite"), not(feature = "file")), default)]
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
@@ -162,6 +173,7 @@ impl Settings {
         #[cfg(all(debug_assertions, feature = "sqlite", feature = "json"))]
         let Settings {
             backend_type: _,
+            file_backend: _,
             json_backend: _,
             sqlite_backend: _,
             export: _,
@@ -177,6 +189,11 @@ impl Settings {
 
         if self.backend_type.is_none() {
             self.backend_type = Some(BackendType::default());
+        }
+
+        #[cfg(feature = "file")]
+        if self.file_backend.storage_root.is_none() {
+            self.file_backend.storage_root = Some(get_default_storage_root()?)
         }
 
         #[cfg(feature = "json")]
