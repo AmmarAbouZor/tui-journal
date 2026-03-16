@@ -178,9 +178,9 @@ impl EntryPopup<'_> {
         let reset_style = Style::reset();
         let invalid_block_style = Style::from(gstyles.input_block_invalid);
 
-        let active_cursor_style = Style::from(gstyles.input_corsur_active);
+        let active_cursor_style = Style::from(gstyles.input_cursor_active);
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
-        let invalid_cursor_style = Style::from(gstyles.input_corsur_invalid);
+        let invalid_cursor_style = Style::from(gstyles.input_cursor_invalid);
 
         if self.title_err_msg.is_empty() {
             let (block, cursor) = match self.active_txt {
