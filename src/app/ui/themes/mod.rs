@@ -190,12 +190,12 @@ modifiers = "DIM"
 fg = "Red"
 modifiers = ""
 
-[general.input_corsur_active]
+[general.input_cursor_active]
 fg = "Black"
 bg = "LightYellow"
 modifiers = ""
 
-[general.input_corsur_invalid]
+[general.input_cursor_invalid]
 fg = "Black"
 bg = "LightRed"
 modifiers = ""
@@ -226,6 +226,56 @@ modifiers = ""
     }
 
     #[test]
+    fn compat_general_only() {
+        let text = r##"
+[general.input_corsur_active]
+fg = "Black"
+bg = "LightYellow"
+modifiers = ""
+
+[general.input_corsur_invalid]
+fg = "Black"
+bg = "LightRed"
+modifiers = ""
+        "##;
+
+        let style = Styles::deserialize(text).unwrap();
+        assert_eq!(style.general.input_cursor_active.fg, Some(Color::Black));
+        assert_eq!(style.general.input_cursor_active.bg, Some(Color::LightYellow));
+        assert_eq!(style.general.input_cursor_invalid.fg, Some(Color::Black));
+        assert_eq!(style.general.input_cursor_invalid.bg, Some(Color::LightRed));
+
+        assert_eq!(style.journals_list, JournalsListStyles::default());
+        assert_eq!(style.editor, EditorStyles::default());
+        assert_eq!(style.msgbox, MsgBoxColors::default());
+    }
+
+    #[test]
+    fn compat_general_both() {
+        let text = r##"
+[general.input_corsur_active]
+fg = "Black"
+bg = "LightYellow"
+modifiers = ""
+
+[general.input_cursor_active]
+fg = "Black"
+bg = "LightRed"
+modifiers = ""
+        "##;
+
+        let err = Styles::deserialize(text).unwrap_err();
+        assert_eq!(
+            format!("{err}"),
+            "TOML parse error at line 2, column 2\n  \
+               |\n\
+             2 | [general.input_corsur_active]\n  \
+               |  ^^^^^^^\n\
+             duplicate field `input_cursor_active`\n"
+        );
+    }
+
+    #[test]
     fn part_general_only() {
         let text = r##"
 [general.input_block_active]
@@ -244,8 +294,8 @@ modifiers = ""
 
         let def_general = GeneralStyles::default();
         assert_eq!(
-            style.general.input_corsur_invalid,
-            def_general.input_corsur_invalid
+            style.general.input_cursor_invalid,
+            def_general.input_cursor_invalid
         );
 
         assert_eq!(style.journals_list, JournalsListStyles::default());
@@ -369,8 +419,8 @@ warning = "Blue"
 
         let def_general = GeneralStyles::default();
         assert_eq!(
-            style.general.input_corsur_invalid,
-            def_general.input_corsur_invalid
+            style.general.input_cursor_invalid,
+            def_general.input_cursor_invalid
         );
 
         // Journals
