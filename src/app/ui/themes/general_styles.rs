@@ -10,10 +10,15 @@ pub struct GeneralStyles {
     pub input_block_active: Style,
     #[serde(default = "input_block_invalid")]
     pub input_block_invalid: Style,
-    #[serde(default = "input_corsur_active")]
-    pub input_corsur_active: Style,
-    #[serde(default = "input_corsur_invalid")]
-    pub input_corsur_invalid: Style,
+    #[serde(default = "input_cursor_active")]
+    // Previous versions had a `corsur` typo, so support reading the old name. The behavior of
+    // `alias` is that providing old and new names will error.
+    #[serde(alias = "input_corsur_active")]
+    pub input_cursor_active: Style,
+    #[serde(default = "input_cursor_invalid")]
+    // See above `alias` comment.
+    #[serde(alias = "input_corsur_invalid")]
+    pub input_cursor_invalid: Style,
 
     // General list items
     #[serde(default = "list_item_selected")]
@@ -29,8 +34,8 @@ impl Default for GeneralStyles {
         Self {
             input_block_active: input_block_active(),
             input_block_invalid: input_block_invalid(),
-            input_corsur_active: input_corsur_active(),
-            input_corsur_invalid: input_corsur_invalid(),
+            input_cursor_active: input_cursor_active(),
+            input_cursor_invalid: input_cursor_invalid(),
             list_item_selected: list_item_selected(),
             list_highlight_active: list_highlight_active(),
             list_highlight_inactive: list_highlight_inactive(),
@@ -55,7 +60,7 @@ fn input_block_active() -> Style {
 }
 
 #[inline]
-fn input_corsur_active() -> Style {
+fn input_cursor_active() -> Style {
     Style {
         bg: Some(ACTIVE_INPUT_BORDER_COLOR),
         fg: Some(Color::Black),
@@ -64,7 +69,7 @@ fn input_corsur_active() -> Style {
 }
 
 #[inline]
-fn input_corsur_invalid() -> Style {
+fn input_cursor_invalid() -> Style {
     Style {
         bg: Some(INVALID_CONTROL_COLOR),
         fg: Some(Color::Black),
