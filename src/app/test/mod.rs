@@ -92,7 +92,7 @@ async fn test_add_entry() {
     let title = String::from("Added Title");
     let date = Utc::now();
 
-    app.add_entry(title.clone(), date.clone(), vec![tag.clone()], Some(1))
+    app.add_entry(title.clone(), date, vec![tag.clone()], Some(1))
         .await
         .unwrap();
 
