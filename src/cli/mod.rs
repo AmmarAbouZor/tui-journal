@@ -138,41 +138,12 @@ fn config_help() -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::path::PathBuf;
 
     use clap::Parser;
+    use tempfile::Builder;
 
     use super::*;
-
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
 
     #[test]
     fn parse_backend_and_config() {
@@ -205,7 +176,7 @@ mod tests {
 
     #[tokio::test]
     async fn handle_cli_without_command() {
-        let dir = TestDir::new("cli-log");
+        let dir = Builder::new().prefix("cli-log").tempdir().unwrap();
         let mut settings = Settings::default();
         let cli = Cli::parse_from([
             "tjournal",
@@ -220,7 +191,7 @@ mod tests {
 
     #[tokio::test]
     async fn ensure_path_creates_parent() {
-        let dir = TestDir::new("cli-parent");
+        let dir = Builder::new().prefix("cli-parent").tempdir().unwrap();
         let file_path = dir.path().join("nested").join("entries.json");
 
         ensure_path_exists(&file_path).await.unwrap();
@@ -231,7 +202,7 @@ mod tests {
     #[cfg(feature = "json")]
     #[tokio::test]
     async fn set_json_path_absolutizes() {
-        let dir = TestDir::new("cli-json");
+        let dir = Builder::new().prefix("cli-json").tempdir().unwrap();
         let mut settings = Settings::default();
         let file_path = dir.path().join("entries.json");
 
@@ -248,7 +219,7 @@ mod tests {
     #[cfg(feature = "sqlite")]
     #[tokio::test]
     async fn set_sqlite_path_absolutizes() {
-        let dir = TestDir::new("cli-sqlite");
+        let dir = Builder::new().prefix("cli-sqlite").tempdir().unwrap();
         let mut settings = Settings::default();
         let file_path = dir.path().join("entries.db");
 
