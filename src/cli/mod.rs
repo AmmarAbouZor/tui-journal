@@ -27,6 +27,11 @@ pub struct Cli {
     #[cfg(feature = "sqlite")]
     sqlite_file_path: Option<PathBuf>,
 
+    /// Sets the vjournal directory path and starts using it.
+    #[arg(long = "vjournal-dir-path", value_name = "DIR PATH")]
+    #[cfg(feature = "vjournal")]
+    vjournal_dir_path: Option<PathBuf>,
+
     /// Sets the backend type and starts using it.
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
@@ -64,6 +69,12 @@ impl Cli {
         if let Some(sql_path) = self.sqlite_file_path.take() {
             set_sqlite_path(sql_path, settings).await?;
             set_backend_type(BackendType::Sqlite, settings);
+        }
+
+        #[cfg(feature = "vjournal")]
+        if let Some(vjournal_dir) = self.vjournal_dir_path.take() {
+            set_vjournal_path(vjournal_dir, settings).await?;
+            set_backend_type(BackendType::Vjournal, settings);
         }
 
         if let Some(backend) = self.backend_type.take() {
@@ -106,6 +117,17 @@ async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Resu
     ensure_path_exists(&path).await?;
 
     settings.sqlite_backend.file_path = path.absolutize().map(PathBuf::from).ok();
+
+    Ok(())
+}
+
+#[cfg(feature = "vjournal")]
+async fn set_vjournal_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
+    if !path.exists() {
+        std::fs::create_dir_all(&path)?;
+    }
+
+    settings.vjournal_backend.directory = path.absolutize().map(PathBuf::from).ok();
 
     Ok(())
 }
@@ -230,6 +252,24 @@ mod tests {
         assert_eq!(
             settings.sqlite_backend.file_path,
             Some(file_path.absolutize().unwrap().into_owned())
+        );
+    }
+
+    #[cfg(feature = "vjournal")]
+    #[tokio::test]
+    async fn set_vjournal_path_absolutizes() {
+        let dir = Builder::new().prefix("cli-vjournal").tempdir().unwrap();
+        let mut settings = Settings::default();
+        let dir_path = dir.path().join("journal");
+
+        set_vjournal_path(dir_path.clone(), &mut settings)
+            .await
+            .unwrap();
+
+        assert!(dir_path.exists());
+        assert_eq!(
+            settings.vjournal_backend.directory,
+            Some(dir_path.absolutize().unwrap().into_owned())
         );
     }
 
