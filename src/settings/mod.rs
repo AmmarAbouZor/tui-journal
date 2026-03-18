@@ -274,49 +274,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::{fs, path::PathBuf};
 
     use super::*;
+    use tempfile::{Builder, TempDir};
 
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
-
-    fn config_dir_with(content: &str) -> TestDir {
-        let dir = TestDir::new("settings");
+    fn config_dir_with(content: &str) -> TempDir {
+        let dir = Builder::new().prefix("settings").tempdir().unwrap();
         fs::write(dir.path().join("config.toml"), content).unwrap();
         dir
     }
 
     #[tokio::test]
     async fn loads_default_without_config() {
-        let dir = TestDir::new("settings-empty");
+        let dir = Builder::new().prefix("settings-empty").tempdir().unwrap();
 
         let settings = Settings::new(Some(dir.path().to_path_buf())).await.unwrap();
 
@@ -328,7 +299,7 @@ mod tests {
 
     #[tokio::test]
     async fn reads_direct_file_path() {
-        let dir = TestDir::new("settings-file");
+        let dir = Builder::new().prefix("settings-file").tempdir().unwrap();
         let config_path = dir.path().join("legacy.toml");
         fs::write(&config_path, "scroll_per_page = 9\nhistory_limit = 4\n").unwrap();
 
@@ -355,11 +326,8 @@ datum_visibility = "empty_line"
 
     #[tokio::test]
     async fn missing_custom_path_errors() {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!("tjournal-missing-{unique}"));
+        let parent = Builder::new().prefix("settings-missing").tempdir().unwrap();
+        let path = parent.path().join("nonexistent");
 
         let err = Settings::new(Some(path)).await.unwrap_err();
 

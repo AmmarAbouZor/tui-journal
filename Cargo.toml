@@ -55,3 +55,6 @@ path = "backend/src/lib.rs"
 [[test]]
 name = "backend"
 path = "backend/tests/backend.rs"
+
+[dev-dependencies]
+tempfile = "3"
