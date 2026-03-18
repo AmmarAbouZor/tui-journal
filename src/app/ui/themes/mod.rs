@@ -98,45 +98,18 @@ impl Styles {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::fs;
 
     use ratatui::style::Modifier;
 
     use super::*;
 
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
-
     #[test]
     fn file_path_uses_directory() {
-        let dir = TestDir::new("themes-dir");
+        let dir = tempfile::Builder::new()
+            .prefix("themes-dir")
+            .tempdir()
+            .unwrap();
 
         let path = Styles::file_path(Some(&dir.path().to_path_buf())).unwrap();
 
@@ -145,7 +118,10 @@ mod tests {
 
     #[test]
     fn file_path_ignores_file_input() {
-        let dir = TestDir::new("themes-file");
+        let dir = tempfile::Builder::new()
+            .prefix("themes-file")
+            .tempdir()
+            .unwrap();
         let config_file = dir.path().join("config.toml");
         fs::write(&config_file, "").unwrap();
 
@@ -158,7 +134,10 @@ mod tests {
 
     #[test]
     fn load_missing_returns_default() {
-        let dir = TestDir::new("themes-load");
+        let dir = tempfile::Builder::new()
+            .prefix("themes-load")
+            .tempdir()
+            .unwrap();
 
         let styles = Styles::load(Some(&dir.path().to_path_buf())).unwrap();
 

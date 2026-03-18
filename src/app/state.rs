@@ -147,43 +147,16 @@ impl AppState {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::path::PathBuf;
 
     use super::*;
 
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
-
     #[test]
     fn missing_state_loads_default() {
-        let dir = TestDir::new("state-empty");
+        let dir = tempfile::Builder::new()
+            .prefix("state-empty")
+            .tempdir()
+            .unwrap();
         let settings = Settings {
             app_state_dir: Some(dir.path().to_path_buf()),
             ..Default::default()
@@ -201,7 +174,10 @@ mod tests {
 
     #[test]
     fn save_then_load_round_trips() {
-        let dir = TestDir::new("state-save");
+        let dir = tempfile::Builder::new()
+            .prefix("state-save")
+            .tempdir()
+            .unwrap();
         let settings = Settings {
             app_state_dir: Some(dir.path().to_path_buf()),
             ..Default::default()

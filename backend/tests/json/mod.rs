@@ -1,14 +1,9 @@
-use std::path::PathBuf;
-
 use backend::*;
 use chrono::{TimeZone, Utc};
+use tempfile::{Builder, NamedTempFile};
 
-use crate::json::temp_file::TempFile;
-
-mod temp_file;
-
-async fn create_provide_with_two_entries(path_file: PathBuf) -> JsonDataProvide {
-    let json_provide = JsonDataProvide::new(path_file);
+async fn create_provide_with_two_entries(temp_file: &NamedTempFile) -> JsonDataProvide {
+    let json_provide = JsonDataProvide::new(temp_file.path().to_path_buf());
     let mut entry_draft_1 = EntryDraft::new(
         Utc::now(),
         String::from("Title 1"),
@@ -32,8 +27,8 @@ async fn create_provide_with_two_entries(path_file: PathBuf) -> JsonDataProvide 
 
 #[tokio::test]
 async fn create_provider_with_default_entries() {
-    let temp_file = TempFile::new("json_create_default");
-    let provider = create_provide_with_two_entries(temp_file.file_path.clone()).await;
+    let temp_file = Builder::new().prefix("json_create_default").tempfile().unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -48,8 +43,8 @@ async fn create_provider_with_default_entries() {
 
 #[tokio::test]
 async fn add_entry() {
-    let temp_file = TempFile::new("json_add_entry");
-    let provider = create_provide_with_two_entries(temp_file.file_path.clone()).await;
+    let temp_file = Builder::new().prefix("json_add_entry").tempfile().unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
 
     let mut entry_draft = EntryDraft::new(
         Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
@@ -76,8 +71,8 @@ async fn add_entry() {
 
 #[tokio::test]
 async fn remove_entry() {
-    let temp_file = TempFile::new("json_remove_entry");
-    let provider = create_provide_with_two_entries(temp_file.file_path.clone()).await;
+    let temp_file = Builder::new().prefix("json_remove_entry").tempfile().unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.remove_entry(1).await.unwrap();
 
@@ -88,8 +83,8 @@ async fn remove_entry() {
 
 #[tokio::test]
 async fn update_entry() {
-    let temp_file = TempFile::new("json_update_entry");
-    let provider = create_provide_with_two_entries(temp_file.file_path.clone()).await;
+    let temp_file = Builder::new().prefix("json_update_entry").tempfile().unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
 
     let mut entries = provider.load_all_entries().await.unwrap();
 
@@ -116,8 +111,8 @@ async fn update_entry() {
 
 #[tokio::test]
 async fn export_import() {
-    let temp_file_source = TempFile::new("json_export_source");
-    let provider_source = create_provide_with_two_entries(temp_file_source.file_path.clone()).await;
+    let temp_file_source = Builder::new().prefix("json_export_source").tempfile().unwrap();
+    let provider_source = create_provide_with_two_entries(&temp_file_source).await;
 
     let created_ids = [0, 1];
 
@@ -128,8 +123,8 @@ async fn export_import() {
 
     assert_eq!(dto_source.entries.len(), created_ids.len());
 
-    let temp_file_dist = TempFile::new("json_export_dist");
-    let provider_dist = JsonDataProvide::new(temp_file_dist.file_path.clone());
+    let temp_file_dist = Builder::new().prefix("json_export_dist").tempfile().unwrap();
+    let provider_dist = JsonDataProvide::new(temp_file_dist.path().to_path_buf());
 
     provider_dist
         .import_entries(dto_source.clone())
@@ -143,8 +138,8 @@ async fn export_import() {
 
 #[tokio::test]
 async fn assign_priority() {
-    let temp_file = TempFile::new("json_assign_priority");
-    let provider = create_provide_with_two_entries(temp_file.file_path.clone()).await;
+    let temp_file = Builder::new().prefix("json_assign_priority").tempfile().unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.assign_priority_to_entries(3).await.unwrap();
 
