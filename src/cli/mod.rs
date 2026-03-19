@@ -27,6 +27,11 @@ pub struct Cli {
     #[cfg(feature = "sqlite")]
     sqlite_file_path: Option<PathBuf>,
 
+    /// Sets the vjournal directory path and starts using it.
+    #[arg(long = "vjournal-dir-path", value_name = "DIR PATH")]
+    #[cfg(feature = "vjournal")]
+    vjournal_dir_path: Option<PathBuf>,
+
     /// Sets the backend type and starts using it.
     #[arg(short, long, value_enum)]
     backend_type: Option<BackendType>,
@@ -64,6 +69,12 @@ impl Cli {
         if let Some(sql_path) = self.sqlite_file_path.take() {
             set_sqlite_path(sql_path, settings).await?;
             set_backend_type(BackendType::Sqlite, settings);
+        }
+
+        #[cfg(feature = "vjournal")]
+        if let Some(vjournal_dir) = self.vjournal_dir_path.take() {
+            set_vjournal_path(vjournal_dir, settings).await?;
+            set_backend_type(BackendType::Vjournal, settings);
         }
 
         if let Some(backend) = self.backend_type.take() {
@@ -110,6 +121,17 @@ async fn set_sqlite_path(path: PathBuf, settings: &mut Settings) -> anyhow::Resu
     Ok(())
 }
 
+#[cfg(feature = "vjournal")]
+async fn set_vjournal_path(path: PathBuf, settings: &mut Settings) -> anyhow::Result<()> {
+    if !path.exists() {
+        std::fs::create_dir_all(&path)?;
+    }
+
+    settings.vjournal_backend.directory = path.absolutize().map(PathBuf::from).ok();
+
+    Ok(())
+}
+
 #[inline]
 fn set_backend_type(backend: BackendType, settings: &mut Settings) {
     settings.backend_type = Some(backend);
@@ -138,41 +160,12 @@ fn config_help() -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::path::PathBuf;
 
     use clap::Parser;
+    use tempfile::Builder;
 
     use super::*;
-
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
 
     #[test]
     fn parse_backend_and_config() {
@@ -205,7 +198,7 @@ mod tests {
 
     #[tokio::test]
     async fn handle_cli_without_command() {
-        let dir = TestDir::new("cli-log");
+        let dir = Builder::new().prefix("cli-log").tempdir().unwrap();
         let mut settings = Settings::default();
         let cli = Cli::parse_from([
             "tjournal",
@@ -220,7 +213,7 @@ mod tests {
 
     #[tokio::test]
     async fn ensure_path_creates_parent() {
-        let dir = TestDir::new("cli-parent");
+        let dir = Builder::new().prefix("cli-parent").tempdir().unwrap();
         let file_path = dir.path().join("nested").join("entries.json");
 
         ensure_path_exists(&file_path).await.unwrap();
@@ -231,7 +224,7 @@ mod tests {
     #[cfg(feature = "json")]
     #[tokio::test]
     async fn set_json_path_absolutizes() {
-        let dir = TestDir::new("cli-json");
+        let dir = Builder::new().prefix("cli-json").tempdir().unwrap();
         let mut settings = Settings::default();
         let file_path = dir.path().join("entries.json");
 
@@ -248,7 +241,7 @@ mod tests {
     #[cfg(feature = "sqlite")]
     #[tokio::test]
     async fn set_sqlite_path_absolutizes() {
-        let dir = TestDir::new("cli-sqlite");
+        let dir = Builder::new().prefix("cli-sqlite").tempdir().unwrap();
         let mut settings = Settings::default();
         let file_path = dir.path().join("entries.db");
 
@@ -259,6 +252,24 @@ mod tests {
         assert_eq!(
             settings.sqlite_backend.file_path,
             Some(file_path.absolutize().unwrap().into_owned())
+        );
+    }
+
+    #[cfg(feature = "vjournal")]
+    #[tokio::test]
+    async fn set_vjournal_path_absolutizes() {
+        let dir = Builder::new().prefix("cli-vjournal").tempdir().unwrap();
+        let mut settings = Settings::default();
+        let dir_path = dir.path().join("journal");
+
+        set_vjournal_path(dir_path.clone(), &mut settings)
+            .await
+            .unwrap();
+
+        assert!(dir_path.exists());
+        assert_eq!(
+            settings.vjournal_backend.directory,
+            Some(dir_path.absolutize().unwrap().into_owned())
         );
     }
 

@@ -20,12 +20,16 @@ use crate::app::state::AppState;
 use self::json_backend::{JsonBackend, get_default_json_path};
 #[cfg(feature = "sqlite")]
 use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
+#[cfg(feature = "vjournal")]
+use self::vjournal_backend::{VjournalBackend, get_default_vjournal_path};
 use self::{export::ExportSettings, external_editor::ExternalEditor};
 
 #[cfg(feature = "json")]
 pub mod json_backend;
 #[cfg(feature = "sqlite")]
 pub mod sqlite_backend;
+#[cfg(feature = "vjournal")]
+pub mod vjournal_backend;
 
 mod export;
 mod external_editor;
@@ -46,6 +50,9 @@ pub struct Settings {
     #[cfg(feature = "sqlite")]
     #[serde(default)]
     pub sqlite_backend: SqliteBackend,
+    #[cfg(feature = "vjournal")]
+    #[serde(default)]
+    pub vjournal_backend: VjournalBackend,
     #[serde(default)]
     pub default_journal_priority: Option<u32>,
     #[serde(default)]
@@ -74,6 +81,8 @@ impl Default for Settings {
             json_backend: Default::default(),
             #[cfg(feature = "sqlite")]
             sqlite_backend: Default::default(),
+            #[cfg(feature = "vjournal")]
+            vjournal_backend: Default::default(),
             default_journal_priority: Default::default(),
             scroll_per_page: Default::default(),
             sync_os_clipboard: Default::default(),
@@ -105,6 +114,11 @@ pub enum BackendType {
     Json,
     #[cfg_attr(feature = "sqlite", default)]
     Sqlite,
+    #[cfg_attr(
+        all(feature = "vjournal", not(feature = "json"), not(feature = "sqlite")),
+        default
+    )]
+    Vjournal,
 }
 
 const fn default_history_limit() -> usize {
@@ -159,11 +173,12 @@ impl Settings {
 
     pub fn complete_missing_options(&mut self) -> anyhow::Result<()> {
         // This check is to ensure that all added fields to settings struct are considered here
-        #[cfg(all(debug_assertions, feature = "sqlite", feature = "json"))]
+        #[cfg(all(debug_assertions, feature = "sqlite", feature = "json", feature = "vjournal"))]
         let Settings {
             backend_type: _,
             json_backend: _,
             sqlite_backend: _,
+            vjournal_backend: _,
             export: _,
             external_editor: _,
             default_journal_priority: _,
@@ -187,6 +202,11 @@ impl Settings {
         #[cfg(feature = "sqlite")]
         if self.sqlite_backend.file_path.is_none() {
             self.sqlite_backend.file_path = Some(get_default_sqlite_path()?)
+        }
+
+        #[cfg(feature = "vjournal")]
+        if self.vjournal_backend.directory.is_none() {
+            self.vjournal_backend.directory = Some(get_default_vjournal_path()?)
         }
 
         if self.scroll_per_page.is_none() {
@@ -274,49 +294,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::{fs, path::PathBuf};
 
     use super::*;
+    use tempfile::{Builder, TempDir};
 
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
-
-    fn config_dir_with(content: &str) -> TestDir {
-        let dir = TestDir::new("settings");
+    fn config_dir_with(content: &str) -> TempDir {
+        let dir = Builder::new().prefix("settings").tempdir().unwrap();
         fs::write(dir.path().join("config.toml"), content).unwrap();
         dir
     }
 
     #[tokio::test]
     async fn loads_default_without_config() {
-        let dir = TestDir::new("settings-empty");
+        let dir = Builder::new().prefix("settings-empty").tempdir().unwrap();
 
         let settings = Settings::new(Some(dir.path().to_path_buf())).await.unwrap();
 
@@ -328,7 +319,7 @@ mod tests {
 
     #[tokio::test]
     async fn reads_direct_file_path() {
-        let dir = TestDir::new("settings-file");
+        let dir = Builder::new().prefix("settings-file").tempdir().unwrap();
         let config_path = dir.path().join("legacy.toml");
         fs::write(&config_path, "scroll_per_page = 9\nhistory_limit = 4\n").unwrap();
 
@@ -355,11 +346,8 @@ datum_visibility = "empty_line"
 
     #[tokio::test]
     async fn missing_custom_path_errors() {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!("tjournal-missing-{unique}"));
+        let parent = Builder::new().prefix("settings-missing").tempdir().unwrap();
+        let path = parent.path().join("nonexistent");
 
         let err = Settings::new(Some(path)).await.unwrap_err();
 
@@ -403,6 +391,7 @@ temp_file_extension = "md"
         let app_state_dir = PathBuf::from("/tmp/app-state");
         let json_path = PathBuf::from("/tmp/entries.json");
         let sqlite_path = PathBuf::from("/tmp/entries.db");
+        let vjournal_dir = PathBuf::from("/tmp/journal");
         let mut settings = Settings {
             backend_type: Some(BackendType::Json),
             scroll_per_page: Some(9),
@@ -414,6 +403,10 @@ temp_file_extension = "md"
             #[cfg(feature = "sqlite")]
             sqlite_backend: SqliteBackend {
                 file_path: Some(sqlite_path.clone()),
+            },
+            #[cfg(feature = "vjournal")]
+            vjournal_backend: VjournalBackend {
+                directory: Some(vjournal_dir.clone()),
             },
             ..Default::default()
         };
@@ -427,6 +420,8 @@ temp_file_extension = "md"
         assert_eq!(settings.json_backend.file_path, Some(json_path));
         #[cfg(feature = "sqlite")]
         assert_eq!(settings.sqlite_backend.file_path, Some(sqlite_path));
+        #[cfg(feature = "vjournal")]
+        assert_eq!(settings.vjournal_backend.directory, Some(vjournal_dir));
     }
 
     #[test]

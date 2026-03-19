@@ -120,42 +120,12 @@ fn exec_write_themes_defaults(custom_config_dir: Option<&PathBuf>) -> anyhow::Re
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-        time::{SystemTime, UNIX_EPOCH},
-    };
+    use std::fs;
 
     use clap::Parser;
 
     use super::*;
     use crate::cli::Cli;
-
-    struct TestDir {
-        path: PathBuf,
-    }
-
-    impl TestDir {
-        fn new(name: &str) -> Self {
-            let unique = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("tjournal-{name}-{unique}"));
-            fs::create_dir_all(&path).unwrap();
-            Self { path }
-        }
-
-        fn path(&self) -> &Path {
-            &self.path
-        }
-    }
-
-    impl Drop for TestDir {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.path);
-        }
-    }
 
     #[test]
     fn aliases_parse() {
@@ -213,7 +183,10 @@ mod tests {
     #[test]
     fn theme_commands_return() {
         let mut settings = Settings::default();
-        let dir = TestDir::new("themes-return");
+        let dir = tempfile::Builder::new()
+            .prefix("themes-return")
+            .tempdir()
+            .unwrap();
 
         let print_path = CliCommand::Theme(Themes::PrintPath)
             .exec(&mut settings, Some(&dir.path().to_path_buf()))
@@ -229,7 +202,10 @@ mod tests {
     #[test]
     fn write_defaults_fails_if_exists() {
         let mut settings = Settings::default();
-        let dir = TestDir::new("themes-exists");
+        let dir = tempfile::Builder::new()
+            .prefix("themes-exists")
+            .tempdir()
+            .unwrap();
         fs::write(dir.path().join("themes.toml"), "already here").unwrap();
 
         let err = CliCommand::Theme(Themes::WriteDefaults)
