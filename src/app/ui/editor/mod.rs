@@ -567,10 +567,6 @@ impl<'a> Editor<'a> {
         self.show_preview = !self.show_preview;
         self.preview_scroll = 0;
     }
-
-    pub fn is_preview_mode(&self) -> bool {
-        self.show_preview
-    }
 }
 
 fn is_default_navigation(input: &Input) -> bool {
