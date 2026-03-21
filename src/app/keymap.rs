@@ -248,6 +248,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::PageDown, KeyModifiers::NONE),
             UICommand::PageDownEntries,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('p'), KeyModifiers::NONE),
+            UICommand::TogglePreviewMode,
+        ),
     ]
 }
 
