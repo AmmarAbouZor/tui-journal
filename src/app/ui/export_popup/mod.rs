@@ -153,7 +153,7 @@ impl ExportPopup<'_> {
 
         if self.path_err_msg.is_empty() {
             let block = Style::from(styles.general.input_block_active);
-            let cursor = Style::from(styles.general.input_corsur_active);
+            let cursor = Style::from(styles.general.input_cursor_active);
             self.path_txt.set_style(block);
             self.path_txt.set_cursor_style(cursor);
             self.path_txt.set_block(
@@ -164,7 +164,7 @@ impl ExportPopup<'_> {
             );
         } else {
             let block = Style::from(styles.general.input_block_invalid);
-            let cursor = Style::from(styles.general.input_corsur_invalid);
+            let cursor = Style::from(styles.general.input_cursor_invalid);
             self.path_txt.set_style(block);
             self.path_txt.set_cursor_style(cursor);
             self.path_txt.set_block(

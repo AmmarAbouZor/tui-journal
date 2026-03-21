@@ -84,7 +84,7 @@ input_block_active = { fg = "Blue" }
 fg = "Red"
 modifiers = "BOLD | SLOW_BLINK"
 
-[general.input_corsur_active]
+[general.input_cursor_active]
 fg = "Black"
 bg = "LightYellow"
 modifiers = "RAPID_BLINK"

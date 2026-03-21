@@ -173,8 +173,8 @@ impl FilterPopup<'_> {
         styles: &Styles,
     ) {
         let gstyles = &styles.general;
-        let active_cursor_style: Style = gstyles.input_corsur_active.into();
-        let invalid_cursor_style: Style = gstyles.input_corsur_invalid.into();
+        let active_cursor_style: Style = gstyles.input_cursor_active.into();
+        let invalid_cursor_style: Style = gstyles.input_cursor_invalid.into();
         let deactivate_cursor_style = Style::default().bg(Color::Reset);
 
         let mut title_txt_block = Block::default().title("Title").borders(Borders::ALL);
