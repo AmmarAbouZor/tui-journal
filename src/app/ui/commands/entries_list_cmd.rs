@@ -4,8 +4,6 @@ use crate::app::{App, UIComponents, external_editor, ui::*};
 
 use backend::DataProvider;
 
-use scopeguard::defer;
-
 use super::{
     CmdResult,
     editor_cmd::{discard_current_content, exec_save_entry_content},
@@ -294,27 +292,21 @@ pub async fn edit_in_external_editor<D: DataProvider>(
         const TEMP_FILENAME: &str = "tui_journal";
         let temp_extension = &app.settings.external_editor.temp_file_extension;
 
-        let file_name = if !temp_extension.is_empty() {
-            format!("{TEMP_FILENAME}.{temp_extension}")
-        } else {
-            String::from(TEMP_FILENAME)
+        let mut builder = tempfile::Builder::new();
+        builder.prefix(TEMP_FILENAME);
+
+        if !temp_extension.is_empty() {
+            builder.suffix(temp_extension);
         };
 
-        let file_path = env::temp_dir().join(file_name);
+        let temp_file = builder.tempfile_in(env::temp_dir())?;
+        let file_path = temp_file.path();
 
-        if file_path.exists() {
-            fs::remove_file(&file_path).await?;
-        }
-
-        fs::write(&file_path, entry.content.as_str()).await?;
-
-        defer! {
-        std::fs::remove_file(&file_path).expect("Temp File couldn't be deleted");
-        }
+        fs::write(file_path, entry.content.as_str()).await?;
 
         app.redraw_after_restore = true;
 
-        external_editor::open_editor(&file_path, &app.settings).await?;
+        external_editor::open_editor(file_path, &app.settings).await?;
 
         if file_path.exists() {
             let new_content = fs::read_to_string(&file_path).await?;
