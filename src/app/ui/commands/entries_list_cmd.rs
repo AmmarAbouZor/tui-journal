@@ -11,6 +11,21 @@ use super::{
     editor_cmd::{discard_current_content, exec_save_entry_content},
 };
 
+pub fn perform_select_prev_entry<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) {
+    if ui_components.entries_list.folder_nav_mode {
+        ui_components.entries_list.folder_nav_select_prev();
+        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
+            app.current_entry_id = Some(id);
+            ui_components.editor.set_current_entry(Some(id), app);
+        }
+    } else {
+        select_prev_entry(1, ui_components, app);
+    }
+}
+
 pub fn exec_select_prev_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
@@ -18,7 +33,7 @@ pub fn exec_select_prev_entry<D: DataProvider>(
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::SelectedPrevEntry));
     } else {
-        select_prev_entry(1, ui_components, app);
+        perform_select_prev_entry(ui_components, app);
     }
 
     Ok(HandleInputReturnType::Handled)
@@ -54,12 +69,27 @@ pub async fn continue_select_prev_entry<D: DataProvider>(
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
             exec_save_entry_content(ui_components, app).await?;
-            select_prev_entry(1, ui_components, app);
+            perform_select_prev_entry(ui_components, app);
         }
-        MsgBoxResult::No => select_prev_entry(1, ui_components, app),
+        MsgBoxResult::No => perform_select_prev_entry(ui_components, app),
     }
 
     Ok(HandleInputReturnType::Handled)
+}
+
+pub fn perform_select_next_entry<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) {
+    if ui_components.entries_list.folder_nav_mode {
+        ui_components.entries_list.folder_nav_select_next(app);
+        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
+            app.current_entry_id = Some(id);
+            ui_components.editor.set_current_entry(Some(id), app);
+        }
+    } else {
+        select_next_entry(1, ui_components, app);
+    }
 }
 
 pub fn exec_select_next_entry<D: DataProvider>(
@@ -69,7 +99,7 @@ pub fn exec_select_next_entry<D: DataProvider>(
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::SelectedNextEntry));
     } else {
-        select_next_entry(1, ui_components, app);
+        perform_select_next_entry(ui_components, app);
     }
 
     Ok(HandleInputReturnType::Handled)
@@ -106,9 +136,9 @@ pub async fn continue_select_next_entry<D: DataProvider>(
         MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
         MsgBoxResult::Yes => {
             exec_save_entry_content(ui_components, app).await?;
-            select_next_entry(1, ui_components, app);
+            perform_select_next_entry(ui_components, app);
         }
-        MsgBoxResult::No => select_next_entry(1, ui_components, app),
+        MsgBoxResult::No => perform_select_next_entry(ui_components, app),
     }
 
     Ok(HandleInputReturnType::Handled)
@@ -546,3 +576,137 @@ pub fn page_down_entries<D: DataProvider>(ui_components: &mut UIComponents, app:
 
     select_next_entry(step, ui_components, app);
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Folder navigation commands
+// ────────────────────────────────────────────────────────────────────────────
+
+pub fn perform_toggle_view_mode<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    _app: &mut App<D>,
+) {
+    use crate::app::ui::{Popup, ViewMode, view_mode_popup::ViewModePopup};
+    let current = if ui_components.entries_list.folder_nav_mode {
+        ViewMode::Folder
+    } else {
+        ViewMode::Flat
+    };
+    ui_components
+        .popup_stack
+        .push(Popup::ViewMode(Box::new(ViewModePopup::new(current))));
+}
+
+/// Show the view-mode chooser popup.
+pub fn exec_toggle_view_mode<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::ToggleViewMode));
+    } else {
+        perform_toggle_view_mode(ui_components, app);
+    }
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn perform_folder_nav_enter<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) {
+    if !ui_components.entries_list.folder_nav_mode {
+        return;
+    }
+
+    // Check if the selection is a sub-folder.
+    if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
+        ui_components.entries_list.folder_path.push(folder_name);
+        ui_components.entries_list.folder_list_state.select(Some(0));
+        return;
+    }
+
+    // Otherwise it is an entry row — set it as the active entry.
+    if let Some(entry_id) = ui_components.entries_list.selected_folder_entry_id(app) {
+        app.current_entry_id = Some(entry_id);
+        ui_components.editor.set_current_entry(Some(entry_id), app);
+    }
+}
+
+/// In folder nav mode: enter + select the focused item.
+/// In flat mode: no-op (the key is unbound in flat mode).
+pub fn exec_folder_nav_enter<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::FolderNavEnter));
+    } else {
+        perform_folder_nav_enter(ui_components, app);
+    }
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn perform_folder_nav_back<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) {
+    if !ui_components.entries_list.folder_nav_mode {
+        return;
+    }
+
+    if !ui_components.entries_list.folder_path.is_empty() {
+        ui_components.entries_list.folder_path.pop();
+        ui_components.entries_list.folder_list_state.select(Some(0));
+        
+        // Also update the current entry if index 0 is an entry row.
+        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
+            app.current_entry_id = Some(id);
+            ui_components.editor.set_current_entry(Some(id), app);
+        }
+    }
+}
+
+/// In folder nav mode: go up one level.
+pub fn exec_folder_nav_back<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if ui_components.has_unsaved() {
+        ui_components.show_unsaved_msg_box(Some(UICommand::FolderNavBack));
+    } else {
+        perform_folder_nav_back(ui_components, app);
+    }
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn continue_folder_nav_back<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            crate::app::ui::commands::editor_cmd::exec_save_entry_content(ui_components, app).await?;
+            perform_folder_nav_back(ui_components, app);
+        }
+        MsgBoxResult::No => perform_folder_nav_back(ui_components, app),
+    }
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub async fn continue_toggle_view_mode<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
+        MsgBoxResult::Yes => {
+            crate::app::ui::commands::editor_cmd::exec_save_entry_content(ui_components, app).await?;
+            perform_toggle_view_mode(ui_components, app);
+        }
+        MsgBoxResult::No => perform_toggle_view_mode(ui_components, app),
+    }
+    Ok(HandleInputReturnType::Handled)
+}
+

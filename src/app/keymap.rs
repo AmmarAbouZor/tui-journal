@@ -159,6 +159,11 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT),
             UICommand::Redo,
         ),
+        // Browse / switch view mode between flat-list and folder navigation
+        Keymap::new(
+            Input::new(KeyCode::Char('b'), KeyModifiers::NONE),
+            UICommand::ToggleViewMode,
+        ),
     ]
 }
 
@@ -247,6 +252,23 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::PageDown, KeyModifiers::NONE),
             UICommand::PageDownEntries,
+        ),
+        // Folder navigation (Right/l = enter, Left/h = back)
+        Keymap::new(
+            Input::new(KeyCode::Right, KeyModifiers::NONE),
+            UICommand::FolderNavEnter,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('l'), KeyModifiers::NONE),
+            UICommand::FolderNavEnter,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Left, KeyModifiers::NONE),
+            UICommand::FolderNavBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('h'), KeyModifiers::NONE),
+            UICommand::FolderNavBack,
         ),
     ]
 }

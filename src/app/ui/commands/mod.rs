@@ -67,6 +67,9 @@ pub enum UICommand {
     PageDownEntries,
     Undo,
     Redo,
+    ToggleViewMode,
+    FolderNavEnter,
+    FolderNavBack,
 }
 
 #[derive(Debug, Clone)]
@@ -221,6 +224,18 @@ impl UICommand {
             ),
             UICommand::Undo => CommandInfo::new("Undo", "Undo the latest change on journals"),
             UICommand::Redo => CommandInfo::new("Redo", "Redo the latest change on journals"),
+            UICommand::ToggleViewMode => CommandInfo::new(
+                "Switch view mode",
+                "Switch between flat list view and folder navigation view (based on tags)",
+            ),
+            UICommand::FolderNavEnter => CommandInfo::new(
+                "Enter folder / select entry",
+                "In folder view: enter the selected sub-folder or open the selected journal",
+            ),
+            UICommand::FolderNavBack => CommandInfo::new(
+                "Go up a folder",
+                "In folder view: navigate up one level in the tag folder hierarchy",
+            ),
         }
     }
 
@@ -280,6 +295,9 @@ impl UICommand {
             }
             UICommand::Undo => exec_undo(ui_components, app).await,
             UICommand::Redo => exec_redo(ui_components, app).await,
+            UICommand::ToggleViewMode => exec_toggle_view_mode(ui_components, app),
+            UICommand::FolderNavEnter => exec_folder_nav_enter(ui_components, app),
+            UICommand::FolderNavBack => exec_folder_nav_back(ui_components, app),
         }
     }
 
@@ -389,6 +407,33 @@ impl UICommand {
             }
             UICommand::Undo => continue_undo(ui_components, app, msg_box_result).await,
             UICommand::Redo => continue_redo(ui_components, app, msg_box_result).await,
+            UICommand::FolderNavEnter => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_folder_nav_enter,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::ToggleViewMode => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_folder_nav_enter,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::FolderNavBack => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_folder_nav_enter,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
         }
     }
 }

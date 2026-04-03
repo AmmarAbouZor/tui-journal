@@ -25,9 +25,12 @@ mod keymap;
 mod runner;
 mod sorter;
 pub mod state;
+mod tag_tree;
 #[cfg(test)]
 mod test;
 pub mod ui;
+
+pub use tag_tree::TagTree;
 
 pub use runner::HandleInputReturnType;
 pub use runner::run;
@@ -358,6 +361,37 @@ where
         }
 
         tags.into_iter().map(String::from).collect()
+    }
+
+    /// Build a `TagTree` from the currently active (non-filtered-out) entries.
+    pub fn get_tag_tree(&self) -> TagTree {
+        TagTree::build(self.get_active_entries())
+    }
+
+    /// Returns active entries whose tags place them exactly at the given folder
+    /// `path` in the tag tree (deepest-match rule).
+    ///
+    /// * An empty `path` returns entries with **no tags** (root-level entries).
+    /// * A non-empty `path` returns entries that have a tag equal to the
+    ///   dot-joined path segments (e.g. path `["linux", "ubuntu"]` matches
+    ///   entries with tag `linux.ubuntu`).
+    pub fn get_entries_in_folder<'a>(
+        &'a self,
+        path: &'a [String],
+    ) -> impl Iterator<Item = &'a Entry> {
+        let expected_tag = if path.is_empty() {
+            None
+        } else {
+            Some(path.join("."))
+        };
+
+        self.get_active_entries().filter(move |entry| {
+            if let Some(ref tag) = expected_tag {
+                entry.tags.contains(tag)
+            } else {
+                entry.tags.is_empty()
+            }
+        })
     }
 
     /// Sets and applies the given filter on the entries

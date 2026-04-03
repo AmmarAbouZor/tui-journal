@@ -14,6 +14,7 @@ use self::{
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
     sort_popup::SortPopup,
+    view_mode_popup::ViewModePopup,
 };
 
 use super::{
@@ -44,9 +45,13 @@ mod msg_box;
 mod sort_popup;
 pub mod themes;
 pub mod ui_functions;
+mod view_mode_popup;
 
 pub use commands::UICommand;
 pub use msg_box::MsgBoxResult;
+pub use view_mode_popup::ViewMode;
+
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlType {
@@ -62,6 +67,7 @@ pub enum Popup<'a> {
     Filter(Box<FilterPopup<'a>>),
     FuzzFind(Box<FuzzFindPopup<'a>>),
     Sort(Box<SortPopup>),
+    ViewMode(Box<ViewModePopup>),
 }
 
 #[derive(Debug, Clone)]
@@ -184,6 +190,7 @@ impl UIComponents<'_> {
                 }
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area(), &self.styles),
                 Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area(), &self.styles),
+                Popup::ViewMode(vmp) => vmp.render_widget(f, f.area(), &self.styles),
             }
         }
     }
@@ -338,6 +345,16 @@ impl UIComponents<'_> {
                             self.set_current_entry(current_entry_id, app);
                         }
                     },
+                    Popup::ViewMode(vmp) => match vmp.handle_input(input) {
+                        PopupReturn::KeepPopup => {}
+                        PopupReturn::Cancel => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                        }
+                        PopupReturn::Apply(mode) => {
+                            self.popup_stack.pop().expect("popup stack isn't empty");
+                            self.apply_view_mode(mode, app);
+                        }
+                    },
                 }
                 Ok(HandleInputReturnType::Handled)
             }
@@ -445,4 +462,33 @@ impl UIComponents<'_> {
             self.set_current_entry(first_entry, app);
         }
     }
+
+    /// Switch between flat-list view and folder navigation view.
+    pub fn apply_view_mode<D: DataProvider>(&mut self, mode: ViewMode, app: &mut App<D>) {
+        let was_folder = self.entries_list.folder_nav_mode;
+        let is_folder = mode == ViewMode::Folder;
+
+        if was_folder == is_folder {
+            return; // nothing to do
+        }
+
+        self.entries_list.folder_nav_mode = is_folder;
+
+        if is_folder {
+            // Reset folder path to root and clear folder list selection.
+            self.entries_list.folder_path.clear();
+            self.entries_list.folder_list_state.select(Some(0));
+            // Keep the current entry selection intact so the editor is not disrupted.
+        } else {
+            // Coming back to flat mode — re-select the current entry so the list
+            // highlights correctly.
+            self.set_current_entry(app.current_entry_id, app);
+        }
+    }
+
+    /// Returns `true` when the entries list is in folder navigation mode.
+    pub fn is_folder_nav_mode(&self) -> bool {
+        self.entries_list.folder_nav_mode
+    }
 }
+

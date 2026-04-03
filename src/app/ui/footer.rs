@@ -85,7 +85,25 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
     ];
 
     if ui_components.active_control == ControlType::EntriesList {
+        if ui_components.entries_list.folder_nav_mode {
+            // In folder navigation mode — show folder-specific hints.
+            let parts = [
+                "Left/h: Go up".to_owned(),
+                "Right/l: Enter".to_owned(),
+                "b: Switch view".to_owned(),
+                get_keymap_text(
+                    ui_components
+                        .global_keymaps
+                        .iter()
+                        .filter(|k| k.command == UICommand::ShowHelp)
+                        .collect(),
+                ),
+            ];
+            return parts.join(SEPARATOR);
+        }
+
         if app.filter.is_none() {
+
             let show_filter_keymap: Vec<_> = ui_components
                 .entries_list_keymaps
                 .iter()
