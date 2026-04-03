@@ -44,6 +44,10 @@ pub trait DataProvider {
     }
     /// Assigns priority to all entries that don't have a priority assigned to
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()>;
+    /// Renames a folder and all its entries (including sub-folders)
+    async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()>;
+    /// Deletes a folder and all its entries (including sub-folders)
+    async fn delete_folder(&self, path: &str) -> anyhow::Result<()>;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -56,6 +60,8 @@ pub struct Entry {
     pub tags: Vec<String>,
     #[serde(default)]
     pub priority: Option<u32>,
+    #[serde(default)]
+    pub folder: String,
 }
 
 impl Entry {
@@ -67,6 +73,7 @@ impl Entry {
         content: String,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
     ) -> Self {
         Self {
             id,
@@ -75,6 +82,7 @@ impl Entry {
             content,
             tags,
             priority,
+            folder,
         }
     }
 
@@ -86,6 +94,7 @@ impl Entry {
             content: draft.content,
             tags: draft.tags,
             priority: draft.priority,
+            folder: draft.folder,
         }
     }
 }
@@ -97,6 +106,7 @@ pub struct EntryDraft {
     pub content: String,
     pub tags: Vec<String>,
     pub priority: Option<u32>,
+    pub folder: String,
 }
 
 impl EntryDraft {
@@ -105,6 +115,7 @@ impl EntryDraft {
         title: String,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
     ) -> Self {
         let content = String::new();
         Self {
@@ -113,12 +124,19 @@ impl EntryDraft {
             content,
             tags,
             priority,
+            folder,
         }
     }
 
     #[must_use]
     pub fn with_content(mut self, content: String) -> Self {
         self.content = content;
+        self
+    }
+
+    #[must_use]
+    pub fn with_folder(mut self, folder: String) -> Self {
+        self.folder = folder;
         self
     }
 
@@ -129,6 +147,7 @@ impl EntryDraft {
             content: entry.content,
             tags: entry.tags,
             priority: entry.priority,
+            folder: entry.folder,
         }
     }
 }
@@ -164,6 +183,7 @@ mod tests {
             content: String::from("Body"),
             tags: vec![String::from("one"), String::from("two")],
             priority: Some(3),
+            folder: String::from("work"),
         }
     }
 
@@ -215,6 +235,14 @@ mod tests {
         async fn assign_priority_to_entries(&self, _priority: u32) -> anyhow::Result<()> {
             unreachable!("not used in these tests");
         }
+
+        async fn rename_folder(&self, _old_path: &str, _new_path: &str) -> anyhow::Result<()> {
+            unreachable!("not used in these tests");
+        }
+
+        async fn delete_folder(&self, _path: &str) -> anyhow::Result<()> {
+            unreachable!("not used in these tests");
+        }
     }
 
     #[test]
@@ -229,6 +257,7 @@ mod tests {
         assert_eq!(entry.content, draft.content);
         assert_eq!(entry.tags, draft.tags);
         assert_eq!(entry.priority, draft.priority);
+        assert_eq!(entry.folder, draft.folder);
     }
 
     #[test]
@@ -242,6 +271,7 @@ mod tests {
         assert_eq!(updated.title, draft.title);
         assert_eq!(updated.tags, draft.tags);
         assert_eq!(updated.priority, draft.priority);
+        assert_eq!(updated.folder, draft.folder);
     }
 
     #[test]
@@ -253,6 +283,7 @@ mod tests {
             String::from("Content"),
             vec![String::from("tag")],
             Some(2),
+            String::from("folder"),
         );
 
         let draft = EntryDraft::from_entry(entry.clone());
@@ -262,6 +293,7 @@ mod tests {
         assert_eq!(draft.content, entry.content);
         assert_eq!(draft.tags, entry.tags);
         assert_eq!(draft.priority, entry.priority);
+        assert_eq!(draft.folder, entry.folder);
     }
 
     #[test]
@@ -282,6 +314,7 @@ mod tests {
                 String::from("Second"),
                 vec![String::from("x")],
                 None,
+                String::new(),
             ),
         ];
 
@@ -304,12 +337,14 @@ mod tests {
                 String::from("Second"),
                 vec![],
                 None,
+                String::new(),
             ),
             EntryDraft::new(
                 Utc.with_ymd_and_hms(2025, 1, 2, 0, 0, 0).unwrap(),
                 String::from("Third"),
                 vec![],
                 None,
+                String::new(),
             ),
         ];
 

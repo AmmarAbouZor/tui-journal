@@ -8,6 +8,7 @@ use super::ui::UICommand;
 pub struct Input {
     pub key_code: KeyCode,
     pub modifiers: KeyModifiers,
+    pub key_event: KeyEvent,
 }
 
 impl Input {
@@ -15,6 +16,7 @@ impl Input {
         Self {
             key_code,
             modifiers,
+            key_event: KeyEvent::new(key_code, modifiers),
         }
     }
 }
@@ -24,6 +26,7 @@ impl From<&KeyEvent> for Input {
         Self {
             key_code: key_event.code,
             modifiers: key_event.modifiers,
+            key_event: *key_event,
         }
     }
 }
@@ -268,6 +271,18 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('h'), KeyModifiers::NONE),
             UICommand::FolderNavBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('r'), KeyModifiers::NONE),
+            UICommand::RenameFolder,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('d'), KeyModifiers::NONE),
+            UICommand::DeleteFolder,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Delete, KeyModifiers::NONE),
+            UICommand::DeleteFolder,
         ),
     ]
 }

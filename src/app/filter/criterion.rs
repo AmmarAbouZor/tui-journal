@@ -70,6 +70,7 @@ mod tests {
             String::from("Searching CONTENT with Mixed Case"),
             tags.into_iter().map(String::from).collect(),
             priority,
+            String::new(),
         )
     }
 
@@ -116,7 +117,8 @@ mod tests {
                 entry.title.clone(),
                 String::from("UPPERCASE ONLY"),
                 entry.tags.clone(),
-                entry.priority
+                entry.priority,
+                String::new(),
             ))
         );
     }

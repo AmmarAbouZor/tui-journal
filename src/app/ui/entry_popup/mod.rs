@@ -1,6 +1,6 @@
 use anyhow::Ok;
 use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyModifiers};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -16,27 +16,31 @@ use crate::{
 
 use backend::{DataProvider, Entry};
 
+use self::folders::{FoldersPopup, FoldersPopupReturn};
 use self::tags::{TagsPopup, TagsPopupReturn};
 
 use super::{Styles, ui_functions::centered_rect_exact_height};
 
+pub mod folders;
 mod tags;
 
-const FOOTER_TEXT: &str = "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Open tags";
-const FOOTER_MARGIN: u16 = 15;
+const FOOTER_TEXT: &str = "Enter or <Ctrl-m>: confirm | Esc or <Ctrl-c>: Cancel | Tab: Change focused control | <Ctrl-Space> or <Ctrl-t>: Tags | <Ctrl-f>: Folders";
 
 pub struct EntryPopup<'a> {
     title_txt: TextArea<'a>,
     date_txt: TextArea<'a>,
     tags_txt: TextArea<'a>,
+    folder_txt: TextArea<'a>,
     priority_txt: TextArea<'a>,
     is_edit_entry: bool,
     active_txt: ActiveText,
     title_err_msg: String,
     date_err_msg: String,
     tags_err_msg: String,
+    folder_err_msg: String,
     priority_err_msg: String,
     tags_popup: Option<TagsPopup>,
+    folders_popup: Option<FoldersPopup>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -44,6 +48,7 @@ enum ActiveText {
     Title,
     Date,
     Tags,
+    Folder,
     Priority,
 }
 
@@ -70,6 +75,8 @@ impl EntryPopup<'_> {
 
         let tags_txt = TextArea::default();
 
+        let folder_txt = TextArea::default();
+
         let priority_txt = if let Some(priority) = settings.default_journal_priority {
             TextArea::new(vec![priority.to_string()])
         } else {
@@ -80,14 +87,17 @@ impl EntryPopup<'_> {
             title_txt,
             date_txt,
             tags_txt,
+            folder_txt,
             priority_txt,
             is_edit_entry: false,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            folder_err_msg: String::default(),
             priority_err_msg: String::default(),
             tags_popup: None,
+            folders_popup: None,
         }
     }
 
@@ -107,6 +117,9 @@ impl EntryPopup<'_> {
         let mut tags_txt = TextArea::new(vec![tags]);
         tags_txt.move_cursor(CursorMove::End);
 
+        let mut folder_txt = TextArea::new(vec![entry.folder.to_owned()]);
+        folder_txt.move_cursor(CursorMove::End);
+
         let prio = entry.priority.map(|pr| pr.to_string()).unwrap_or_default();
 
         let mut priority_txt = TextArea::new(vec![prio]);
@@ -116,14 +129,17 @@ impl EntryPopup<'_> {
             title_txt,
             date_txt,
             tags_txt,
+            folder_txt,
             priority_txt,
             is_edit_entry: true,
             active_txt: ActiveText::Title,
             title_err_msg: String::default(),
             date_err_msg: String::default(),
             tags_err_msg: String::default(),
+            folder_err_msg: String::default(),
             priority_err_msg: String::default(),
             tags_popup: None,
+            folders_popup: None,
         };
 
         entry_popup.validate_all();
@@ -132,13 +148,7 @@ impl EntryPopup<'_> {
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
-        let mut area = centered_rect_exact_height(70, 17, area);
-
-        const FOOTER_LEN: u16 = FOOTER_TEXT.len() as u16 + FOOTER_MARGIN;
-
-        if area.width < FOOTER_LEN {
-            area.height += FOOTER_LEN / area.width;
-        }
+        let area = centered_rect_exact_height(70, 20, area);
 
         let block = Block::default()
             .borders(Borders::ALL)
@@ -153,10 +163,11 @@ impl EntryPopup<'_> {
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .horizontal_margin(4)
-            .vertical_margin(2)
+            .horizontal_margin(2)
+            .vertical_margin(1)
             .constraints(
                 [
+                    Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
@@ -170,6 +181,7 @@ impl EntryPopup<'_> {
         self.title_txt.set_cursor_line_style(Style::default());
         self.date_txt.set_cursor_line_style(Style::default());
         self.tags_txt.set_cursor_line_style(Style::default());
+        self.folder_txt.set_cursor_line_style(Style::default());
         self.priority_txt.set_cursor_line_style(Style::default());
 
         let gstyles = &styles.general;
@@ -270,57 +282,54 @@ impl EntryPopup<'_> {
                 Block::default()
                     .borders(Borders::ALL)
                     .style(invalid_block_style)
-                    .title(format!("Tags : {}", self.date_err_msg)),
+                    .title(format!("Tags : {}", self.tags_err_msg)),
             );
         }
 
-        if self.priority_err_msg.is_empty() {
-            let (block, cursor) = match self.active_txt {
-                ActiveText::Priority => (active_block_style, active_cursor_style),
-                _ => (reset_style, deactivate_cursor_style),
-            };
-            self.priority_txt.set_style(block);
-            self.priority_txt.set_cursor_style(cursor);
-            self.priority_txt.set_block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .style(block)
-                    .title("Priority"),
-            );
-        } else {
-            let cursor = if self.active_txt == ActiveText::Priority {
-                invalid_cursor_style
+        let folder_block = Block::default()
+            .borders(Borders::ALL)
+            .title(format!("Folder{}", self.folder_err_msg))
+            .style(if self.active_txt == ActiveText::Folder {
+                styles.general.input_block_active.into()
             } else {
-                deactivate_cursor_style
-            };
-            self.priority_txt.set_style(invalid_block_style);
-            self.priority_txt.set_cursor_style(cursor);
-            self.priority_txt.set_block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .style(invalid_block_style)
-                    .title(format!("Priority : {}", self.priority_err_msg)),
-            );
-        }
+                Style::default()
+            });
+
+        self.folder_txt.set_block(folder_block);
+
+        let priority_block = Block::default()
+            .borders(Borders::ALL)
+            .title(format!("Priority (Optional){}", self.priority_err_msg))
+            .style(if self.active_txt == ActiveText::Priority {
+                styles.general.input_block_active.into()
+            } else {
+                Style::default()
+            });
+
+        self.priority_txt.set_block(priority_block);
 
         frame.render_widget(&self.title_txt, chunks[0]);
         frame.render_widget(&self.date_txt, chunks[1]);
-        frame.render_widget(&self.priority_txt, chunks[2]);
-        frame.render_widget(&self.tags_txt, chunks[3]);
+        frame.render_widget(&self.tags_txt, chunks[2]);
+        frame.render_widget(&self.folder_txt, chunks[3]);
+        frame.render_widget(&self.priority_txt, chunks[4]);
 
         let footer = Paragraph::new(FOOTER_TEXT)
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: false })
             .block(
                 Block::default()
-                    .borders(Borders::NONE)
+                    .borders(Borders::TOP)
                     .style(Style::default()),
             );
 
-        frame.render_widget(footer, chunks[4]);
+        frame.render_widget(footer, chunks[5]);
 
         if let Some(tags_popup) = self.tags_popup.as_mut() {
             tags_popup.render_widget(frame, area, styles)
+        }
+        if let Some(folders_popup) = self.folders_popup.as_mut() {
+            folders_popup.render_widget(frame, area, styles)
         }
     }
 
@@ -329,6 +338,7 @@ impl EntryPopup<'_> {
             && self.date_err_msg.is_empty()
             && self.tags_err_msg.is_empty()
             && self.priority_err_msg.is_empty()
+            && self.folder_err_msg.is_empty()
     }
 
     pub fn validate_all(&mut self) {
@@ -387,6 +397,11 @@ impl EntryPopup<'_> {
 
             return Ok(EntryPopupInputReturn::KeepPopup);
         }
+        if self.folders_popup.is_some() {
+            self.handle_folders_popup_input(input);
+
+            return Ok(EntryPopupInputReturn::KeepPopup);
+        }
 
         let has_ctrl = input.modifiers.contains(KeyModifiers::CONTROL);
 
@@ -394,21 +409,23 @@ impl EntryPopup<'_> {
             KeyCode::Esc => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Char('c') if has_ctrl => Ok(EntryPopupInputReturn::Cancel),
             KeyCode::Enter => self.handle_confirm(app).await,
-            KeyCode::Tab | KeyCode::Down => {
+            KeyCode::Tab => {
                 self.active_txt = match self.active_txt {
                     ActiveText::Title => ActiveText::Date,
-                    ActiveText::Date => ActiveText::Priority,
-                    ActiveText::Priority => ActiveText::Tags,
-                    ActiveText::Tags => ActiveText::Title,
+                    ActiveText::Date => ActiveText::Tags,
+                    ActiveText::Tags => ActiveText::Folder,
+                    ActiveText::Folder => ActiveText::Priority,
+                    ActiveText::Priority => ActiveText::Title,
                 };
                 Ok(EntryPopupInputReturn::KeepPopup)
             }
-            KeyCode::Up => {
+            KeyCode::BackTab => {
                 self.active_txt = match self.active_txt {
-                    ActiveText::Title => ActiveText::Tags,
+                    ActiveText::Title => ActiveText::Priority,
                     ActiveText::Date => ActiveText::Title,
-                    ActiveText::Priority => ActiveText::Date,
-                    ActiveText::Tags => ActiveText::Priority,
+                    ActiveText::Tags => ActiveText::Date,
+                    ActiveText::Folder => ActiveText::Tags,
+                    ActiveText::Priority => ActiveText::Folder,
                 };
                 Ok(EntryPopupInputReturn::KeepPopup)
             }
@@ -426,27 +443,29 @@ impl EntryPopup<'_> {
 
                 Ok(EntryPopupInputReturn::KeepPopup)
             }
+            KeyCode::Char('f') if has_ctrl => {
+                Ok(self.open_folders_popup(app))
+            }
             _ => {
                 match self.active_txt {
                     ActiveText::Title => {
-                        if self.title_txt.input(KeyEvent::from(input)) {
-                            self.validate_title();
-                        }
+                        self.title_txt.input(input.key_event);
+                        self.validate_title();
                     }
                     ActiveText::Date => {
-                        if self.date_txt.input(KeyEvent::from(input)) {
-                            self.validate_date();
-                        }
+                        self.date_txt.input(input.key_event);
+                        self.validate_date();
                     }
                     ActiveText::Tags => {
-                        if self.tags_txt.input(KeyEvent::from(input)) {
-                            self.validate_tags();
-                        }
+                        self.tags_txt.input(input.key_event);
+                        self.validate_tags();
+                    }
+                    ActiveText::Folder => {
+                        self.folder_txt.input(input.key_event);
                     }
                     ActiveText::Priority => {
-                        if self.priority_txt.input(KeyEvent::from(input)) {
-                            self.validate_priority();
-                        }
+                        self.priority_txt.input(input.key_event);
+                        self.validate_priority();
                     }
                 }
                 Ok(EntryPopupInputReturn::KeepPopup)
@@ -470,6 +489,36 @@ impl EntryPopup<'_> {
                 self.tags_popup = None;
             }
         }
+    }
+
+    pub fn handle_folders_popup_input(&mut self, input: &Input) {
+        let folders_popup = self
+            .folders_popup
+            .as_mut()
+            .expect("Folders popup must be some at this point");
+
+        match folders_popup.handle_input(input) {
+            FoldersPopupReturn::Keep => {}
+            FoldersPopupReturn::Cancel => self.folders_popup = None,
+            FoldersPopupReturn::Apply(folder) => {
+                self.apply_folder(folder);
+                self.active_txt = ActiveText::Folder;
+                self.folders_popup = None;
+            }
+        }
+    }
+
+    fn open_folders_popup<D: DataProvider>(&mut self, app: &App<D>) -> EntryPopupInputReturn {
+        let folders = app.get_all_folders();
+        let current_folder = self.folder_txt.lines()[0].trim().to_string();
+        self.folders_popup = Some(FoldersPopup::new(&current_folder, folders));
+
+        EntryPopupInputReturn::KeepPopup
+    }
+
+    pub fn apply_folder(&mut self, folder: String) {
+        self.folder_txt = TextArea::new(vec![folder]);
+        self.folder_txt.move_cursor(CursorMove::End);
     }
 
     async fn handle_confirm<D: DataProvider>(
@@ -497,17 +546,15 @@ impl EntryPopup<'_> {
                 .expect("Tags TextBox have one line"),
         );
 
-        let priority = match self.priority_txt.lines().first().unwrap() {
-            num if num.is_empty() => None,
-            num => Some(num.parse().expect("Priority must be validated before")),
-        };
+        let priority = self.priority_txt.lines()[0].parse::<u32>().ok();
+        let folder = self.folder_txt.lines()[0].trim().to_string();
 
         if self.is_edit_entry {
-            app.update_current_entry_attributes(title, date, tags, priority)
+            app.update_current_entry_attributes(title, date, tags, priority, folder)
                 .await?;
             Ok(EntryPopupInputReturn::UpdateCurrentEntry)
         } else {
-            let entry_id = app.add_entry(title, date, tags, priority).await?;
+            let entry_id = app.add_entry(title, date, tags, priority, folder).await?;
             Ok(EntryPopupInputReturn::AddEntry(entry_id))
         }
     }

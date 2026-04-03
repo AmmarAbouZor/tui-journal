@@ -63,7 +63,7 @@ impl SqliteDataProvide {
 impl DataProvider for SqliteDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
         let entries: Vec<EntryIntermediate> = sqlx::query_as(
-            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
+            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, entries.folder, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
             LEFT JOIN tags ON entries.id = tags.entry_id
             GROUP BY entries.id
@@ -83,14 +83,15 @@ impl DataProvider for SqliteDataProvide {
 
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         let row = sqlx::query(
-            r"INSERT INTO entries (title, date, content, priority)
-            VALUES($1, $2, $3, $4)
+            r"INSERT INTO entries (title, date, content, priority, folder)
+            VALUES($1, $2, $3, $4, $5)
             RETURNING id",
         )
         .bind(&entry.title)
         .bind(entry.date)
         .bind(&entry.content)
         .bind(entry.priority)
+        .bind(&entry.folder)
         .fetch_one(&self.pool)
         .await
         .map_err(|err| {
@@ -137,13 +138,15 @@ impl DataProvider for SqliteDataProvide {
             Set title = $1,
                 date = $2,
                 content = $3,
-                priority = $4
-            WHERE id = $5",
+                priority = $4,
+                folder = $5
+            WHERE id = $6",
         )
         .bind(&entry.title)
         .bind(entry.date)
         .bind(&entry.content)
         .bind(entry.priority)
+        .bind(&entry.folder)
         .bind(entry.id)
         .execute(&self.pool)
         .await
@@ -204,7 +207,7 @@ impl DataProvider for SqliteDataProvide {
             .join(", ");
 
         let sql = format!(
-            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
+            r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, entries.folder, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
             LEFT JOIN tags ON entries.id = tags.entry_id
             WHERE entries.id IN ({ids_text})
@@ -244,6 +247,52 @@ impl DataProvider for SqliteDataProvide {
 
                 anyhow!(err)
             })?;
+
+        Ok(())
+    }
+
+    async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
+        let old_path_match = format!("{}%", old_path);
+        let old_path_exact = old_path.to_string();
+
+        sqlx::query(
+            r"UPDATE entries
+            SET folder = CASE
+                WHEN folder = $1 THEN $2
+                WHEN folder LIKE $3 THEN $2 || SUBSTR(folder, LENGTH($1) + 1)
+                ELSE folder
+            END
+            WHERE folder = $1 OR folder LIKE $3",
+        )
+        .bind(&old_path_exact)
+        .bind(new_path)
+        .bind(&old_path_match)
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
+            log::error!("Rename folder failed. Error info {err}");
+            anyhow!(err)
+        })?;
+
+        Ok(())
+    }
+
+    async fn delete_folder(&self, path: &str) -> anyhow::Result<()> {
+        let path_match = format!("{}%", path);
+        let path_exact = path.to_string();
+
+        sqlx::query(
+            r"DELETE FROM entries
+            WHERE folder = $1 OR folder LIKE $2",
+        )
+        .bind(&path_exact)
+        .bind(&path_match)
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
+            log::error!("Delete folder failed. Error info {err}");
+            anyhow!(err)
+        })?;
 
         Ok(())
     }

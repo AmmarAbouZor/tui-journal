@@ -104,7 +104,6 @@ impl DataProvider for JsonDataProvide {
 
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
-
         let mut modified = false;
 
         entries
@@ -116,6 +115,44 @@ impl DataProvider for JsonDataProvide {
             });
 
         if modified {
+            self.write_entries_to_file(&entries).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
+        let mut entries = self.load_all_entries().await?;
+        let mut modified = false;
+
+        let old_prefix = format!("{}/", old_path);
+
+        for entry in entries.iter_mut() {
+            if entry.folder == old_path {
+                entry.folder = new_path.to_string();
+                modified = true;
+            } else if entry.folder.starts_with(&old_prefix) {
+                entry.folder = format!("{}{}", new_path, &entry.folder[old_path.len()..]);
+                modified = true;
+            }
+        }
+
+        if modified {
+            self.write_entries_to_file(&entries).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn delete_folder(&self, path: &str) -> anyhow::Result<()> {
+        let mut entries = self.load_all_entries().await?;
+        let old_len = entries.len();
+
+        let prefix = format!("{}/", path);
+
+        entries.retain(|entry| !(entry.folder == path || entry.folder.starts_with(&prefix)));
+
+        if entries.len() != old_len {
             self.write_entries_to_file(&entries).await?;
         }
 

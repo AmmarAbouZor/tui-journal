@@ -220,13 +220,29 @@ pub async fn continue_edit_current_entry<D: DataProvider>(
 
     Ok(HandleInputReturnType::Handled)
 }
-
 pub fn exec_delete_current_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &App<D>,
 ) -> CmdResult {
+    if app.state.folder_nav_mode {
+        if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
+            let mut full_path = ui_components.entries_list.folder_path.clone();
+            full_path.push(folder_name);
+            let path_str = full_path.join("/");
+
+            let msg = MsgBoxType::Question(format!(
+                "Do you want to remove the folder '{}' and all its contents?",
+                path_str
+            ));
+            let msg_actions = MsgBoxActions::YesNo;
+            ui_components.show_msg_box(msg, msg_actions, Some(UICommand::ConfirmDeleteFolder));
+
+            return Ok(HandleInputReturnType::Handled);
+        }
+    }
+
     if app.current_entry_id.is_some() {
-        let msg = MsgBoxType::Question("Do you want to remove the current journal?".into());
+        let msg = MsgBoxType::Question("Do you want to remove the selected journal?".to_string());
         let msg_actions = MsgBoxActions::YesNo;
         ui_components.show_msg_box(msg, msg_actions, Some(UICommand::DeleteCurrentEntry));
     }
@@ -585,7 +601,6 @@ pub fn perform_toggle_view_mode<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) {
-    use crate::app::ui::{Popup, ViewMode, view_mode_popup::ViewModePopup};
     let current = if app.state.folder_nav_mode {
         ViewMode::Folder
     } else {
@@ -675,6 +690,89 @@ pub fn exec_folder_nav_back<D: DataProvider>(
     } else {
         perform_folder_nav_back(ui_components, app);
     }
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn exec_rename_folder<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if !app.state.folder_nav_mode {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
+    perform_rename_folder(ui_components, app);
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn perform_rename_folder<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
+        let mut full_path = ui_components.entries_list.folder_path.clone();
+        full_path.push(folder_name);
+        let path_str = full_path.join("/");
+
+        ui_components
+            .popup_stack
+            .push(Popup::RenameFolder(Box::new(RenameFolderPopup::new(
+                path_str,
+            ))));
+    }
+}
+
+pub fn exec_delete_folder<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &mut App<D>,
+) -> CmdResult {
+    if !app.state.folder_nav_mode {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
+    perform_delete_folder(ui_components, app);
+
+    Ok(HandleInputReturnType::Handled)
+}
+
+pub fn perform_delete_folder<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
+    if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
+        let mut full_path = ui_components.entries_list.folder_path.clone();
+        full_path.push(folder_name);
+        let path_str = full_path.join("/");
+
+        let msg = MsgBoxType::Question(format!(
+            "Do you want to remove the folder '{}' and all its contents?",
+            path_str
+        ));
+        let msg_actions = MsgBoxActions::YesNo;
+        ui_components.show_msg_box(msg, msg_actions, Some(UICommand::ConfirmDeleteFolder));
+    }
+}
+
+pub async fn continue_delete_folder<D: DataProvider>(
+    ui_components: &mut UIComponents<'_>,
+    app: &mut App<D>,
+    msg_box_result: MsgBoxResult,
+) -> CmdResult {
+    match msg_box_result {
+        MsgBoxResult::Yes => {
+            if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
+                let mut full_path = ui_components.entries_list.folder_path.clone();
+                full_path.push(folder_name);
+                let path_str = full_path.join("/");
+
+                app.delete_folder(&path_str).await?;
+                // Refresh the list.
+                ui_components.entries_list.sync_folder_nav_state(app);
+                ui_components.set_current_entry(app.current_entry_id, app);
+            }
+        }
+        MsgBoxResult::No => {}
+        _ => unreachable!(
+            "{:?} not implemented for delete folder",
+            msg_box_result
+        ),
+    }
+
     Ok(HandleInputReturnType::Handled)
 }
 

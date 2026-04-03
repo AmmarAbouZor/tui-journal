@@ -70,6 +70,9 @@ pub enum UICommand {
     ToggleViewMode,
     FolderNavEnter,
     FolderNavBack,
+    RenameFolder,
+    DeleteFolder,
+    ConfirmDeleteFolder,
 }
 
 #[derive(Debug, Clone)]
@@ -236,6 +239,9 @@ impl UICommand {
                 "Go up a folder",
                 "In folder view: navigate up one level in the tag folder hierarchy",
             ),
+            UICommand::RenameFolder => CommandInfo::new("Rename folder", "Rename the selected folder"),
+            UICommand::DeleteFolder => CommandInfo::new("Delete folder", "Delete the selected folder and all its contents"),
+            UICommand::ConfirmDeleteFolder => CommandInfo::new("Confirm delete", "Confirm folder deletion"),
         }
     }
 
@@ -244,6 +250,7 @@ impl UICommand {
         ui_components: &mut UIComponents<'_>,
         app: &mut App<D>,
     ) -> CmdResult {
+        let not_implemented = || unreachable!("exec isn't implemented for {:?}", self);
         match self {
             UICommand::Quit => exec_quit(ui_components),
             UICommand::ShowHelp => exec_show_help(ui_components),
@@ -298,6 +305,9 @@ impl UICommand {
             UICommand::ToggleViewMode => exec_toggle_view_mode(ui_components, app),
             UICommand::FolderNavEnter => exec_folder_nav_enter(ui_components, app),
             UICommand::FolderNavBack => exec_folder_nav_back(ui_components, app),
+            UICommand::RenameFolder => exec_rename_folder(ui_components, app),
+            UICommand::DeleteFolder => exec_delete_folder(ui_components, app),
+            UICommand::ConfirmDeleteFolder => not_implemented(),
         }
     }
 
@@ -433,6 +443,11 @@ impl UICommand {
                     msg_box_result,
                 )
                 .await
+            }
+            UICommand::RenameFolder => not_implemented(),
+            UICommand::DeleteFolder => not_implemented(),
+            UICommand::ConfirmDeleteFolder => {
+                entries_list_cmd::continue_delete_folder(ui_components, app, msg_box_result).await
             }
         }
     }

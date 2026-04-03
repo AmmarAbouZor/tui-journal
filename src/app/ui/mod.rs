@@ -13,6 +13,7 @@ use self::{
     fuzz_find::FuzzFindPopup,
     help_popup::{HelpInputInputReturn, HelpPopup},
     msg_box::{MsgBox, MsgBoxActions, MsgBoxType},
+    rename_folder_popup::{RenameFolderPopup, RenameFolderPopupReturn},
     sort_popup::SortPopup,
     view_mode_popup::ViewModePopup,
 };
@@ -45,6 +46,7 @@ mod footer;
 mod fuzz_find;
 mod help_popup;
 mod msg_box;
+mod rename_folder_popup;
 mod sort_popup;
 pub mod themes;
 pub mod ui_functions;
@@ -71,6 +73,7 @@ pub enum Popup<'a> {
     FuzzFind(Box<FuzzFindPopup<'a>>),
     Sort(Box<SortPopup>),
     ViewMode(Box<ViewModePopup>),
+    RenameFolder(Box<RenameFolderPopup<'a>>),
 }
 
 #[derive(Debug, Clone)]
@@ -208,7 +211,12 @@ impl UIComponents<'_> {
                 }
                 Popup::FuzzFind(fuzz_find) => fuzz_find.render_widget(f, f.area(), &self.styles),
                 Popup::Sort(sort_popup) => sort_popup.render_widget(f, f.area(), &self.styles),
-                Popup::ViewMode(vmp) => vmp.render_widget(f, f.area(), &self.styles),
+                Popup::ViewMode(view_mode_popup) => {
+                    view_mode_popup.render_widget(f, f.area(), &self.styles)
+                }
+                Popup::RenameFolder(rename_folder_popup) => {
+                    rename_folder_popup.render_widget(f, f.area())
+                }
             }
         }
     }
@@ -373,6 +381,22 @@ impl UIComponents<'_> {
                             self.apply_view_mode(mode, app);
                         }
                     },
+                    Popup::RenameFolder(rename_popup) => {
+                        match rename_popup.handle_input(input) {
+                            RenameFolderPopupReturn::Keep => {}
+                            RenameFolderPopupReturn::Cancel => {
+                                self.popup_stack.pop();
+                            }
+                            RenameFolderPopupReturn::Apply(new_path) => {
+                                let old_path = rename_popup.old_path.clone();
+                                self.popup_stack.pop();
+ 
+                                app.rename_folder(&old_path, &new_path).await?;
+                                self.entries_list.sync_folder_nav_state(app);
+                                self.set_current_entry(app.current_entry_id, app);
+                            }
+                        }
+                    }
                 }
                 Ok(HandleInputReturnType::Handled)
             }
@@ -558,6 +582,8 @@ impl UIComponents<'_> {
             ]),
             Line::from("  Right / l : Open folder"),
             Line::from("  Left / h : Go up one level"),
+            Line::from("  r : Rename folder"),
+            Line::from("  d / Del : Delete folder"),
         ];
 
         let paragraph = Paragraph::new(lines)
@@ -568,4 +594,3 @@ impl UIComponents<'_> {
         f.render_widget(paragraph, area);
     }
 }
-

@@ -9,6 +9,7 @@ async fn create_provide_with_two_entries(temp_file: &NamedTempFile) -> JsonDataP
         String::from("Title 1"),
         vec![String::from("Tag_1"), String::from("Tag_2")],
         None,
+        String::new(),
     );
     entry_draft_1.content.push_str("Content entry 1");
     let mut entry_draft_2 = EntryDraft::new(
@@ -16,6 +17,7 @@ async fn create_provide_with_two_entries(temp_file: &NamedTempFile) -> JsonDataP
         String::from("Title 2"),
         Vec::new(),
         Some(1),
+        String::new(),
     );
     entry_draft_2.content.push_str("Content entry 2");
 
@@ -51,6 +53,7 @@ async fn add_entry() {
         String::from("Title added"),
         vec![String::from("Tag_1"), String::from("Tag_3")],
         Some(1),
+        String::new(),
     );
     entry_draft.content.push_str("Content entry added");
 

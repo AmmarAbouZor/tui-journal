@@ -102,16 +102,18 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
                 .filter(|keymap| keymap.command == UICommand::FolderNavEnter)
                 .collect();
 
-            let view_mode_keymap: Vec<_> = ui_components
-                .global_keymaps
-                .iter()
-                .filter(|keymap| keymap.command == UICommand::ToggleViewMode)
-                .collect();
 
             footer_parts.push(get_keymap_text(back_keymap));
             footer_parts.push(get_keymap_text(enter_nav_keymap));
-            footer_parts.push(get_keymap_text(view_mode_keymap));
         }
+
+        let view_mode_keymap: Vec<_> = ui_components
+            .global_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::ToggleViewMode)
+            .collect();
+
+        footer_parts.push(get_keymap_text(view_mode_keymap));
 
         if app.filter.is_none() {
             let show_filter_keymap: Vec<_> = ui_components

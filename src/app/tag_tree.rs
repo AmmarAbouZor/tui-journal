@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 
 use backend::Entry;
 
-/// A node in the tag-based folder hierarchy.
+/// A node in the folder-based hierarchy.
 ///
-/// Tags are split on `.` to build the tree. An entry with tag `linux.ubuntu`
-/// contributes to the node at path `["linux", "ubuntu"]`.
+/// Folders are split on `/` to build the tree. An entry with folder `work/project`
+/// contributes to the node at path `["work", "project"]`.
 ///
-/// **Placement rule:** An entry is placed only at the **deepest** matching
-/// node for each of its tags. Entries with no tags are placed at the root.
+/// **Placement rule:** An entry is placed exactly at the node described by its
+/// `folder` field. Entries with an empty folder are placed at the root.
 #[derive(Debug, Default)]
 pub struct TagTree {
     /// Ordered sub-folders at this level.
@@ -23,14 +23,12 @@ impl TagTree {
         let mut root = TagTree::default();
 
         for entry in entries {
-            if entry.tags.is_empty() {
-                // Entries with no tags live at the root level.
+            if entry.folder.is_empty() {
+                // Entries with no folder live at the root level.
                 root.entry_ids.push(entry.id);
             } else {
-                for tag in &entry.tags {
-                    let segments: Vec<&str> = tag.split('.').collect();
-                    root.insert_entry(entry.id, &segments);
-                }
+                let segments: Vec<&str> = entry.folder.split('/').collect();
+                root.insert_entry(entry.id, &segments);
             }
         }
 
@@ -79,20 +77,21 @@ mod tests {
 
     use super::*;
 
-    fn make_entry(id: u32, tags: Vec<&str>) -> Entry {
+    fn make_entry(id: u32, folder: &str) -> Entry {
         Entry::new(
             id,
             Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap(),
             format!("Entry {id}"),
             String::new(),
-            tags.into_iter().map(String::from).collect(),
+            vec![],
             None,
+            folder.to_string(),
         )
     }
 
     #[test]
-    fn no_tags_entry_goes_to_root() {
-        let entry = make_entry(1, vec![]);
+    fn no_folder_entry_goes_to_root() {
+        let entry = make_entry(1, "");
         let tree = TagTree::build(std::iter::once(&entry));
 
         assert_eq!(tree.entry_ids, vec![1]);
@@ -100,8 +99,8 @@ mod tests {
     }
 
     #[test]
-    fn single_segment_tag_creates_top_level_folder() {
-        let entry = make_entry(1, vec!["rust"]);
+    fn single_segment_folder_creates_top_level_folder() {
+        let entry = make_entry(1, "rust");
         let tree = TagTree::build(std::iter::once(&entry));
 
         assert!(tree.entry_ids.is_empty());
@@ -110,8 +109,8 @@ mod tests {
     }
 
     #[test]
-    fn dotted_tag_places_entry_at_deepest_level_only() {
-        let entry = make_entry(1, vec!["linux.ubuntu"]);
+    fn nested_folder_places_entry_at_deepest_level_only() {
+        let entry = make_entry(1, "linux/ubuntu");
         let tree = TagTree::build(std::iter::once(&entry));
 
         // Root: no entries, one folder "linux"
@@ -124,24 +123,27 @@ mod tests {
     }
 
     #[test]
-    fn entry_with_multiple_tags_appears_in_each_deepest_folder() {
-        let entry = make_entry(1, vec!["linux.ubuntu", "rust"]);
-        let tree = TagTree::build(std::iter::once(&entry));
+    fn entries_in_different_folders_are_separated() {
+        let entry1 = make_entry(1, "rust");
+        let entry2 = make_entry(2, "linux/ubuntu");
+        let tree = TagTree::build(vec![&entry1, &entry2].into_iter());
 
-        let ubuntu = tree
-            .subfolders
-            .get("linux")
-            .and_then(|l| l.subfolders.get("ubuntu"))
-            .unwrap();
-        assert_eq!(ubuntu.entry_ids, vec![1]);
-
-        let rust = tree.subfolders.get("rust").unwrap();
-        assert_eq!(rust.entry_ids, vec![1]);
+        assert_eq!(tree.subfolders.get("rust").unwrap().entry_ids, vec![1]);
+        assert_eq!(
+            tree.subfolders
+                .get("linux")
+                .unwrap()
+                .subfolders
+                .get("ubuntu")
+                .unwrap()
+                .entry_ids,
+            vec![2]
+        );
     }
 
     #[test]
     fn get_node_returns_correct_subtree() {
-        let entry = make_entry(42, vec!["a.b.c"]);
+        let entry = make_entry(42, "a/b/c");
         let tree = TagTree::build(std::iter::once(&entry));
 
         let node = tree.get_node(&["a".into(), "b".into(), "c".into()]);

@@ -13,6 +13,7 @@ pub(crate) struct EntryIntermediate {
     pub priority: Option<u32>,
     /// Tags as a string with commas as separator for the tags
     pub tags: Option<String>,
+    pub folder: String,
 }
 
 impl From<EntryIntermediate> for Entry {
@@ -27,6 +28,7 @@ impl From<EntryIntermediate> for Entry {
                 .tags
                 .map(|tags| tags.split_terminator(',').map(String::from).collect())
                 .unwrap_or_default(),
+            folder: value.folder,
         }
     }
 }
@@ -45,6 +47,7 @@ mod tests {
             content: String::from("Content"),
             priority: Some(2),
             tags: tags.map(String::from),
+            folder: String::from("folder"),
         }
     }
 
@@ -53,6 +56,7 @@ mod tests {
         let entry: Entry = sample_intermediate(None).into();
 
         assert!(entry.tags.is_empty());
+        assert_eq!(entry.folder, "folder");
     }
 
     #[test]

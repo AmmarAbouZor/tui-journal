@@ -18,7 +18,7 @@ use backend::DataProvider;
 use crate::app::App;
 use crate::{app::keymap::Keymap, settings::DatumVisibility};
 
-use super::{Styles, UICommand};
+use super::{Styles, UICommand, themes::JournalsListStyles};
 
 const LIST_INNER_MARGIN: usize = 5;
 
@@ -134,42 +134,9 @@ impl EntriesList {
                 lines_count += date_priority_lines.len();
 
                 // *** Tags ***
-                if !entry.tags.is_empty() {
-                    const TAGS_SEPARATOR: &str = " | ";
-                    let tags_default_style: Style = jstyles.tags_default.into();
+                let added_lines = self.append_entry_tags(entry, &mut spans, area.width as usize, app, jstyles);
 
-                    let mut added_lines = 1;
-                    spans.push(Line::default());
-
-                    for tag in entry.tags.iter() {
-                        let mut last_line = spans.last_mut().unwrap();
-                        let allowd_width = area.width as usize - LIST_INNER_MARGIN;
-                        if !last_line.spans.is_empty() {
-                            if last_line.width() + TAGS_SEPARATOR.len() > allowd_width {
-                                added_lines += 1;
-                                spans.push(Line::default());
-                                last_line = spans.last_mut().unwrap();
-                            }
-                            last_line.push_span(Span::styled(TAGS_SEPARATOR, tags_default_style))
-                        }
-
-                        let style = app
-                            .get_color_for_tag(tag)
-                            .map(|c| Style::default().bg(c.background).fg(c.foreground))
-                            .unwrap_or(tags_default_style);
-                        let span_to_add = Span::styled(tag.to_owned(), style);
-
-                        if last_line.width() + tag.len() < allowd_width {
-                            last_line.push_span(span_to_add);
-                        } else {
-                            added_lines += 1;
-                            let line = Line::from(span_to_add);
-                            spans.push(line);
-                        }
-                    }
-
-                    lines_count += added_lines;
-                }
+                lines_count += added_lines;
 
                 ListItem::new(spans)
             })
@@ -390,8 +357,58 @@ impl EntriesList {
             _ => {}
         }
 
-        let _ = app; // silence if unused by the match above
+        // Tags (same logic as flat view)
+        self.append_entry_tags(entry, &mut spans, width, app, jstyles_inner);
+
         ListItem::new(spans)
+    }
+
+    fn append_entry_tags<'a, D: DataProvider>(
+        &self,
+        entry: &backend::Entry,
+        spans: &mut Vec<Line<'a>>,
+        width: usize,
+        app: &App<D>,
+        jstyles: &JournalsListStyles,
+    ) -> usize {
+        if entry.tags.is_empty() {
+            return 0;
+        }
+
+        const TAGS_SEPARATOR: &str = " | ";
+        let tags_default_style: Style = jstyles.tags_default.into();
+
+        let mut added_lines = 1;
+        spans.push(Line::default());
+
+        for tag in entry.tags.iter() {
+            let mut last_line = spans.last_mut().unwrap();
+            let allowd_width = width.saturating_sub(LIST_INNER_MARGIN);
+            if !last_line.spans.is_empty() {
+                if last_line.width() + TAGS_SEPARATOR.len() > allowd_width {
+                    added_lines += 1;
+                    spans.push(Line::default());
+                    last_line = spans.last_mut().unwrap();
+                }
+                last_line.push_span(Span::styled(TAGS_SEPARATOR, tags_default_style))
+            }
+
+            let style = app
+                .get_color_for_tag(tag)
+                .map(|c| Style::default().bg(c.background).fg(c.foreground))
+                .unwrap_or(tags_default_style);
+            let span_to_add = Span::styled(tag.to_owned(), style);
+
+            if last_line.width() + tag.len() < allowd_width {
+                last_line.push_span(span_to_add);
+            } else {
+                added_lines += 1;
+                let line = Line::from(span_to_add);
+                spans.push(line);
+            }
+        }
+
+        added_lines
     }
 
     /// Return the name of the selected sub-folder (if the current selection is
