@@ -271,7 +271,7 @@ impl UICommand {
             UICommand::EditInExternalEditor => {
                 exec_edit_in_external_editor(ui_components, app).await
             }
-            UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components),
+            UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components, app),
             UICommand::LeaveMultiSelectMode => exec_leave_select_mode(ui_components, app),
             UICommand::MulSelToggleSelected => exec_toggle_selected(app),
             UICommand::MulSelSelectAll => exec_select_all(app),
