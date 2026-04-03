@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   release:
-    if: github.repository == 'AmmarAbouZor/tui-journal'
+    if: github.repository == 'ghifarhaidar/tui-journal'
     name: build-release
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
