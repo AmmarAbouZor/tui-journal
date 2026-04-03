@@ -149,3 +149,38 @@ async fn assign_priority() {
     assert_eq!(entries[0].priority, Some(3));
     assert_eq!(entries[1].priority, Some(1));
 }
+
+#[tokio::test]
+async fn folder_operations() {
+    let provider = create_provider().await;
+
+    let entries = vec![
+        EntryDraft::new(Utc::now(), "A1".into(), vec![], None, "A".into()),
+        EntryDraft::new(Utc::now(), "A2".into(), vec![], None, "A/B".into()),
+        EntryDraft::new(Utc::now(), "W1".into(), vec![], None, "work".into()),
+        EntryDraft::new(Utc::now(), "W2".into(), vec![], None, "workshop".into()),
+    ];
+
+    for draft in entries {
+        provider.add_entry(draft).await.unwrap();
+    }
+
+    // Test Rename: "A" to "X" should update "A" and "A/B"
+    provider.rename_folder("A", "X").await.unwrap();
+    let entries = provider.load_all_entries().await.unwrap();
+    assert!(entries.iter().any(|e| e.title == "A1" && e.folder == "X"));
+    assert!(entries.iter().any(|e| e.title == "A2" && e.folder == "X/B"));
+
+    // Test Rename Safety: Rename "work" to "job"
+    provider.rename_folder("work", "job").await.unwrap();
+    let entries = provider.load_all_entries().await.unwrap();
+    assert!(entries.iter().any(|e| e.title == "W1" && e.folder == "job"));
+    // "workshop" should remain UNCHANGED
+    assert!(entries.iter().any(|e| e.title == "W2" && e.folder == "workshop"));
+
+    // Test Delete: Delete "X" (which contains "X/B")
+    provider.delete_folder("X").await.unwrap();
+    let entries = provider.load_all_entries().await.unwrap();
+    assert_eq!(entries.len(), 2); // Only "job" and "workshop" remaining
+    assert!(!entries.iter().any(|e| e.folder.starts_with("X")));
+}

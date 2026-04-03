@@ -121,6 +121,10 @@ impl DataProvider for JsonDataProvide {
         Ok(())
     }
 
+    /// Renames a folder and its contents recursively.
+    ///
+    /// Iterates through all entries and updates paths.
+    /// Safety: Uses `old_path + "/"` as a prefix to ensure that "work" does not affect "workshop".
     async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
         let mut modified = false;
@@ -144,6 +148,7 @@ impl DataProvider for JsonDataProvide {
         Ok(())
     }
 
+    /// Deletes a folder and its contents recursively.
     async fn delete_folder(&self, path: &str) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
         let old_len = entries.len();

@@ -251,6 +251,10 @@ impl DataProvider for SqliteDataProvide {
         Ok(())
     }
 
+    /// Renames a folder and its contents recursively.
+    ///
+    /// Uses a SQL `CASE` statement to rename exact matches and sub-folder matches (`folder/sub`).
+    /// Safety: Uses `|| '/'` to ensure that renaming "work" does not affect "workshop".
     async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
         sqlx::query(
             r"UPDATE entries
@@ -273,6 +277,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(())
     }
 
+    /// Deletes a folder and its contents recursively.
     async fn delete_folder(&self, path: &str) -> anyhow::Result<()> {
         sqlx::query(
             r"DELETE FROM entries

@@ -44,9 +44,15 @@ pub trait DataProvider {
     }
     /// Assigns priority to all entries that don't have a priority assigned to
     async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()>;
-    /// Renames a folder and all its entries (including sub-folders)
+    /// Renames a folder and all its entries (including all entries in its sub-folders).
+    ///
+    /// The `old_path` must be an exact match or a prefix followed by a slash.
+    /// Example: renaming "work" to "job" will rename "work/project" to "job/project"
+    /// but will NOT affect "workshop".
     async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()>;
-    /// Deletes a folder and all its entries (including sub-folders)
+    /// Deletes a folder and all its entries (including all entries in its sub-folders).
+    ///
+    /// The `path` must be an exact match or a prefix followed by a slash.
     async fn delete_folder(&self, path: &str) -> anyhow::Result<()>;
 }
 

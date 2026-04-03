@@ -41,6 +41,8 @@ impl TagTree {
     }
 
     /// Insert `entry_id` at the deepest node described by `path`.
+    ///
+    /// The `path` is a slice of folder segments (e.g., `["work", "project"]`).
     fn insert_entry(&mut self, entry_id: u32, path: &[&str]) {
         match path {
             [] => {
@@ -162,5 +164,15 @@ mod tests {
                 .entry_ids
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn build_handles_redundant_slashes() {
+        let entry = make_entry(1, "work//project/");
+        let tree = TagTree::build(std::iter::once(&entry));
+
+        let work = tree.subfolders.get("work").expect("work node exists");
+        let project = work.subfolders.get("project").expect("project node exists");
+        assert_eq!(project.entry_ids, vec![1]);
     }
 }
