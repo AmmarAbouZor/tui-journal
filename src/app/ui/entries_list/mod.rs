@@ -27,8 +27,6 @@ pub struct EntriesList {
     pub state: ListState,
     is_active: bool,
     pub multi_select_mode: bool,
-    /// Whether folder navigation mode is active.
-    pub folder_nav_mode: bool,
     /// Current folder path in folder navigation mode (empty = root).
     pub folder_path: Vec<String>,
     /// Selection state for the combined folder+entry list shown in folder nav mode.
@@ -41,7 +39,6 @@ impl EntriesList {
             state: ListState::default(),
             is_active: false,
             multi_select_mode: false,
-            folder_nav_mode: false,
             folder_path: Vec::new(),
             folder_list_state: ListState::default(),
         }
@@ -286,19 +283,6 @@ impl EntriesList {
             block
         };
 
-        // Clamp selection
-        if items_count > 0 {
-            match self.folder_list_state.selected() {
-                None => self.folder_list_state.select(Some(0)),
-                Some(s) if s >= items_count => {
-                    self.folder_list_state.select(Some(items_count - 1))
-                }
-                _ => {}
-            }
-        } else {
-            self.folder_list_state.select(None);
-        }
-
         let list = List::new(items)
             .block(block)
             .highlight_style(highlight_style)
@@ -410,14 +394,6 @@ impl EntriesList {
         ListItem::new(spans)
     }
 
-    /// Return the number of sub-folders visible in the current folder node.
-    pub fn folder_subfolder_count<D: DataProvider>(&self, app: &App<D>) -> usize {
-        let tree = app.get_tag_tree();
-        tree.get_node(&self.folder_path)
-            .map(|n| n.subfolders.len())
-            .unwrap_or(0)
-    }
-
     /// Return the name of the selected sub-folder (if the current selection is
     /// on a folder, not an entry).
     pub fn selected_folder_name<D: DataProvider>(&self, app: &App<D>) -> Option<String> {
@@ -474,6 +450,39 @@ impl EntriesList {
             .map(|s| s.saturating_sub(1))
             .unwrap_or(0);
         self.folder_list_state.select(Some(prev));
+    }
+
+    /// Sync the selection index and update the app's current entry.
+    /// This should be called after any modification to `folder_path` or `folder_list_state`.
+    pub fn sync_folder_nav_state<D: DataProvider>(&mut self, app: &mut App<D>) {
+        if !app.state.folder_nav_mode {
+            return;
+        }
+
+        let tree = app.get_tag_tree();
+        let node = tree.get_node(&self.folder_path);
+
+        let items_count = if let Some(node) = node {
+            node.subfolders.len() + app.get_entries_in_folder(&self.folder_path).count()
+        } else {
+            0
+        };
+
+        if items_count > 0 {
+            match self.folder_list_state.selected() {
+                None => self.folder_list_state.select(Some(0)),
+                Some(s) if s >= items_count => {
+                    self.folder_list_state.select(Some(items_count - 1))
+                }
+                _ => {}
+            }
+        } else {
+            self.folder_list_state.select(None);
+        }
+
+        // Always sync the current entry based on the (potentially clamped) selection.
+        let entry_id = self.selected_folder_entry_id(app);
+        app.current_entry_id = entry_id;
     }
 
     // ────────────────────────────────────────────────────────────────────────────
@@ -578,7 +587,7 @@ impl EntriesList {
         list_keymaps: &[Keymap],
         styles: &Styles,
     ) {
-        if self.folder_nav_mode {
+        if app.state.folder_nav_mode {
             self.render_folder_view(frame, app, area, styles);
         } else if app.get_active_entries().next().is_none() {
             self.render_place_holder(frame, area, list_keymaps, app.filter.is_some(), styles);

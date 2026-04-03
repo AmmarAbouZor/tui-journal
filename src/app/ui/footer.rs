@@ -79,31 +79,41 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
         .filter(|keymap| keymap.command == UICommand::StartEditEntryContent)
         .collect();
 
-    let mut footer_parts = vec![
-        get_keymap_text(close_keymap),
-        get_keymap_text(enter_editor_keymap),
-    ];
+    let mut footer_parts = vec![get_keymap_text(close_keymap.clone())];
+
+    let is_focused_on_folder =
+        app.state.folder_nav_mode && ui_components.entries_list.selected_folder_name(app).is_some();
+
+    if !is_focused_on_folder {
+        footer_parts.push(get_keymap_text(enter_editor_keymap));
+    }
 
     if ui_components.active_control == ControlType::EntriesList {
-        if ui_components.entries_list.folder_nav_mode {
-            // In folder navigation mode — show folder-specific hints.
-            let parts = [
-                "Left/h: Go up".to_owned(),
-                "Right/l: Enter".to_owned(),
-                "b: Switch view".to_owned(),
-                get_keymap_text(
-                    ui_components
-                        .global_keymaps
-                        .iter()
-                        .filter(|k| k.command == UICommand::ShowHelp)
-                        .collect(),
-                ),
-            ];
-            return parts.join(SEPARATOR);
+        if is_focused_on_folder {
+            let back_keymap: Vec<_> = ui_components
+                .entries_list_keymaps
+                .iter()
+                .filter(|keymap| keymap.command == UICommand::FolderNavBack)
+                .collect();
+
+            let enter_nav_keymap: Vec<_> = ui_components
+                .entries_list_keymaps
+                .iter()
+                .filter(|keymap| keymap.command == UICommand::FolderNavEnter)
+                .collect();
+
+            let view_mode_keymap: Vec<_> = ui_components
+                .global_keymaps
+                .iter()
+                .filter(|keymap| keymap.command == UICommand::ToggleViewMode)
+                .collect();
+
+            footer_parts.push(get_keymap_text(back_keymap));
+            footer_parts.push(get_keymap_text(enter_nav_keymap));
+            footer_parts.push(get_keymap_text(view_mode_keymap));
         }
 
         if app.filter.is_none() {
-
             let show_filter_keymap: Vec<_> = ui_components
                 .entries_list_keymaps
                 .iter()

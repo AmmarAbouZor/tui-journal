@@ -15,12 +15,10 @@ pub fn perform_select_prev_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) {
-    if ui_components.entries_list.folder_nav_mode {
+    if app.state.folder_nav_mode {
         ui_components.entries_list.folder_nav_select_prev();
-        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
-            app.current_entry_id = Some(id);
-            ui_components.editor.set_current_entry(Some(id), app);
-        }
+        let entry_id = ui_components.entries_list.selected_folder_entry_id(app);
+        ui_components.set_current_entry(entry_id, app);
     } else {
         select_prev_entry(1, ui_components, app);
     }
@@ -81,12 +79,10 @@ pub fn perform_select_next_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) {
-    if ui_components.entries_list.folder_nav_mode {
+    if app.state.folder_nav_mode {
         ui_components.entries_list.folder_nav_select_next(app);
-        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
-            app.current_entry_id = Some(id);
-            ui_components.editor.set_current_entry(Some(id), app);
-        }
+        let entry_id = ui_components.entries_list.selected_folder_entry_id(app);
+        ui_components.set_current_entry(entry_id, app);
     } else {
         select_next_entry(1, ui_components, app);
     }
@@ -184,6 +180,10 @@ pub fn exec_edit_current_entry<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) -> CmdResult {
+    if app.current_entry_id.is_none() {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
     if ui_components.has_unsaved() {
         ui_components.show_unsaved_msg_box(Some(UICommand::EditCurrentEntry));
     } else {
@@ -583,10 +583,10 @@ pub fn page_down_entries<D: DataProvider>(ui_components: &mut UIComponents, app:
 
 pub fn perform_toggle_view_mode<D: DataProvider>(
     ui_components: &mut UIComponents,
-    _app: &mut App<D>,
+    app: &mut App<D>,
 ) {
     use crate::app::ui::{Popup, ViewMode, view_mode_popup::ViewModePopup};
-    let current = if ui_components.entries_list.folder_nav_mode {
+    let current = if app.state.folder_nav_mode {
         ViewMode::Folder
     } else {
         ViewMode::Flat
@@ -613,7 +613,7 @@ pub fn perform_folder_nav_enter<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) {
-    if !ui_components.entries_list.folder_nav_mode {
+    if !app.state.folder_nav_mode {
         return;
     }
 
@@ -621,13 +621,15 @@ pub fn perform_folder_nav_enter<D: DataProvider>(
     if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
         ui_components.entries_list.folder_path.push(folder_name);
         ui_components.entries_list.folder_list_state.select(Some(0));
+        // Sync the current entry selection with the new folder's content (usually first item).
+        ui_components.entries_list.sync_folder_nav_state(app);
+        ui_components.set_current_entry(app.current_entry_id, app);
         return;
     }
 
     // Otherwise it is an entry row — set it as the active entry.
     if let Some(entry_id) = ui_components.entries_list.selected_folder_entry_id(app) {
-        app.current_entry_id = Some(entry_id);
-        ui_components.editor.set_current_entry(Some(entry_id), app);
+        ui_components.set_current_entry(Some(entry_id), app);
     }
 }
 
@@ -649,19 +651,17 @@ pub fn perform_folder_nav_back<D: DataProvider>(
     ui_components: &mut UIComponents,
     app: &mut App<D>,
 ) {
-    if !ui_components.entries_list.folder_nav_mode {
+    if !app.state.folder_nav_mode {
         return;
     }
 
     if !ui_components.entries_list.folder_path.is_empty() {
         ui_components.entries_list.folder_path.pop();
         ui_components.entries_list.folder_list_state.select(Some(0));
-        
-        // Also update the current entry if index 0 is an entry row.
-        if let Some(id) = ui_components.entries_list.selected_folder_entry_id(app) {
-            app.current_entry_id = Some(id);
-            ui_components.editor.set_current_entry(Some(id), app);
-        }
+
+        // Always update the current entry based on the new selection (usually first item).
+        ui_components.entries_list.sync_folder_nav_state(app);
+        ui_components.set_current_entry(app.current_entry_id, app);
     }
 }
 
@@ -678,35 +678,4 @@ pub fn exec_folder_nav_back<D: DataProvider>(
     Ok(HandleInputReturnType::Handled)
 }
 
-pub async fn continue_folder_nav_back<D: DataProvider>(
-    ui_components: &mut UIComponents<'_>,
-    app: &mut App<D>,
-    msg_box_result: MsgBoxResult,
-) -> CmdResult {
-    match msg_box_result {
-        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
-        MsgBoxResult::Yes => {
-            crate::app::ui::commands::editor_cmd::exec_save_entry_content(ui_components, app).await?;
-            perform_folder_nav_back(ui_components, app);
-        }
-        MsgBoxResult::No => perform_folder_nav_back(ui_components, app),
-    }
-    Ok(HandleInputReturnType::Handled)
-}
-
-pub async fn continue_toggle_view_mode<D: DataProvider>(
-    ui_components: &mut UIComponents<'_>,
-    app: &mut App<D>,
-    msg_box_result: MsgBoxResult,
-) -> CmdResult {
-    match msg_box_result {
-        MsgBoxResult::Ok | MsgBoxResult::Cancel => {}
-        MsgBoxResult::Yes => {
-            crate::app::ui::commands::editor_cmd::exec_save_entry_content(ui_components, app).await?;
-            perform_toggle_view_mode(ui_components, app);
-        }
-        MsgBoxResult::No => perform_toggle_view_mode(ui_components, app),
-    }
-    Ok(HandleInputReturnType::Handled)
-}
 

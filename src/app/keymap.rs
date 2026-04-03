@@ -159,7 +159,6 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT),
             UICommand::Redo,
         ),
-        // Browse / switch view mode between flat-list and folder navigation
         Keymap::new(
             Input::new(KeyCode::Char('b'), KeyModifiers::NONE),
             UICommand::ToggleViewMode,

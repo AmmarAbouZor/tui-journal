@@ -247,14 +247,14 @@ impl UICommand {
         match self {
             UICommand::Quit => exec_quit(ui_components),
             UICommand::ShowHelp => exec_show_help(ui_components),
-            UICommand::CycleFocusedControlForward => exec_cycle_forward(ui_components),
-            UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components),
+            UICommand::CycleFocusedControlForward => exec_cycle_forward(ui_components, app),
+            UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components, app),
             UICommand::SelectedNextEntry => exec_select_next_entry(ui_components, app),
             UICommand::SelectedPrevEntry => exec_select_prev_entry(ui_components, app),
             UICommand::CreateEntry => exec_create_entry(ui_components, app),
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
             UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
-            UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
+            UICommand::StartEditEntryContent => exec_start_edit_content(ui_components, app),
             UICommand::BackEditorNormalMode => exec_back_editor_to_normal_mode(ui_components),
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app).await,
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
@@ -418,7 +418,7 @@ impl UICommand {
             }
             UICommand::ToggleViewMode => {
                 continue_cmd_after_check_unsaved(
-                    entries_list_cmd::perform_folder_nav_enter,
+                    entries_list_cmd::perform_toggle_view_mode,
                     ui_components,
                     app,
                     msg_box_result,
@@ -427,7 +427,7 @@ impl UICommand {
             }
             UICommand::FolderNavBack => {
                 continue_cmd_after_check_unsaved(
-                    entries_list_cmd::perform_folder_nav_enter,
+                    entries_list_cmd::perform_folder_nav_back,
                     ui_components,
                     app,
                     msg_box_result,

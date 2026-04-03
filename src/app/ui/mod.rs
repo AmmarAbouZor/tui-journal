@@ -29,7 +29,10 @@ use anyhow::Result;
 
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 mod commands;
@@ -123,8 +126,12 @@ impl UIComponents<'_> {
     pub fn set_current_entry<D: DataProvider>(&mut self, entry_id: Option<u32>, app: &mut App<D>) {
         app.current_entry_id = entry_id;
         if let Some(id) = entry_id {
-            let entry_index = app.get_active_entries().position(|entry| entry.id == id);
-            self.entries_list.state.select(entry_index);
+            // Only update the flat entries-list's selection index if we're not in folder mode.
+            // In folder mode, we maintain our own folder_list_state separately.
+            if !app.state.folder_nav_mode {
+                let entry_index = app.get_active_entries().position(|entry| entry.id == id);
+                self.entries_list.state.select(entry_index);
+            }
         }
 
         self.editor.set_current_entry(entry_id, app);
@@ -169,8 +176,19 @@ impl UIComponents<'_> {
                 &self.entries_list_keymaps,
                 &self.styles,
             );
-            self.editor
-                .render_widget(f, entries_chunks[1], &self.styles);
+
+            let folder_name = if app.state.folder_nav_mode {
+                self.entries_list.selected_folder_name(app)
+            } else {
+                None
+            };
+
+            if let Some(folder_name) = folder_name {
+                self.render_folder_info(f, entries_chunks[1], folder_name, app);
+            } else {
+                self.editor
+                    .render_widget(f, entries_chunks[1], &self.styles);
+            }
         }
 
         self.render_popup(f);
@@ -414,10 +432,6 @@ impl UIComponents<'_> {
     }
 
     fn start_edit_current_entry(&mut self) -> Result<HandleInputReturnType> {
-        if self.entries_list.state.selected().is_none() {
-            return Ok(HandleInputReturnType::Handled);
-        }
-
         self.change_active_control(ControlType::EntryContentTxt);
 
         assert!(!self.editor.is_insert_mode());
@@ -457,28 +471,40 @@ impl UIComponents<'_> {
     }
 
     pub fn update_current_entry<D: DataProvider>(&mut self, app: &mut App<D>) {
-        if app.get_current_entry().is_none() {
+        if app.state.folder_nav_mode {
+            let prev_id = app.current_entry_id;
+            self.sync_folder_nav_state(app);
+            if prev_id != app.current_entry_id {
+                self.editor.set_current_entry(app.current_entry_id, app);
+            }
+        } else if app.get_current_entry().is_none() {
             let first_entry = app.get_active_entries().next().map(|entry| entry.id);
             self.set_current_entry(first_entry, app);
         }
     }
 
+    pub fn sync_folder_nav_state<D: DataProvider>(&mut self, app: &mut App<D>) {
+        self.entries_list.sync_folder_nav_state(app);
+    }
+
     /// Switch between flat-list view and folder navigation view.
     pub fn apply_view_mode<D: DataProvider>(&mut self, mode: ViewMode, app: &mut App<D>) {
-        let was_folder = self.entries_list.folder_nav_mode;
+        let was_folder = app.state.folder_nav_mode;
         let is_folder = mode == ViewMode::Folder;
 
         if was_folder == is_folder {
             return; // nothing to do
         }
 
-        self.entries_list.folder_nav_mode = is_folder;
+        app.state.folder_nav_mode = is_folder;
 
         if is_folder {
             // Reset folder path to root and clear folder list selection.
             self.entries_list.folder_path.clear();
             self.entries_list.folder_list_state.select(Some(0));
-            // Keep the current entry selection intact so the editor is not disrupted.
+            // Sync the current entry selection with the folder selection.
+            self.entries_list.sync_folder_nav_state(app);
+            self.set_current_entry(app.current_entry_id, app);
         } else {
             // Coming back to flat mode — re-select the current entry so the list
             // highlights correctly.
@@ -486,9 +512,60 @@ impl UIComponents<'_> {
         }
     }
 
-    /// Returns `true` when the entries list is in folder navigation mode.
-    pub fn is_folder_nav_mode(&self) -> bool {
-        self.entries_list.folder_nav_mode
+    fn render_folder_info<D: DataProvider>(
+        &self,
+        f: &mut Frame,
+        area: Rect,
+        folder_name: String,
+        app: &App<D>,
+    ) {
+        let tree = app.get_tag_tree();
+        let current_path = &self.entries_list.folder_path;
+        let mut path_to_query = current_path.clone();
+        path_to_query.push(folder_name.clone());
+
+        let node = tree.get_node(&path_to_query);
+        let subfolder_count = node.map(|n| n.subfolders.len()).unwrap_or(0);
+        let entry_count = app.get_entries_in_folder(&path_to_query).count();
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(self.styles.editor.block_normal_active)
+            .title(format!(" Folder: {folder_name} "));
+
+        let mut path_str = "/".to_string();
+        for p in current_path {
+            path_str.push_str(p);
+            path_str.push_str(" / ");
+        }
+        path_str.push_str(&folder_name);
+
+        let lines = vec![
+            Line::from(vec![
+                Span::styled("Path: ", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(path_str),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Contains:", Style::default().add_modifier(Modifier::BOLD)),
+            ]),
+            Line::from(format!("  • {subfolder_count} sub-folder(s)")),
+            Line::from(format!("  • {entry_count} journal entry(ies)")),
+            Line::from(""),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Actions:", Style::default().add_modifier(Modifier::BOLD)),
+            ]),
+            Line::from("  Right / l : Open folder"),
+            Line::from("  Left / h : Go up one level"),
+        ];
+
+        let paragraph = Paragraph::new(lines)
+            .block(block)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: true });
+
+        f.render_widget(paragraph, area);
     }
 }
 

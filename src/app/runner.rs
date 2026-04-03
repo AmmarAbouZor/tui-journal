@@ -92,7 +92,12 @@ where
         ui_components.show_err_msg(err.to_string());
     }
 
-    ui_components.set_current_entry(app.entries.first().map(|entry| entry.id), &mut app);
+    if app.state.folder_nav_mode {
+        ui_components.sync_folder_nav_state(&mut app);
+        ui_components.set_current_entry(app.current_entry_id, &mut app);
+    } else {
+        ui_components.set_current_entry(app.entries.first().map(|entry| entry.id), &mut app);
+    }
 
     draw_ui(terminal, &mut app, &mut ui_components)?;
 
