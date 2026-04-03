@@ -67,6 +67,11 @@ pub enum UICommand {
     PageDownEntries,
     Undo,
     Redo,
+    ToggleViewMode,
+    FolderNavEnter,
+    FolderNavBack,
+    RenameFolder,
+    ConfirmDeleteFolder,
 }
 
 #[derive(Debug, Clone)]
@@ -112,7 +117,10 @@ impl UICommand {
                 "Open entry dialog to edit current journal entry if any",
             ),
             UICommand::DeleteCurrentEntry => {
-                CommandInfo::new("Delete journal", "Delete current journal entry if any")
+                CommandInfo::new(
+                    "Delete journal / folder",
+                    "Delete current journal entry or selected folder (recursive) if any",
+                )
             }
             UICommand::StartEditEntryContent => CommandInfo::new(
                 "Edit journal content",
@@ -221,6 +229,20 @@ impl UICommand {
             ),
             UICommand::Undo => CommandInfo::new("Undo", "Undo the latest change on journals"),
             UICommand::Redo => CommandInfo::new("Redo", "Redo the latest change on journals"),
+            UICommand::ToggleViewMode => CommandInfo::new(
+                "Switch view mode",
+                "Switch between flat list view and folder navigation view (based on tags)",
+            ),
+            UICommand::FolderNavEnter => CommandInfo::new(
+                "Enter folder / select entry",
+                "In folder view: enter the selected sub-folder or open the selected journal",
+            ),
+            UICommand::FolderNavBack => CommandInfo::new(
+                "Go up a folder",
+                "In folder view: navigate up one level in the tag folder hierarchy",
+            ),
+            UICommand::RenameFolder => CommandInfo::new("Rename folder", "Rename the selected folder"),
+            UICommand::ConfirmDeleteFolder => CommandInfo::new("Confirm delete", "Confirm folder deletion"),
         }
     }
 
@@ -229,17 +251,18 @@ impl UICommand {
         ui_components: &mut UIComponents<'_>,
         app: &mut App<D>,
     ) -> CmdResult {
+        let not_implemented = || unreachable!("exec isn't implemented for {:?}", self);
         match self {
             UICommand::Quit => exec_quit(ui_components),
             UICommand::ShowHelp => exec_show_help(ui_components),
-            UICommand::CycleFocusedControlForward => exec_cycle_forward(ui_components),
-            UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components),
+            UICommand::CycleFocusedControlForward => exec_cycle_forward(ui_components, app),
+            UICommand::CycleFocusedControlBack => exec_cycle_backward(ui_components, app),
             UICommand::SelectedNextEntry => exec_select_next_entry(ui_components, app),
             UICommand::SelectedPrevEntry => exec_select_prev_entry(ui_components, app),
             UICommand::CreateEntry => exec_create_entry(ui_components, app),
             UICommand::EditCurrentEntry => exec_edit_current_entry(ui_components, app),
             UICommand::DeleteCurrentEntry => exec_delete_current_entry(ui_components, app),
-            UICommand::StartEditEntryContent => exec_start_edit_content(ui_components),
+            UICommand::StartEditEntryContent => exec_start_edit_content(ui_components, app),
             UICommand::BackEditorNormalMode => exec_back_editor_to_normal_mode(ui_components),
             UICommand::SaveEntryContent => exec_save_entry_content(ui_components, app).await,
             UICommand::DiscardChangesEntryContent => exec_discard_content(ui_components),
@@ -248,7 +271,7 @@ impl UICommand {
             UICommand::EditInExternalEditor => {
                 exec_edit_in_external_editor(ui_components, app).await
             }
-            UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components),
+            UICommand::EnterMultiSelectMode => exec_enter_select_mode(ui_components, app),
             UICommand::LeaveMultiSelectMode => exec_leave_select_mode(ui_components, app),
             UICommand::MulSelToggleSelected => exec_toggle_selected(app),
             UICommand::MulSelSelectAll => exec_select_all(app),
@@ -280,6 +303,11 @@ impl UICommand {
             }
             UICommand::Undo => exec_undo(ui_components, app).await,
             UICommand::Redo => exec_redo(ui_components, app).await,
+            UICommand::ToggleViewMode => exec_toggle_view_mode(ui_components, app),
+            UICommand::FolderNavEnter => exec_folder_nav_enter(ui_components, app),
+            UICommand::FolderNavBack => exec_folder_nav_back(ui_components, app),
+            UICommand::RenameFolder => exec_rename_folder(ui_components, app),
+            UICommand::ConfirmDeleteFolder => not_implemented(),
         }
     }
 
@@ -389,6 +417,37 @@ impl UICommand {
             }
             UICommand::Undo => continue_undo(ui_components, app, msg_box_result).await,
             UICommand::Redo => continue_redo(ui_components, app, msg_box_result).await,
+            UICommand::FolderNavEnter => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_folder_nav_enter,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::ToggleViewMode => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_toggle_view_mode,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::FolderNavBack => {
+                continue_cmd_after_check_unsaved(
+                    entries_list_cmd::perform_folder_nav_back,
+                    ui_components,
+                    app,
+                    msg_box_result,
+                )
+                .await
+            }
+            UICommand::RenameFolder => not_implemented(),
+            UICommand::ConfirmDeleteFolder => {
+                entries_list_cmd::continue_delete_folder(ui_components, app, msg_box_result).await
+            }
         }
     }
 }

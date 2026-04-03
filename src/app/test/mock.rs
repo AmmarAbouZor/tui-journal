@@ -105,4 +105,12 @@ impl DataProvider for MockDataProvider {
     async fn assign_priority_to_entries(&self, _priority: u32) -> anyhow::Result<()> {
         unimplemented!("There are not tests for assigning priority on the app level");
     }
+
+    async fn rename_folder(&self, _old_path: &str, _new_path: &str) -> anyhow::Result<()> {
+        unimplemented!("There are not tests for renaming folders on the app level");
+    }
+
+    async fn delete_folder(&self, _path: &str) -> anyhow::Result<()> {
+        unimplemented!("There are not tests for deleting folders on the app level");
+    }
 }

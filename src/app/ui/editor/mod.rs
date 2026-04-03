@@ -31,6 +31,7 @@ pub struct Editor<'a> {
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,
+    entry_id: Option<u32>,
 }
 
 impl From<&Input> for KeyEvent {
@@ -54,6 +55,7 @@ impl<'a> Editor<'a> {
             is_active: false,
             is_dirty: false,
             has_unsaved: false,
+            entry_id: None,
         }
     }
 
@@ -90,8 +92,13 @@ impl<'a> Editor<'a> {
         };
 
         self.text_area = text_area;
+        self.entry_id = entry_id;
 
         self.refresh_has_unsaved(app);
+    }
+
+    pub fn get_current_entry_id(&self) -> Option<u32> {
+        self.entry_id
     }
 
     pub fn handle_input_prioritized<D: DataProvider>(
@@ -463,7 +470,7 @@ impl<'a> Editor<'a> {
     pub fn refresh_has_unsaved<D: DataProvider>(&mut self, app: &App<D>) {
         self.has_unsaved = match self.is_dirty {
             true => {
-                if let Some(entry) = app.get_current_entry() {
+                if let Some(entry) = self.entry_id.and_then(|id| app.get_entry(id)) {
                     self.is_dirty && entry.content != self.get_content()
                 } else {
                     false

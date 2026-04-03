@@ -62,6 +62,8 @@ pub struct Settings {
     pub datum_visibility: DatumVisibility,
     /// Overwrite the path for the directory used to persist the app state.
     pub app_state_dir: Option<PathBuf>,
+    #[serde(default)]
+    pub folder_nav_mode: bool,
 }
 
 impl Default for Settings {
@@ -81,6 +83,7 @@ impl Default for Settings {
             colored_tags: default_colored_tags(),
             datum_visibility: Default::default(),
             app_state_dir: Default::default(),
+            folder_nav_mode: Default::default(),
         }
     }
 }
@@ -173,6 +176,7 @@ impl Settings {
             colored_tags: _,
             datum_visibility: _,
             app_state_dir: _,
+            folder_nav_mode: _,
         } = self;
 
         if self.backend_type.is_none() {

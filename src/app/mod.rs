@@ -25,9 +25,12 @@ mod keymap;
 mod runner;
 mod sorter;
 pub mod state;
+mod tag_tree;
 #[cfg(test)]
 mod test;
 pub mod ui;
+
+pub use tag_tree::TagTree;
 
 pub use runner::HandleInputReturnType;
 pub use runner::run;
@@ -142,8 +145,9 @@ where
         date: DateTime<Utc>,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
     ) -> anyhow::Result<u32> {
-        self.add_entry_intern(title, date, tags, priority, None, HistoryStack::Undo)
+        self.add_entry_intern(title, date, tags, priority, folder, None, HistoryStack::Undo)
             .await
     }
 
@@ -155,12 +159,13 @@ where
         date: DateTime<Utc>,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
         content: Option<String>,
         history_target: HistoryStack,
     ) -> anyhow::Result<u32> {
         log::trace!("Adding entry");
 
-        let mut draft = EntryDraft::new(date, title, tags, priority);
+        let mut draft = EntryDraft::new(date, title, tags, priority, folder);
         if let Some(content) = content {
             draft = draft.with_content(content);
         }
@@ -186,6 +191,7 @@ where
         date: DateTime<Utc>,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
     ) -> anyhow::Result<()> {
         let current_entry_id = self
             .current_entry_id
@@ -196,6 +202,7 @@ where
             date,
             tags,
             priority,
+            folder,
             HistoryStack::Undo,
         )
         .await
@@ -210,6 +217,7 @@ where
         date: DateTime<Utc>,
         tags: Vec<String>,
         priority: Option<u32>,
+        folder: String,
         history_target: HistoryStack,
     ) -> anyhow::Result<()> {
         log::trace!("Updating entry");
@@ -224,6 +232,7 @@ where
         entry.date = date;
         entry.tags = tags;
         entry.priority = priority;
+        entry.folder = folder;
 
         let clone = entry.clone();
 
@@ -236,18 +245,6 @@ where
         self.update_colored_tags();
 
         Ok(())
-    }
-
-    /// Updates the content of the currently selected [`Entry`]
-    pub async fn update_current_entry_content(
-        &mut self,
-        entry_content: String,
-    ) -> anyhow::Result<()> {
-        let current_entry_id = self
-            .current_entry_id
-            .expect("Current entry id must have value when updating entry content");
-        self.update_entry_content(current_entry_id, entry_content, HistoryStack::Undo)
-            .await
     }
 
     /// Update the content of the given [`Entry`], registering its previous content to the given
@@ -358,6 +355,44 @@ where
         }
 
         tags.into_iter().map(String::from).collect()
+    }
+
+    pub fn get_all_folders(&self) -> Vec<String> {
+        let mut folders = BTreeSet::new();
+
+        for folder in self.entries.iter().map(|entry| &entry.folder) {
+            if !folder.is_empty() {
+                folders.insert(folder);
+            }
+        }
+
+        folders.into_iter().map(String::from).collect()
+    }
+
+    /// Build a `TagTree` from the currently active (non-filtered-out) entries.
+    pub fn get_tag_tree(&self) -> TagTree {
+        TagTree::build(self.get_active_entries())
+    }
+
+    /// Returns active entries whose folder matches exactly the given folder
+    /// `path` in the hierarchy.
+    ///
+    /// * An empty `path` returns entries with **no folder** (root-level entries).
+    /// * A non-empty `path` returns entries that have a folder equal to the
+    ///   joined path segments with `/` (e.g. path `["work", "project"]` matches
+    ///   entries with folder `work/project`).
+    pub fn get_entries_in_folder<'a>(
+        &'a self,
+        path: &'a [String],
+    ) -> impl Iterator<Item = &'a Entry> {
+        let expected_folder = if path.is_empty() {
+            String::new()
+        } else {
+            path.join("/")
+        };
+
+        self.get_active_entries()
+            .filter(move |entry| entry.folder == expected_folder)
     }
 
     /// Sets and applies the given filter on the entries
@@ -573,6 +608,7 @@ where
                         entry.date,
                         entry.tags,
                         entry.priority,
+                        entry.folder,
                         Some(entry.content),
                         history_target,
                     )
@@ -588,6 +624,7 @@ where
                     attr.date,
                     attr.tags,
                     attr.priority,
+                    attr.folder,
                     history_target,
                 )
                 .await?;
@@ -601,6 +638,45 @@ where
                 Ok(Some(id))
             }
         }
+    }
+
+    pub async fn rename_folder(&mut self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
+        log::trace!("Renaming folder {} to {}", old_path, new_path);
+
+        self.data_provide.rename_folder(old_path, new_path).await?;
+
+        let old_prefix = format!("{}/", old_path);
+
+        for entry in self.entries.iter_mut() {
+            if entry.folder == old_path {
+                entry.folder = new_path.to_string();
+            } else if entry.folder.starts_with(&old_prefix) {
+                entry.folder = format!("{}{}", new_path, &entry.folder[old_path.len()..]);
+            }
+        }
+
+        self.sort_entries();
+        self.update_filtered_out_entries();
+        // Colored tags are not affected since we only changed the folder field
+
+        Ok(())
+    }
+
+    pub async fn delete_folder(&mut self, path: &str) -> anyhow::Result<()> {
+        log::trace!("Deleting folder {}", path);
+
+        self.data_provide.delete_folder(path).await?;
+
+        let prefix = format!("{}/", path);
+
+        self.entries
+            .retain(|entry| !(entry.folder == path || entry.folder.starts_with(&prefix)));
+
+        self.update_filter();
+        self.update_filtered_out_entries();
+        self.update_colored_tags();
+
+        Ok(())
     }
 }
 
