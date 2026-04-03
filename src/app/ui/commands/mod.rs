@@ -71,7 +71,6 @@ pub enum UICommand {
     FolderNavEnter,
     FolderNavBack,
     RenameFolder,
-    DeleteFolder,
     ConfirmDeleteFolder,
 }
 
@@ -118,7 +117,10 @@ impl UICommand {
                 "Open entry dialog to edit current journal entry if any",
             ),
             UICommand::DeleteCurrentEntry => {
-                CommandInfo::new("Delete journal", "Delete current journal entry if any")
+                CommandInfo::new(
+                    "Delete journal / folder",
+                    "Delete current journal entry or selected folder (recursive) if any",
+                )
             }
             UICommand::StartEditEntryContent => CommandInfo::new(
                 "Edit journal content",
@@ -240,7 +242,6 @@ impl UICommand {
                 "In folder view: navigate up one level in the tag folder hierarchy",
             ),
             UICommand::RenameFolder => CommandInfo::new("Rename folder", "Rename the selected folder"),
-            UICommand::DeleteFolder => CommandInfo::new("Delete folder", "Delete the selected folder and all its contents"),
             UICommand::ConfirmDeleteFolder => CommandInfo::new("Confirm delete", "Confirm folder deletion"),
         }
     }
@@ -306,7 +307,6 @@ impl UICommand {
             UICommand::FolderNavEnter => exec_folder_nav_enter(ui_components, app),
             UICommand::FolderNavBack => exec_folder_nav_back(ui_components, app),
             UICommand::RenameFolder => exec_rename_folder(ui_components, app),
-            UICommand::DeleteFolder => exec_delete_folder(ui_components, app),
             UICommand::ConfirmDeleteFolder => not_implemented(),
         }
     }
@@ -445,7 +445,6 @@ impl UICommand {
                 .await
             }
             UICommand::RenameFolder => not_implemented(),
-            UICommand::DeleteFolder => not_implemented(),
             UICommand::ConfirmDeleteFolder => {
                 entries_list_cmd::continue_delete_folder(ui_components, app, msg_box_result).await
             }

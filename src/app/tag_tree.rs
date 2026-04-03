@@ -23,11 +23,16 @@ impl TagTree {
         let mut root = TagTree::default();
 
         for entry in entries {
-            if entry.folder.is_empty() {
-                // Entries with no folder live at the root level.
+            let segments: Vec<&str> = entry
+                .folder
+                .split('/')
+                .filter(|s| !s.is_empty())
+                .collect();
+
+            if segments.is_empty() {
+                // Entries with no folder (or only slashes) live at the root level.
                 root.entry_ids.push(entry.id);
             } else {
-                let segments: Vec<&str> = entry.folder.split('/').collect();
                 root.insert_entry(entry.id, &segments);
             }
         }

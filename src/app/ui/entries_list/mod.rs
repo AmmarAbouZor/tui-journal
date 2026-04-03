@@ -272,11 +272,7 @@ impl EntriesList {
     }
 
     fn build_breadcrumb(&self) -> String {
-        if self.folder_path.is_empty() {
-            "  /".to_owned()
-        } else {
-            format!("  / {}", self.folder_path.join(" / "))
-        }
+        format!("  /{}", self.folder_path.join("/"))
     }
 
     fn get_folder_view_block_title(&self) -> String {

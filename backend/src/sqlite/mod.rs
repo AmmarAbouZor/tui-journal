@@ -252,21 +252,17 @@ impl DataProvider for SqliteDataProvide {
     }
 
     async fn rename_folder(&self, old_path: &str, new_path: &str) -> anyhow::Result<()> {
-        let old_path_match = format!("{}%", old_path);
-        let old_path_exact = old_path.to_string();
-
         sqlx::query(
             r"UPDATE entries
             SET folder = CASE
                 WHEN folder = $1 THEN $2
-                WHEN folder LIKE $3 THEN $2 || SUBSTR(folder, LENGTH($1) + 1)
+                WHEN folder LIKE $1 || '/%' THEN $2 || SUBSTR(folder, LENGTH($1) + 1)
                 ELSE folder
             END
-            WHERE folder = $1 OR folder LIKE $3",
+            WHERE folder = $1 OR folder LIKE $1 || '/%'",
         )
-        .bind(&old_path_exact)
+        .bind(old_path)
         .bind(new_path)
-        .bind(&old_path_match)
         .execute(&self.pool)
         .await
         .map_err(|err| {
@@ -278,15 +274,11 @@ impl DataProvider for SqliteDataProvide {
     }
 
     async fn delete_folder(&self, path: &str) -> anyhow::Result<()> {
-        let path_match = format!("{}%", path);
-        let path_exact = path.to_string();
-
         sqlx::query(
             r"DELETE FROM entries
-            WHERE folder = $1 OR folder LIKE $2",
+            WHERE folder = $1 OR folder LIKE $1 || '/%'",
         )
-        .bind(&path_exact)
-        .bind(&path_match)
+        .bind(path)
         .execute(&self.pool)
         .await
         .map_err(|err| {

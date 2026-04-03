@@ -276,14 +276,6 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('r'), KeyModifiers::NONE),
             UICommand::RenameFolder,
         ),
-        Keymap::new(
-            Input::new(KeyCode::Char('d'), KeyModifiers::NONE),
-            UICommand::DeleteFolder,
-        ),
-        Keymap::new(
-            Input::new(KeyCode::Delete, KeyModifiers::NONE),
-            UICommand::DeleteFolder,
-        ),
     ]
 }
 

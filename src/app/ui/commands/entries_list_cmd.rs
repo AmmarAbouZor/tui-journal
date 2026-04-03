@@ -720,34 +720,6 @@ pub fn perform_rename_folder<D: DataProvider>(ui_components: &mut UIComponents, 
     }
 }
 
-pub fn exec_delete_folder<D: DataProvider>(
-    ui_components: &mut UIComponents,
-    app: &mut App<D>,
-) -> CmdResult {
-    if !app.state.folder_nav_mode {
-        return Ok(HandleInputReturnType::Handled);
-    }
-
-    perform_delete_folder(ui_components, app);
-
-    Ok(HandleInputReturnType::Handled)
-}
-
-pub fn perform_delete_folder<D: DataProvider>(ui_components: &mut UIComponents, app: &mut App<D>) {
-    if let Some(folder_name) = ui_components.entries_list.selected_folder_name(app) {
-        let mut full_path = ui_components.entries_list.folder_path.clone();
-        full_path.push(folder_name);
-        let path_str = full_path.join("/");
-
-        let msg = MsgBoxType::Question(format!(
-            "Do you want to remove the folder '{}' and all its contents?",
-            path_str
-        ));
-        let msg_actions = MsgBoxActions::YesNo;
-        ui_components.show_msg_box(msg, msg_actions, Some(UICommand::ConfirmDeleteFolder));
-    }
-}
-
 pub async fn continue_delete_folder<D: DataProvider>(
     ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
