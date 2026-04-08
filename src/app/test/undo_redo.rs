@@ -11,7 +11,7 @@ async fn add() {
     let added_title = "Added";
 
     let id = app
-        .add_entry(added_title.into(), DateTime::default(), vec![], None)
+        .add_entry(added_title.into(), DateTime::default(), vec![], None, String::new())
         .await
         .unwrap();
 
@@ -76,6 +76,7 @@ async fn update_attributes() {
         current.date,
         current.tags.to_owned(),
         current.priority,
+        current.folder.to_owned(),
     )
     .await
     .unwrap();
@@ -107,7 +108,7 @@ async fn update_content() {
     let original_content = current.content.to_owned();
     let changed_content = "Changed_content";
 
-    app.update_current_entry_content(changed_content.into())
+    app.update_entry_content(id, changed_content.into(), crate::app::HistoryStack::Undo)
         .await
         .unwrap();
 

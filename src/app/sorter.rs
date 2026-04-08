@@ -114,6 +114,7 @@ mod test {
                 String::from("Content 2"),
                 vec![],
                 Some(1),
+                String::new(),
             ),
             Entry::new(
                 1,
@@ -122,6 +123,7 @@ mod test {
                 String::from("Content 1"),
                 vec![String::from("Tag 1"), String::from("Tag 2")],
                 None,
+                String::new(),
             ),
             Entry::new(
                 2,
@@ -130,6 +132,7 @@ mod test {
                 String::from("Content 3"),
                 vec![],
                 Some(2),
+                String::new(),
             ),
         ]
     }

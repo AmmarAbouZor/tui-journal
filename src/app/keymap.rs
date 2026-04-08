@@ -8,6 +8,7 @@ use super::ui::UICommand;
 pub struct Input {
     pub key_code: KeyCode,
     pub modifiers: KeyModifiers,
+    pub key_event: KeyEvent,
 }
 
 impl Input {
@@ -15,6 +16,7 @@ impl Input {
         Self {
             key_code,
             modifiers,
+            key_event: KeyEvent::new(key_code, modifiers),
         }
     }
 }
@@ -24,6 +26,7 @@ impl From<&KeyEvent> for Input {
         Self {
             key_code: key_event.code,
             modifiers: key_event.modifiers,
+            key_event: *key_event,
         }
     }
 }
@@ -159,6 +162,10 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::Char('U'), KeyModifiers::SHIFT),
             UICommand::Redo,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('b'), KeyModifiers::NONE),
+            UICommand::ToggleViewMode,
+        ),
     ]
 }
 
@@ -247,6 +254,27 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::PageDown, KeyModifiers::NONE),
             UICommand::PageDownEntries,
+        ),
+        // Folder navigation (Right/l = enter, Left/h = back)
+        Keymap::new(
+            Input::new(KeyCode::Right, KeyModifiers::NONE),
+            UICommand::FolderNavEnter,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('l'), KeyModifiers::NONE),
+            UICommand::FolderNavEnter,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Left, KeyModifiers::NONE),
+            UICommand::FolderNavBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('h'), KeyModifiers::NONE),
+            UICommand::FolderNavBack,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('r'), KeyModifiers::NONE),
+            UICommand::RenameFolder,
         ),
     ]
 }

@@ -48,7 +48,17 @@ pub fn exec_show_help(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_cycle_forward(ui_components: &mut UIComponents) -> CmdResult {
+pub fn exec_cycle_forward<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    let is_on_folder = app.state.folder_nav_mode
+        && ui_components.entries_list.selected_folder_name(app).is_some();
+
+    if ui_components.active_control == ControlType::EntriesList && (app.current_entry_id.is_none() || is_on_folder) {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
     let next_control = match ui_components.active_control {
         ControlType::EntriesList => ControlType::EntryContentTxt,
         ControlType::EntryContentTxt => ControlType::EntriesList,
@@ -58,7 +68,17 @@ pub fn exec_cycle_forward(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> CmdResult {
+pub fn exec_cycle_backward<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    let is_on_folder = app.state.folder_nav_mode
+        && ui_components.entries_list.selected_folder_name(app).is_some();
+
+    if ui_components.active_control == ControlType::EntriesList && (app.current_entry_id.is_none() || is_on_folder) {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
     let prev_control = match ui_components.active_control {
         ControlType::EntriesList => ControlType::EntryContentTxt,
         ControlType::EntryContentTxt => ControlType::EntriesList,
@@ -69,8 +89,13 @@ pub fn exec_cycle_backward(ui_components: &mut UIComponents) -> CmdResult {
     Ok(HandleInputReturnType::Handled)
 }
 
-pub fn exec_start_edit_content(ui_components: &mut UIComponents) -> CmdResult {
-    ui_components.start_edit_current_entry()?;
+pub fn exec_start_edit_content<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    if app.current_entry_id.is_some() {
+        ui_components.start_edit_current_entry()?;
+    }
 
     Ok(HandleInputReturnType::Handled)
 }
