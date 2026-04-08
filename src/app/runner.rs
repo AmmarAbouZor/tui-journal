@@ -12,6 +12,8 @@ use backend::DataProvider;
 use backend::JsonDataProvide;
 #[cfg(feature = "sqlite")]
 use backend::SqliteDataProvide;
+#[cfg(feature = "vjournal")]
+use backend::VjournalDataProvide;
 
 use super::keymap::Input;
 use super::ui::Styles;
@@ -62,6 +64,22 @@ pub async fn run<B: Backend>(
         BackendType::Sqlite => {
             anyhow::bail!(
                 "Feature 'sqlite' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the program with 'sqlite' feature"
+            )
+        }
+        #[cfg(feature = "vjournal")]
+        BackendType::Vjournal => {
+            let directory = if let Some(dir) = &settings.vjournal_backend.directory {
+                dir.clone()
+            } else {
+                crate::settings::vjournal_backend::get_default_vjournal_path()?
+            };
+            let data_provider = VjournalDataProvide::new(directory);
+            run_intern(terminal, data_provider, settings, styles, pending_cmd).await
+        }
+        #[cfg(not(feature = "vjournal"))]
+        BackendType::Vjournal => {
+            anyhow::bail!(
+                "Feature 'vjournal' is not installed. Please check your configs and set your backend to an installed feature, or reinstall the program with 'vjournal' feature"
             )
         }
     }
