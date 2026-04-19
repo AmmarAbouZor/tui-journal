@@ -5,10 +5,15 @@ use backend::DataProvider;
 use super::{ClipboardOperation, CmdResult};
 
 pub fn exec_back_editor_to_normal_mode(ui_components: &mut UIComponents) -> CmdResult {
-    if ui_components.active_control == ControlType::EntryContentTxt
-        && ui_components.editor.is_prioritized()
-    {
-        ui_components.editor.set_editor_mode(EditorMode::Normal);
+    if ui_components.active_control == ControlType::EntryContentTxt {
+        match ui_components.editor.get_editor_mode() {
+            EditorMode::Insert | EditorMode::Visual => {
+                ui_components.editor.set_editor_mode(EditorMode::Normal);
+            }
+            EditorMode::Normal => {
+                ui_components.change_active_control(ControlType::EntriesList);
+            }
+        }
     }
 
     Ok(HandleInputReturnType::Handled)

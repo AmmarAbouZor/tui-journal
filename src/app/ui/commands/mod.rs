@@ -119,8 +119,8 @@ impl UICommand {
                 "Start editing current journal entry content in editor",
             ),
             UICommand::BackEditorNormalMode => CommandInfo::new(
-                "Back to Editor Normal Mode",
-                "Exit editor special modes (insert, visual) and go back to normal mode",
+                "Back to Editor Normal Mode / Leave Editor",
+                "Exit editor special modes (insert, visual) and go back to normal mode. If already in normal mode, leave the editor and return focus to the entries list",
             ),
             UICommand::SaveEntryContent => {
                 CommandInfo::new("Save", "Save changes on journal content")
