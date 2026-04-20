@@ -62,22 +62,23 @@ impl EntriesList {
                     title.insert_str(0, "* ");
                 }
 
-                // Text wrapping
-                let title_lines = textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGIN);
-
-                // tilte lines
-                lines_count += title_lines.len();
-
                 let title_style = match (self.is_active, highlight_selected) {
                     (_, true) => jstyles.title_selected,
                     (true, _) => jstyles.title_active,
                     (false, _) => jstyles.title_inactive,
                 };
 
-                let mut spans: Vec<Line> = title_lines
-                    .iter()
-                    .map(|line| Line::from(Span::styled(line.to_string(), title_style)))
-                    .collect();
+                let mut spans: Vec<Line> = if title.trim().is_empty() {
+                    Vec::new()
+                } else {
+                    let title_lines =
+                        textwrap::wrap(&title, area.width as usize - LIST_INNER_MARGIN);
+                    lines_count += title_lines.len();
+                    title_lines
+                        .iter()
+                        .map(|line| Line::from(Span::styled(line.to_string(), title_style)))
+                        .collect()
+                };
 
                 // *** Date & Priority ***
                 let date_priority_lines = match (app.settings.datum_visibility, entry.priority) {

@@ -339,11 +339,7 @@ impl EntryPopup<'_> {
     }
 
     fn validate_title(&mut self) {
-        if self.title_txt.lines()[0].is_empty() {
-            self.title_err_msg = "Title can't be empty".into();
-        } else {
-            self.title_err_msg.clear();
-        }
+        self.title_err_msg.clear();
     }
 
     fn validate_date(&mut self) {
