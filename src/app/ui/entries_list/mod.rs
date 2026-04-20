@@ -16,7 +16,10 @@ use ratatui::{
 use backend::DataProvider;
 
 use crate::app::App;
-use crate::{app::keymap::Keymap, settings::DatumVisibility};
+use crate::{
+    app::keymap::Keymap,
+    settings::{DatumVisibility, TagVisibility},
+};
 
 use super::{Styles, UICommand};
 
@@ -128,7 +131,8 @@ impl EntriesList {
                 lines_count += date_priority_lines.len();
 
                 // *** Tags ***
-                if !entry.tags.is_empty() {
+                let show_tags = matches!(app.settings.tag_visibility, TagVisibility::Show);
+                if show_tags && !entry.tags.is_empty() {
                     const TAGS_SEPARATOR: &str = " | ";
                     let tags_default_style: Style = jstyles.tags_default.into();
 
