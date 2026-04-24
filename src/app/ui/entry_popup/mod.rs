@@ -57,7 +57,11 @@ pub enum EntryPopupInputReturn {
 
 impl EntryPopup<'_> {
     pub fn new_entry(settings: &Settings) -> Self {
-        let title_txt = TextArea::default();
+        let title_txt = if let Some(auto_title) = &settings.auto_title {
+            TextArea::new(vec![auto_title.resolve()])
+        } else {
+            TextArea::default()
+        };
 
         let date = Local::now();
 
