@@ -80,10 +80,10 @@ where
 {
     let mut ui_components = UIComponents::new(styles);
     let mut app = App::new(data_provider, settings);
-    if let Some(cmd) = pending_cmd {
-        if let Err(err) = exec_pending_cmd(terminal, &app, cmd).await {
-            ui_components.show_err_msg(err.to_string());
-        }
+    if let Some(cmd) = pending_cmd
+        && let Err(err) = exec_pending_cmd(terminal, &app, cmd).await
+    {
+        ui_components.show_err_msg(err.to_string());
     }
 
     app.load_state(&mut ui_components);

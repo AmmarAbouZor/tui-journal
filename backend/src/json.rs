@@ -126,10 +126,10 @@ impl DataProvider for JsonDataProvide {
 impl JsonDataProvide {
     async fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
         let entries_text = serde_json::to_vec(&entries)?;
-        if !self.file_path.exists() {
-            if let Some(parent) = self.file_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
+        if !self.file_path.exists()
+            && let Some(parent) = self.file_path.parent()
+        {
+            tokio::fs::create_dir_all(parent).await?;
         }
         tokio::fs::write(&self.file_path, entries_text).await?;
 
