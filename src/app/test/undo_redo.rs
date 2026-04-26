@@ -152,3 +152,39 @@ async fn many() {
         assert_eq!(app.entries.len(), current_count);
     }
 }
+
+#[tokio::test]
+/// Undo of an EntryContent change must succeed even after a previous undo step
+/// restored a deleted entry under a new id (because the backend assigned the
+/// next free id rather than the original).
+async fn undo_after_restore_with_new_id() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    let a_id = app
+        .add_entry("A".into(), DateTime::default(), vec![], None)
+        .await
+        .unwrap();
+    let _b_id = app
+        .add_entry("B".into(), DateTime::default(), vec![], None)
+        .await
+        .unwrap();
+
+    app.current_entry_id = Some(a_id);
+    app.update_current_entry_content("edited content".into())
+        .await
+        .unwrap();
+
+    app.delete_entry(a_id).await.unwrap();
+
+    let restored_id = app.undo().await.unwrap().unwrap();
+    assert_ne!(
+        restored_id, a_id,
+        "precondition: restored entry must have a new id for this regression test to be meaningful"
+    );
+
+    app.undo().await.unwrap();
+
+    let restored = app.get_entry(restored_id).expect("restored entry exists");
+    assert_eq!(restored.content, "");
+}

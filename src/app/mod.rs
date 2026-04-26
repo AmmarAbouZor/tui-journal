@@ -567,7 +567,8 @@ where
             }
             Change::RemoveEntry(entry) => {
                 log::trace!("History Apply: Remove Entry: {entry:?}");
-                let id = self
+                let old_id = entry.id;
+                let new_id = self
                     .add_entry_intern(
                         entry.title,
                         entry.date,
@@ -578,7 +579,9 @@ where
                     )
                     .await?;
 
-                Ok(Some(id))
+                self.history.remap_entry_id(old_id, new_id);
+
+                Ok(Some(new_id))
             }
             Change::EntryAttribute(attr) => {
                 log::trace!("History Apply: Change Attributes: {attr:?}");

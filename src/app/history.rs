@@ -83,6 +83,25 @@ impl HistoryManager {
     pub fn pop_redo(&mut self) -> Option<Change> {
         self.redo_stack.pop_front()
     }
+
+    /// Rewrites every reference to `old` in both stacks to `new`. Used when an
+    /// undo replays a removal and the backend assigns a different id to the
+    /// restored entry, so subsequent stack entries don't reference an id that
+    /// no longer exists.
+    pub fn remap_entry_id(&mut self, old: u32, new: u32) {
+        if old == new {
+            return;
+        }
+        for change in self.undo_stack.iter_mut().chain(self.redo_stack.iter_mut()) {
+            match change {
+                Change::AddEntry { id } if *id == old => *id = new,
+                Change::RemoveEntry(entry) if entry.id == old => entry.id = new,
+                Change::EntryAttribute(attr) if attr.id == old => attr.id = new,
+                Change::EntryContent { id, .. } if *id == old => *id = new,
+                _ => {}
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
