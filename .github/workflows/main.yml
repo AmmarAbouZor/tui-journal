@@ -3,9 +3,9 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,34 +33,38 @@ jobs:
         rust-version: ["stable", "1.85.0"]
 
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Install Rust
-      run: |
-        echo "Installing Rust ${{ matrix.rust-version }}"
-        rustup update --no-self-update ${{ matrix.rust-version  }}
-        rustup default ${{ matrix.rust-version  }}
+      - name: Install Rust
+        run: |
+          echo "Installing Rust ${{ matrix.rust-version }}"
+          rustup update --no-self-update ${{ matrix.rust-version  }}
+          rustup default ${{ matrix.rust-version  }}
 
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2.8.2
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.8.2
 
-    - name: Check General
-      run: cargo check --verbose
+      - name: Check General
+        run: cargo check --verbose
 
-    - name: Check sqlite
-      run: cargo check --no-default-features -F sqlite --verbose
+      - name: Check sqlite
+        run: cargo check --no-default-features -F sqlite --verbose
 
-    - name: Clippy
-      if: ${{ matrix.rust-version == 'stable' }}
-      run: cargo clippy --verbose
+      - name: Clippy
+        if: ${{ matrix.rust-version == 'stable' }}
+        run: cargo clippy --all-targets --all-features --verbose -- -D warnings
 
-    - name: Build
-      if: ${{ matrix.rust-version == 'stable' }}
-      run: cargo build --verbose
+      - name: Format
+        if: ${{ matrix.rust-version == 'stable' }}
+        run: cargo fmt --all -- --check
 
-    - name: Run tests
-      if: ${{ matrix.rust-version == 'stable' }}
-      run: cargo test --verbose
+      - name: Build
+        if: ${{ matrix.rust-version == 'stable' }}
+        run: cargo build --verbose
+
+      - name: Run tests
+        if: ${{ matrix.rust-version == 'stable' }}
+        run: cargo test --verbose
 
   cffconvert:
     runs-on: ubuntu-latest

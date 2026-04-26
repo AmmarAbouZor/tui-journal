@@ -220,7 +220,10 @@ modifiers = ""
 
         let style = Styles::deserialize(text).unwrap();
         assert_eq!(style.general.input_cursor_active.fg, Some(Color::Black));
-        assert_eq!(style.general.input_cursor_active.bg, Some(Color::LightYellow));
+        assert_eq!(
+            style.general.input_cursor_active.bg,
+            Some(Color::LightYellow)
+        );
         assert_eq!(style.general.input_cursor_invalid.fg, Some(Color::Black));
         assert_eq!(style.general.input_cursor_invalid.bg, Some(Color::LightRed));
 

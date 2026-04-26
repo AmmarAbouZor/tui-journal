@@ -27,7 +27,10 @@ async fn create_provide_with_two_entries(temp_file: &NamedTempFile) -> JsonDataP
 
 #[tokio::test]
 async fn create_provider_with_default_entries() {
-    let temp_file = Builder::new().prefix("json_create_default").tempfile().unwrap();
+    let temp_file = Builder::new()
+        .prefix("json_create_default")
+        .tempfile()
+        .unwrap();
     let provider = create_provide_with_two_entries(&temp_file).await;
 
     let entries = provider.load_all_entries().await.unwrap();
@@ -71,7 +74,10 @@ async fn add_entry() {
 
 #[tokio::test]
 async fn remove_entry() {
-    let temp_file = Builder::new().prefix("json_remove_entry").tempfile().unwrap();
+    let temp_file = Builder::new()
+        .prefix("json_remove_entry")
+        .tempfile()
+        .unwrap();
     let provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.remove_entry(1).await.unwrap();
@@ -83,7 +89,10 @@ async fn remove_entry() {
 
 #[tokio::test]
 async fn update_entry() {
-    let temp_file = Builder::new().prefix("json_update_entry").tempfile().unwrap();
+    let temp_file = Builder::new()
+        .prefix("json_update_entry")
+        .tempfile()
+        .unwrap();
     let provider = create_provide_with_two_entries(&temp_file).await;
 
     let mut entries = provider.load_all_entries().await.unwrap();
@@ -111,7 +120,10 @@ async fn update_entry() {
 
 #[tokio::test]
 async fn export_import() {
-    let temp_file_source = Builder::new().prefix("json_export_source").tempfile().unwrap();
+    let temp_file_source = Builder::new()
+        .prefix("json_export_source")
+        .tempfile()
+        .unwrap();
     let provider_source = create_provide_with_two_entries(&temp_file_source).await;
 
     let created_ids = [0, 1];
@@ -123,7 +135,10 @@ async fn export_import() {
 
     assert_eq!(dto_source.entries.len(), created_ids.len());
 
-    let temp_file_dist = Builder::new().prefix("json_export_dist").tempfile().unwrap();
+    let temp_file_dist = Builder::new()
+        .prefix("json_export_dist")
+        .tempfile()
+        .unwrap();
     let provider_dist = JsonDataProvide::new(temp_file_dist.path().to_path_buf());
 
     provider_dist
@@ -138,7 +153,10 @@ async fn export_import() {
 
 #[tokio::test]
 async fn assign_priority() {
-    let temp_file = Builder::new().prefix("json_assign_priority").tempfile().unwrap();
+    let temp_file = Builder::new()
+        .prefix("json_assign_priority")
+        .tempfile()
+        .unwrap();
     let provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.assign_priority_to_entries(3).await.unwrap();

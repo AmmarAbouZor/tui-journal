@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::Reverse, collections::HashMap};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
@@ -231,7 +231,8 @@ impl FuzzFindPopup<'_> {
                 })
                 .collect();
 
-            self.filtered_entries.sort_by(|a, b| b.score.cmp(&a.score));
+            self.filtered_entries
+                .sort_by_key(|entry| Reverse(entry.score));
         }
 
         if self.filtered_entries.is_empty() {
