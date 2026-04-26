@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 
 use super::*;
 
@@ -16,16 +16,23 @@ impl JsonDataProvide {
 
 impl DataProvider for JsonDataProvide {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
-        if !self.file_path.try_exists()? {
+        if !self.file_path.exists() {
             return Ok(Vec::new());
         }
 
-        let json_content = tokio::fs::read_to_string(&self.file_path).await?;
+        let json_content = tokio::fs::read_to_string(&self.file_path)
+            .await
+            .with_context(|| {
+                format!("Failed to read entries file: {}", self.file_path.display())
+            })?;
+
         if json_content.is_empty() {
             return Ok(Vec::new());
         }
-        let entries =
-            serde_json::from_str(&json_content).context("Error while parsing entries json data")?;
+
+        let entries = serde_json::from_str(&json_content).with_context(|| {
+            format!("Failed to parse entries file: {}", self.file_path.display())
+        })?;
 
         Ok(entries)
     }
@@ -45,9 +52,7 @@ impl DataProvider for JsonDataProvide {
 
         entries.push(new_entry);
 
-        self.write_entries_to_file(&entries)
-            .await
-            .map_err(|err| anyhow!(err))?;
+        self.write_entries_to_file(&entries).await?;
 
         Ok(entries.into_iter().next_back().unwrap())
     }
@@ -58,9 +63,7 @@ impl DataProvider for JsonDataProvide {
         if let Some(pos) = entries.iter().position(|e| e.id == entry_id) {
             entries.remove(pos);
 
-            self.write_entries_to_file(&entries)
-                .await
-                .map_err(|err| anyhow!(err))?;
+            self.write_entries_to_file(&entries).await?;
         }
 
         Ok(())
@@ -78,9 +81,7 @@ impl DataProvider for JsonDataProvide {
         if let Some(entry_to_modify) = entries.iter_mut().find(|e| e.id == entry.id) {
             *entry_to_modify = entry.clone();
 
-            self.write_entries_to_file(&entries)
-                .await
-                .map_err(|err| anyhow!(err))?;
+            self.write_entries_to_file(&entries).await?;
 
             Ok(entry)
         } else {
@@ -125,13 +126,24 @@ impl DataProvider for JsonDataProvide {
 
 impl JsonDataProvide {
     async fn write_entries_to_file(&self, entries: &Vec<Entry>) -> anyhow::Result<()> {
-        let entries_text = serde_json::to_vec(&entries)?;
+        let entries_text = serde_json::to_vec(&entries).with_context(|| {
+            format!(
+                "Failed to serialize entries for {}",
+                self.file_path.display()
+            )
+        })?;
         if !self.file_path.exists()
             && let Some(parent) = self.file_path.parent()
         {
-            tokio::fs::create_dir_all(parent).await?;
+            tokio::fs::create_dir_all(parent).await.with_context(|| {
+                format!("Failed to create entries directory: {}", parent.display())
+            })?;
         }
-        tokio::fs::write(&self.file_path, entries_text).await?;
+        tokio::fs::write(&self.file_path, entries_text)
+            .await
+            .with_context(|| {
+                format!("Failed to write entries file: {}", self.file_path.display())
+            })?;
 
         Ok(())
     }
