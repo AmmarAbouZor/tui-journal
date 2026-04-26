@@ -3,7 +3,7 @@ use std::{path::PathBuf, str::FromStr};
 use self::sqlite_helper::EntryIntermediate;
 
 use super::*;
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use path_absolutize::Absolutize;
 use sqlx::{
     Row, Sqlite, SqlitePool,
@@ -19,11 +19,15 @@ pub struct SqliteDataProvide {
 
 impl SqliteDataProvide {
     pub async fn from_file(file_path: PathBuf) -> anyhow::Result<Self> {
-        let file_full_path = file_path.absolutize()?;
+        let file_full_path = file_path
+            .absolutize()
+            .with_context(|| format!("Failed to resolve database path: {}", file_path.display()))?;
         if !file_path.exists()
             && let Some(parent) = file_path.parent()
         {
-            tokio::fs::create_dir_all(parent).await?;
+            tokio::fs::create_dir_all(parent).await.with_context(|| {
+                format!("Failed to create database directory: {}", parent.display())
+            })?;
         }
 
         let db_url = format!("sqlite://{}", file_full_path.to_string_lossy());
@@ -32,29 +36,37 @@ impl SqliteDataProvide {
     }
 
     pub async fn create(db_url: &str) -> anyhow::Result<Self> {
-        if !Sqlite::database_exists(db_url).await? {
+        if !Sqlite::database_exists(db_url)
+            .await
+            .with_context(|| format!("Failed to check database existence: {db_url}"))?
+        {
             log::trace!("Creating Database with the URL '{db_url}'");
             Sqlite::create_database(db_url)
                 .await
-                .map_err(|err| anyhow!("Creating database failed. Error info: {err}"))?;
+                .with_context(|| format!("Failed to create database: {db_url}"))?;
         }
 
         // We are using the database as a normal file for one user.
         // Journal mode will causes problems with the synchronisation in our case and it must be
         // turned off
-        let options = SqliteConnectOptions::from_str(db_url)?
+        let options = SqliteConnectOptions::from_str(db_url)
+            .with_context(|| format!("Failed to parse database URL: {db_url}"))?
             .journal_mode(SqliteJournalMode::Off)
             .synchronous(SqliteSynchronous::Off);
 
-        let pool = SqlitePoolOptions::new().connect_with(options).await?;
+        let pool = SqlitePoolOptions::new()
+            .connect_with(options)
+            .await
+            .with_context(|| format!("Failed to connect to database: {db_url}"))?;
 
         sqlx::migrate!("backend/src/sqlite/migrations")
             .run(&pool)
             .await
             .map_err(|err| match err {
-                sqlx::migrate::MigrateError::VersionMissing(id) => anyhow!("Database version mismatches. Error Info: migration {id} was previously applied but is missing in the resolved migrations"),
-                err => anyhow!("Error while applying migrations on database: Error info {err}"),
-            })?;
+                sqlx::migrate::MigrateError::VersionMissing(id) => anyhow!("Database version mismatch: migration {id} was previously applied but is missing in the resolved migrations"),
+                err => anyhow!(err),
+            })
+            .with_context(|| format!("Failed to apply migrations on database: {db_url}"))?;
 
         Ok(Self { pool })
     }
@@ -71,10 +83,7 @@ impl DataProvider for SqliteDataProvide {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|err| {
-            log::error!("Loading entries failed. Error Info {err}");
-            anyhow!(err)
-        })?;
+        .context("Failed to load entries from database")?;
 
         let entries: Vec<Entry> = entries.into_iter().map(Entry::from).collect();
 
@@ -93,10 +102,7 @@ impl DataProvider for SqliteDataProvide {
         .bind(entry.priority)
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
-            log::error!("Add entry failed. Error info: {err}");
-            anyhow!(err)
-        })?;
+        .with_context(|| format!("Failed to add entry: {}", entry.title))?;
 
         let id = row.get::<u32, _>(0);
 
@@ -109,10 +115,7 @@ impl DataProvider for SqliteDataProvide {
             .bind(tag)
             .execute(&self.pool)
             .await
-            .map_err(|err| {
-                log::error!("Add entry tags failed. Error info:{err}");
-                anyhow!(err)
-            })?;
+            .with_context(|| format!("Failed to add tag '{tag}' to entry {id}"))?;
         }
 
         Ok(Entry::from_draft(id, entry))
@@ -123,10 +126,7 @@ impl DataProvider for SqliteDataProvide {
             .bind(entry_id)
             .execute(&self.pool)
             .await
-            .map_err(|err| {
-                log::error!("Delete entry failed. Error info: {err}");
-                anyhow!(err)
-            })?;
+            .with_context(|| format!("Failed to delete entry {entry_id}"))?;
 
         Ok(())
     }
@@ -147,10 +147,7 @@ impl DataProvider for SqliteDataProvide {
         .bind(entry.id)
         .execute(&self.pool)
         .await
-        .map_err(|err| {
-            log::error!("Update entry failed. Error info {err}");
-            anyhow!(err)
-        })?;
+        .with_context(|| format!("Failed to update entry {}", entry.id))?;
 
         let existing_tags: Vec<String> = sqlx::query_scalar(
             r"SELECT tag FROM tags 
@@ -159,10 +156,7 @@ impl DataProvider for SqliteDataProvide {
         .bind(entry.id)
         .fetch_all(&self.pool)
         .await
-        .map_err(|err| {
-            log::error!("Update entry tags failed. Error info {err}");
-            anyhow!(err)
-        })?;
+        .with_context(|| format!("Failed to load tags for entry {}", entry.id))?;
 
         // Tags to remove
         for tag_to_remove in existing_tags.iter().filter(|tag| !entry.tags.contains(tag)) {
@@ -171,9 +165,11 @@ impl DataProvider for SqliteDataProvide {
                 .bind(tag_to_remove)
                 .execute(&self.pool)
                 .await
-                .map_err(|err| {
-                    log::error!("Update entry tags failed. Error info {err}");
-                    anyhow!(err)
+                .with_context(|| {
+                    format!(
+                        "Failed to remove tag '{tag_to_remove}' from entry {}",
+                        entry.id
+                    )
                 })?;
         }
 
@@ -187,9 +183,8 @@ impl DataProvider for SqliteDataProvide {
             .bind(tag_to_insert)
             .execute(&self.pool)
             .await
-            .map_err(|err| {
-                log::error!("Update entry tags failed. Error info {err}");
-                anyhow!(err)
+            .with_context(|| {
+                format!("Failed to add tag '{tag_to_insert}' to entry {}", entry.id)
             })?;
         }
 
@@ -215,10 +210,7 @@ impl DataProvider for SqliteDataProvide {
         let entries: Vec<EntryIntermediate> = sqlx::query_as(sql.as_str())
             .fetch_all(&self.pool)
             .await
-            .map_err(|err| {
-                log::error!("Loading entries failed. Error Info {err}");
-                anyhow!(err)
-            })?;
+            .with_context(|| format!("Failed to load entries for export: {ids_text}"))?;
 
         let entry_drafts = entries
             .into_iter()
@@ -239,11 +231,7 @@ impl DataProvider for SqliteDataProvide {
         sqlx::query(sql.as_str())
             .execute(&self.pool)
             .await
-            .map_err(|err| {
-                log::error!("Assign priority to entries failed. Error info {err}");
-
-                anyhow!(err)
-            })?;
+            .with_context(|| format!("Failed to assign priority {priority} to entries"))?;
 
         Ok(())
     }
