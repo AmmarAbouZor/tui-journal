@@ -19,7 +19,7 @@
 - `make cargo_check`, `make run_test`, `make clippy`, `make build-release` - convenience wrappers used by maintainers.
 
 ## Coding Style & Naming Conventions
-- Rust edition: 2024, minimum Rust: `1.85.0`.
+- Rust edition: 2024, minimum Rust: `1.92.0`.
 - Use standard Rust formatting (`cargo fmt`) and keep Clippy warnings addressed.
 - Naming: `snake_case` for files/functions/modules, `PascalCase` for types/traits, `UPPER_SNAKE_CASE` for constants.
 - Keep modules focused; place UI behavior under `src/app/ui/*` and backend/data access under `backend/src/*`.
