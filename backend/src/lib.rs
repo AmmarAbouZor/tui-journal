@@ -12,6 +12,11 @@ mod sqlite;
 #[cfg(feature = "sqlite")]
 pub use sqlite::SqliteDataProvide;
 
+#[cfg(feature = "vjournal")]
+mod vjournal;
+#[cfg(feature = "vjournal")]
+pub use vjournal::VjournalDataProvide;
+
 pub const TRANSFER_DATA_VERSION: u16 = 100;
 
 #[derive(Debug, thiserror::Error)]
