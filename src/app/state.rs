@@ -11,6 +11,8 @@ const STATE_FILE_NAME: &str = "state.json";
 pub struct AppState {
     pub sorter: Sorter,
     pub full_screen: bool,
+    #[serde(default)]
+    pub folder_nav_mode: bool,
 }
 
 impl AppState {
@@ -27,10 +29,13 @@ impl AppState {
         let state = if state_path.exists() {
             let state_file = File::open(state_path)
                 .map_err(|err| anyhow!("Failed to load state file. Error info: {err}"))?;
-            serde_json::from_reader(state_file)
+            serde_json::from_reader::<_, AppState>(state_file)
                 .map_err(|err| anyhow!("Failed to read state file. Error info: {err}"))?
         } else {
-            AppState::default()
+            AppState {
+                folder_nav_mode: settings.folder_nav_mode,
+                ..Default::default()
+            }
         };
 
         Ok(state)
@@ -165,6 +170,7 @@ mod tests {
         let state = AppState::load(&settings).unwrap();
 
         assert!(!state.full_screen);
+        assert!(!state.folder_nav_mode);
         assert_eq!(
             state.sorter.get_criteria(),
             Sorter::default().get_criteria()
@@ -189,12 +195,14 @@ mod tests {
         let state = AppState {
             sorter,
             full_screen: true,
+            folder_nav_mode: true,
         };
 
         state.save(&settings).unwrap();
         let loaded = AppState::load(&settings).unwrap();
 
         assert!(loaded.full_screen);
+        assert!(loaded.folder_nav_mode);
         assert_eq!(loaded.sorter.get_criteria(), &[SortCriteria::Title]);
         assert!(matches!(loaded.sorter.order, SortOrder::Ascending));
     }

@@ -18,6 +18,7 @@ fn get_default_entries() -> Vec<Entry> {
             String::from("Content 1"),
             vec![String::from("Tag 1"), String::from("Tag 2")],
             None,
+            String::new(),
         ),
         Entry::new(
             1,
@@ -26,6 +27,7 @@ fn get_default_entries() -> Vec<Entry> {
             String::from("Content 2"),
             vec![],
             Some(1),
+            String::new(),
         ),
     ]
 }
@@ -63,7 +65,7 @@ async fn test_data_provider_errors() {
     assert!(app.get_entry(0).is_none());
     assert!(app.get_all_tags().is_empty());
     assert!(
-        app.add_entry("title".into(), Utc::now(), Vec::new(), Some(1))
+        app.add_entry("title".into(), Utc::now(), Vec::new(), Some(1), String::new())
             .await
             .is_err()
     );
@@ -92,7 +94,7 @@ async fn test_add_entry() {
     let title = String::from("Added Title");
     let date = Utc::now();
 
-    app.add_entry(title.clone(), date, vec![tag.clone()], Some(1))
+    app.add_entry(title.clone(), date, vec![tag.clone()], Some(1), String::new())
         .await
         .unwrap();
 
@@ -139,23 +141,26 @@ async fn add_extra_entries_drafts(app: &mut App<MockDataProvider>) {
             String::from("Title 3"),
             vec![String::from("Tag 1"), String::from("Tag 2")],
             Some(2),
+            String::new(),
         ),
         EntryDraft::new(
             Utc.with_ymd_and_hms(2022, 12, 2, 1, 2, 3).unwrap(),
             String::from("Title 4"),
             vec![],
             Some(4),
+            String::new(),
         ),
         EntryDraft::new(
             Utc.with_ymd_and_hms(2023, 1, 2, 1, 2, 3).unwrap(),
             String::from("Title 5"),
             vec![String::from("Tag 1")],
             Some(3),
+            String::new(),
         ),
     ];
 
     for draft in drafts {
-        app.add_entry(draft.title, draft.date, draft.tags, draft.priority)
+        app.add_entry(draft.title, draft.date, draft.tags, draft.priority, draft.folder)
             .await
             .unwrap();
     }

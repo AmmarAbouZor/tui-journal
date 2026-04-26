@@ -113,6 +113,7 @@ pub struct EntryAttributes {
     pub title: String,
     pub tags: Vec<String>,
     pub priority: Option<u32>,
+    pub folder: String,
 }
 
 impl From<&Entry> for EntryAttributes {
@@ -123,6 +124,7 @@ impl From<&Entry> for EntryAttributes {
             title: entry.title.to_owned(),
             tags: entry.tags.to_owned(),
             priority: entry.priority.to_owned(),
+            folder: entry.folder.to_owned(),
         }
     }
 }
@@ -141,6 +143,7 @@ mod tests {
             format!("Content {id}"),
             vec![format!("tag-{id}")],
             Some(id),
+            format!("folder-{id}"),
         )
     }
 
@@ -196,6 +199,7 @@ mod tests {
                 assert_eq!(attributes.title, "Title 5");
                 assert_eq!(attributes.tags, vec![String::from("tag-5")]);
                 assert_eq!(attributes.priority, Some(5));
+                assert_eq!(attributes.folder, "folder-5");
             }
             change => panic!("unexpected change: {change:?}"),
         }

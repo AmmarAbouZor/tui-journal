@@ -24,7 +24,14 @@ pub async fn exec_save_entry_content<D: DataProvider>(
     app: &mut App<D>,
 ) -> CmdResult {
     let entry_content = ui_components.editor.get_content();
-    app.update_current_entry_content(entry_content).await?;
+    let entry_id = if let Some(id) = ui_components.editor.get_current_entry_id() {
+        id
+    } else {
+        return Ok(HandleInputReturnType::Handled);
+    };
+
+    app.update_entry_content(entry_id, entry_content, crate::app::HistoryStack::Undo)
+        .await?;
 
     ui_components.editor.refresh_has_unsaved(app);
 

@@ -14,7 +14,14 @@ use super::{
     editor_cmd::{discard_current_content, exec_save_entry_content},
 };
 
-pub fn exec_enter_select_mode(ui_components: &mut UIComponents) -> CmdResult {
+pub fn exec_enter_select_mode<D: DataProvider>(
+    ui_components: &mut UIComponents,
+    app: &App<D>,
+) -> CmdResult {
+    if app.state.folder_nav_mode {
+        return Ok(HandleInputReturnType::Handled);
+    }
+
     if ui_components.entries_list.multi_select_mode {
         return Ok(HandleInputReturnType::Handled);
     }

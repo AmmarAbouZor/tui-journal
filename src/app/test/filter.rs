@@ -125,10 +125,10 @@ async fn cycle_tag_no_tags() {
     // Check empty app doesn't panic
     app.cycle_tags_in_filter();
 
-    app.add_entry("Title_1".into(), Utc::now(), Vec::new(), Some(1))
+    app.add_entry("Title_1".into(), Utc::now(), Vec::new(), Some(1), String::new())
         .await
         .unwrap();
-    app.add_entry("Title_2".into(), Utc::now(), Vec::new(), Some(2))
+    app.add_entry("Title_2".into(), Utc::now(), Vec::new(), Some(2), String::new())
         .await
         .unwrap();
 
@@ -229,6 +229,7 @@ async fn cycle_tag_existing_filter() {
         Utc::now(),
         vec!["New".into(), "Other".into()],
         Some(55),
+        String::new(),
     )
     .await
     .unwrap();

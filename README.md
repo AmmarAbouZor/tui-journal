@@ -68,6 +68,9 @@ Before opening a PR, please read the [Contribution and AI Policy](#contribution-
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from within the app.
 - Add custom colored tags to the journals and use them in the built-in filter.
+- **Hierarchical Folder Navigation**: Organize your journals using a nested folder structure (delimited by `/`). 
+- **Persistent View Modes**: Toggle between a traditional "Flat List" and a hierarchical "Folder Navigation" mode with the `b` key. Your preference is automatically saved.
+- **Recursive Folder Management**: Easily rename or delete entire folder branches with a single command.
 - Fuzzy Finder: Locate your desired journal with lightning-fast speed using smart-case search.
 - Smart search functions for journals title and content in the built-in filter.
 - Sort the journals based on their date, priority and title.
@@ -97,6 +100,8 @@ Before opening a PR, please read the [Contribution and AI Policy](#contribution-
 - [ ]  Preview mode for journals supporting Markdown highlighting and word wrapping.
 - [ ]  Add mouse support
 - [ ]  Improve app input and rending cycle using app events to support real concurrency within the app.
+- [x]  Hierarchical Folder Navigation Support.
+- [ ]  integrate selection mode in Folder Navigation view.
 
 ## Installation
 
