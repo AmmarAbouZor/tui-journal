@@ -20,13 +20,14 @@ use crate::app::state::AppState;
 use self::json_backend::{JsonBackend, get_default_json_path};
 #[cfg(feature = "sqlite")]
 use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
-use self::{export::ExportSettings, external_editor::ExternalEditor};
+use self::{auto_title::AutoTitle, export::ExportSettings, external_editor::ExternalEditor};
 
 #[cfg(feature = "json")]
 pub mod json_backend;
 #[cfg(feature = "sqlite")]
 pub mod sqlite_backend;
 
+mod auto_title;
 mod export;
 mod external_editor;
 
@@ -48,6 +49,8 @@ pub struct Settings {
     pub sqlite_backend: SqliteBackend,
     #[serde(default)]
     pub default_journal_priority: Option<u32>,
+    #[serde(default)]
+    pub auto_title: Option<AutoTitle>,
     #[serde(default)]
     pub scroll_per_page: Option<usize>,
     #[serde(default)]
@@ -75,6 +78,7 @@ impl Default for Settings {
             #[cfg(feature = "sqlite")]
             sqlite_backend: Default::default(),
             default_journal_priority: Default::default(),
+            auto_title: Default::default(),
             scroll_per_page: Default::default(),
             sync_os_clipboard: Default::default(),
             history_limit: default_history_limit(),
@@ -167,6 +171,7 @@ impl Settings {
             export: _,
             external_editor: _,
             default_journal_priority: _,
+            auto_title: _,
             scroll_per_page: _,
             sync_os_clipboard: _,
             history_limit: _,
@@ -276,6 +281,7 @@ where
 mod tests {
     use std::{fs, path::PathBuf};
 
+    use super::auto_title::ComputedKind;
     use super::*;
     use tempfile::{Builder, TempDir};
 
@@ -364,6 +370,41 @@ temp_file_extension = "md"
         );
         assert!(settings.external_editor.auto_save);
         assert_eq!(settings.external_editor.temp_file_extension, "md");
+    }
+
+    #[test]
+    fn auto_title_accepts_literal_string() {
+        let settings: Settings = toml::from_str(r#"auto_title = "Daily Note""#).unwrap();
+
+        assert_eq!(
+            settings.auto_title,
+            Some(AutoTitle::Literal(String::from("Daily Note")))
+        );
+    }
+
+    #[test]
+    fn auto_title_accepts_computed_struct() {
+        let settings: Settings = toml::from_str(
+            r#"
+[auto_title]
+kind = "date"
+"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            settings.auto_title,
+            Some(AutoTitle::Computed {
+                kind: ComputedKind::Date,
+            })
+        );
+    }
+
+    #[test]
+    fn auto_title_defaults_to_none() {
+        let settings: Settings = toml::from_str("").unwrap();
+
+        assert_eq!(settings.auto_title, None);
     }
 
     #[test]
