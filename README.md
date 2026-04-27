@@ -236,6 +236,13 @@ backend_type = "Sqlite"   # Available options: Json, Sqlite. Default value: Sqli
 
 default_journal_priority = 3  # Sets the suggested priority while creating a new journal
 
+auto_title = { kind = "date" } # Pre-populates the title field when creating a new entry. Two forms are accepted:
+#   - Literal string: `auto_title = "Daily Note"` inserts the text as-is.
+#   - Computed value: `auto_title = { kind = "date" }` inserts today's date as DD-MM-YYYY.
+# Omit the key entirely (default) to leave the title field empty.
+# Note: the string form is always literal. `auto_title = "date"` inserts the literal word "date",
+# not today's date — use the struct form `{ kind = "date" }` for computed values.
+
 scroll_per_page = 5  # Sets how many journals will be scrolled when using page up/down commands
 
 sync_os_clipboard = false  # Syncs editor clipboard actions with operating system clipboard
@@ -312,4 +319,3 @@ In the age of powerful AI agents, we need to specify clear rules for contributio
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
-
