@@ -125,6 +125,39 @@ async fn update_content() {
 }
 
 #[tokio::test]
+async fn undo_redo_after_restoring_deleted_entry_keeps_history_id() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+
+    let a_id = app
+        .add_entry("A".into(), DateTime::default(), vec![], None)
+        .await
+        .unwrap();
+    let _b_id = app
+        .add_entry("B".into(), DateTime::default(), vec![], None)
+        .await
+        .unwrap();
+
+    app.current_entry_id = Some(a_id);
+    app.update_current_entry_content("edited content".into())
+        .await
+        .unwrap();
+    app.delete_entry(a_id).await.unwrap();
+
+    let restored_id = app.undo().await.unwrap().unwrap();
+    assert_eq!(restored_id, a_id);
+
+    app.undo().await.unwrap();
+    assert_eq!(app.get_entry(a_id).unwrap().content, "");
+
+    app.redo().await.unwrap();
+    assert_eq!(app.get_entry(a_id).unwrap().content, "edited content");
+
+    app.redo().await.unwrap();
+    assert!(app.get_entry(a_id).is_none());
+}
+
+#[tokio::test]
 /// This test will run multiple delete calls, undo do them, then redo them
 async fn many() {
     let mut app = create_default_app();

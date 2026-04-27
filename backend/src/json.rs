@@ -57,6 +57,27 @@ impl DataProvider for JsonDataProvide {
         Ok(entries.into_iter().next_back().unwrap())
     }
 
+    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+        if entry.title.is_empty() {
+            return Err(ModifyEntryError::ValidationError(
+                "Entry title can't be empty".into(),
+            ));
+        }
+
+        let mut entries = self.load_all_entries().await?;
+        if entries.iter().any(|existing| existing.id == entry.id) {
+            return Err(ModifyEntryError::ValidationError(format!(
+                "Entry id {} already exists",
+                entry.id
+            )));
+        }
+
+        entries.push(entry.clone());
+        self.write_entries_to_file(&entries).await?;
+
+        Ok(entry)
+    }
+
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
 

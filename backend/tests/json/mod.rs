@@ -88,6 +88,45 @@ async fn remove_entry() {
 }
 
 #[tokio::test]
+async fn restore_entry_preserves_id() {
+    let temp_file = Builder::new()
+        .prefix("json_restore_entry")
+        .tempfile()
+        .unwrap();
+    let provider = create_provide_with_two_entries(&temp_file).await;
+
+    let restored_entry = provider
+        .load_all_entries()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|entry| entry.id == 0)
+        .unwrap();
+
+    provider.remove_entry(restored_entry.id).await.unwrap();
+    let added = provider
+        .add_entry(EntryDraft::new(
+            Utc.with_ymd_and_hms(2024, 5, 6, 7, 8, 9).unwrap(),
+            String::from("Added"),
+            vec![],
+            None,
+        ))
+        .await
+        .unwrap();
+    assert_ne!(added.id, restored_entry.id);
+
+    let restored = provider
+        .restore_entry(restored_entry.clone())
+        .await
+        .unwrap();
+
+    assert_eq!(restored, restored_entry);
+
+    let entries = provider.load_all_entries().await.unwrap();
+    assert!(entries.iter().any(|entry| entry == &restored_entry));
+}
+
+#[tokio::test]
 async fn update_entry() {
     let temp_file = Builder::new()
         .prefix("json_update_entry")
