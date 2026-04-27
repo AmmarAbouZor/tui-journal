@@ -179,6 +179,27 @@ where
         Ok(entry_id)
     }
 
+    async fn restore_entry_intern(
+        &mut self,
+        entry: Entry,
+        history_target: HistoryStack,
+    ) -> anyhow::Result<u32> {
+        log::trace!("Restoring entry");
+
+        let entry = self.data_provide.restore_entry(entry).await?;
+        let entry_id = entry.id;
+
+        self.history.register_add(history_target, &entry);
+
+        self.entries.push(entry);
+
+        self.sort_entries();
+        self.update_filtered_out_entries();
+        self.update_colored_tags();
+
+        Ok(entry_id)
+    }
+
     /// Updates the attributes of the currently selected [`Entry`]
     pub async fn update_current_entry_attributes(
         &mut self,
@@ -567,16 +588,7 @@ where
             }
             Change::RemoveEntry(entry) => {
                 log::trace!("History Apply: Remove Entry: {entry:?}");
-                let id = self
-                    .add_entry_intern(
-                        entry.title,
-                        entry.date,
-                        entry.tags,
-                        entry.priority,
-                        Some(entry.content),
-                        history_target,
-                    )
-                    .await?;
+                let id = self.restore_entry_intern(*entry, history_target).await?;
 
                 Ok(Some(id))
             }

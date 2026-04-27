@@ -27,6 +27,8 @@ pub enum ModifyEntryError {
 pub trait DataProvider {
     async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>>;
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError>;
+    /// Restores an entry with its existing id. Implementations must not overwrite another entry.
+    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
     async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()>;
     async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError>;
     async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO>;
@@ -198,6 +200,10 @@ mod tests {
             }
 
             Ok(Entry::from_draft(call_idx as u32, entry))
+        }
+
+        async fn restore_entry(&self, _entry: Entry) -> Result<Entry, ModifyEntryError> {
+            unreachable!("not used in these tests");
         }
 
         async fn remove_entry(&self, _entry_id: u32) -> anyhow::Result<()> {

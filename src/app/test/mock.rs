@@ -41,9 +41,25 @@ impl DataProvider for MockDataProvider {
     async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         self.early_return()?;
         let mut entries = self.entries.write().unwrap();
-        let new_id = entries.last().map_or(0, |entry| entry.id + 1);
+        let new_id = entries.iter().map(|entry| entry.id + 1).max().unwrap_or(0);
 
         let entry = Entry::from_draft(new_id, entry);
+
+        entries.push(entry.clone());
+
+        Ok(entry)
+    }
+
+    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+        self.early_return()?;
+
+        let mut entries = self.entries.write().unwrap();
+        if entries.iter().any(|existing| existing.id == entry.id) {
+            return Err(ModifyEntryError::ValidationError(format!(
+                "Entry id {} already exists",
+                entry.id
+            )));
+        }
 
         entries.push(entry.clone());
 
