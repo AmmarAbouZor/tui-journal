@@ -126,6 +126,10 @@ impl<'a> Editor<'a> {
                 }
             }
 
+            if self.try_snap_vertical_navigation(input) {
+                return Ok(HandleInputReturnType::Handled);
+            }
+
             // give the input to the editor
             let key_event = KeyEvent::from(input);
             if self.text_area.input(key_event) {
@@ -153,8 +157,10 @@ impl<'a> Editor<'a> {
         let sync_os_clipboard = app.settings.sync_os_clipboard;
 
         if is_default_navigation(input) {
-            let key_event = KeyEvent::from(input);
-            self.text_area.input(key_event);
+            if !self.try_snap_vertical_navigation(input) {
+                let key_event = KeyEvent::from(input);
+                self.text_area.input(key_event);
+            }
         } else if !self.is_visual_mode()
             || !self.handle_input_visual_only(input, sync_os_clipboard)?
         {
@@ -307,6 +313,33 @@ impl<'a> Editor<'a> {
         }
 
         Ok(())
+    }
+
+    /// Up on first line / Down on last line snaps to line start/end instead of no-op.
+    fn try_snap_vertical_navigation(&mut self, input: &Input) -> bool {
+        if !input.modifiers.is_empty() || self.is_visual_mode() {
+            return false;
+        }
+        match input.key_code {
+            KeyCode::Up if self.is_on_first_line() => {
+                self.text_area.move_cursor(CursorMove::Head);
+                true
+            }
+            KeyCode::Down if self.is_on_last_line() => {
+                self.text_area.move_cursor(CursorMove::End);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn is_on_first_line(&self) -> bool {
+        self.text_area.cursor().0 == 0
+    }
+
+    fn is_on_last_line(&self) -> bool {
+        let (row, _) = self.text_area.cursor();
+        row + 1 >= self.text_area.lines().len()
     }
 
     pub fn get_editor_mode(&self) -> EditorMode {
