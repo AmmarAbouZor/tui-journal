@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use backend::DataProvider;
+use crossterm::event::KeyCode;
 pub use themes::Styles;
 
 use self::{
@@ -195,6 +196,11 @@ impl UIComponents<'_> {
     ) -> Result<HandleInputReturnType> {
         if self.has_popup() {
             return self.handle_popup_input(input, app).await;
+        }
+
+        if self.editor.is_preview_mode() && input.key_code == KeyCode::Esc {
+            self.editor.toggle_preview();
+            return Ok(HandleInputReturnType::Handled);
         }
 
         if self.editor.is_prioritized() {
