@@ -153,14 +153,21 @@ impl<'a> Editor<'a> {
             match input.key_code {
                 KeyCode::Char('j') | KeyCode::Down => {
                     self.preview_scroll = self.preview_scroll.saturating_add(1);
+                    return Ok(HandleInputReturnType::Handled);
                 }
                 KeyCode::Char('k') | KeyCode::Up => {
                     self.preview_scroll = self.preview_scroll.saturating_sub(1);
+                    return Ok(HandleInputReturnType::Handled);
                 }
-                KeyCode::Char('p') => self.toggle_preview(),
-                _ => {}
+                KeyCode::Char('p') | KeyCode::Esc => {
+                    self.toggle_preview();
+                    return Ok(HandleInputReturnType::Handled);
+                }
+                _ => {
+                    self.show_preview = false;
+                    self.preview_scroll = 0;
+                }
             }
-            return Ok(HandleInputReturnType::Handled);
         }
         debug_assert!(!self.is_insert_mode());
 
@@ -342,6 +349,11 @@ impl<'a> Editor<'a> {
             _ => {}
         }
 
+        if matches!(mode, EditorMode::Insert | EditorMode::Visual) {
+            self.show_preview = false;
+            self.preview_scroll = 0;
+        }
+
         self.mode = mode;
     }
 
@@ -417,6 +429,32 @@ impl<'a> Editor<'a> {
             MarkdownWidget::new(&content).scroll(self.preview_scroll),
             inner,
         );
+
+        self.render_preview_scrollbar(frame, area, inner);
+    }
+
+    fn render_preview_scrollbar(&mut self, frame: &mut Frame, area: Rect, inner: Rect) {
+        let total_lines = self.text_area.lines().len();
+        if total_lines as u16 <= inner.height {
+            return;
+        }
+
+        let mut state = ScrollbarState::default()
+            .content_length(total_lines)
+            .position(self.preview_scroll as usize);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("▲"))
+            .end_symbol(Some("▼"))
+            .track_symbol(Some(symbols::line::VERTICAL))
+            .thumb_symbol(symbols::block::FULL);
+
+        let scroll_area = area.inner(Margin {
+            horizontal: 0,
+            vertical: 1,
+        });
+
+        frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
     pub fn render_vertical_scrollbar(&mut self, frame: &mut Frame, area: Rect) {
@@ -566,6 +604,10 @@ impl<'a> Editor<'a> {
     pub fn toggle_preview(&mut self) {
         self.show_preview = !self.show_preview;
         self.preview_scroll = 0;
+    }
+
+    pub fn is_preview_mode(&self) -> bool {
+        self.show_preview
     }
 }
 

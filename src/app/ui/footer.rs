@@ -41,15 +41,31 @@ pub fn render_footer<D: DataProvider>(
 }
 
 fn get_footer_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>) -> String {
-    let (editor_mode, multi_select_mode) = (
+    let (editor_mode, multi_select_mode, preview_mode) = (
         ui_components.editor.is_insert_mode(),
         ui_components.entries_list.multi_select_mode,
+        ui_components.editor.is_preview_mode(),
     );
-    match (editor_mode, multi_select_mode) {
-        (true, false) => get_editor_mode_text(ui_components),
-        (false, true) => get_multi_select_text(ui_components),
+    match (editor_mode, multi_select_mode, preview_mode) {
+        (true, false, _) => get_editor_mode_text(ui_components),
+        (false, true, _) => get_multi_select_text(ui_components),
+        (false, false, true) => get_preview_mode_text(ui_components),
         _ => get_standard_text(ui_components, app),
     }
+}
+
+fn get_preview_mode_text(ui_components: &UIComponents) -> String {
+    let toggle_preview_keymap: Vec<_> = ui_components
+        .entries_list_keymaps
+        .iter()
+        .filter(|keymap| keymap.command == UICommand::TogglePreviewMode)
+        .collect();
+
+    format!(
+        "{}{}Scroll: 'j','k'",
+        get_keymap_text(toggle_preview_keymap),
+        SEPARATOR
+    )
 }
 
 fn get_editor_mode_text(ui_components: &UIComponents) -> String {
@@ -110,6 +126,14 @@ fn get_standard_text<D: DataProvider>(ui_components: &UIComponents, app: &App<D>
             .collect();
 
         footer_parts.push(get_keymap_text(sort_keymap));
+
+        let preview_keymap: Vec<_> = ui_components
+            .entries_list_keymaps
+            .iter()
+            .filter(|keymap| keymap.command == UICommand::TogglePreviewMode)
+            .collect();
+
+        footer_parts.push(get_keymap_text(preview_keymap));
     }
 
     if app.state.full_screen {
