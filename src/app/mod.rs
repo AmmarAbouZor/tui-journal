@@ -582,6 +582,16 @@ where
             }
             Change::EntryAttribute(attr) => {
                 log::trace!("History Apply: Change Attributes: {attr:?}");
+                // Same caveat as Change::EntryContent: an entry deleted and
+                // recreated via undo carries a new ID, so older history
+                // entries can no longer be matched (#623).
+                if !self.entries.iter().any(|e| e.id == attr.id) {
+                    log::trace!(
+                        "History Apply: skipping Attributes for missing entry id {}",
+                        attr.id
+                    );
+                    return Ok(None);
+                }
                 self.update_entry_attributes(
                     attr.id,
                     attr.title,
@@ -596,6 +606,15 @@ where
             }
             Change::EntryContent { id, content } => {
                 log::trace!("History Apply: Change Content: ID: {id}");
+                // When an entry is deleted and then recreated via undo, the
+                // recreated entry receives a fresh ID from the data provider;
+                // earlier `EntryContent` changes still reference the old ID
+                // and can't be applied. Skip silently rather than panicking
+                // inside `update_entry_content` (#623).
+                if !self.entries.iter().any(|e| e.id == id) {
+                    log::trace!("History Apply: skipping Content for missing entry id {id}");
+                    return Ok(None);
+                }
                 self.update_entry_content(id, content, history_target)
                     .await?;
                 Ok(Some(id))
