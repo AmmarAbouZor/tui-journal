@@ -36,7 +36,7 @@ rayon = "1"
 fuzzy-matcher = "0.3"
 path-absolutize = "3"
 tui-textarea = "0.7"
-ratatui = { version = "0.29", features = ["all-widgets", "serde"]}
+ratatui = { version = "0.30", features = ["all-widgets", "serde"]}
 arboard = { version = "3", default-features = false, features = ["wayland-data-control"]}
 
 [features]
