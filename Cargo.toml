@@ -27,6 +27,8 @@ textwrap = "0.16"
 thiserror = "2.0"
 toml = "1.1"
 sqlx = {version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"], optional = true}
+vobject = {version = "0.9", optional = true}
+uuid = {version = "1", features = ["v4"], optional = true}
 futures-util = { version = "0.3", default-features = false }
 aho-corasick = "1.1"
 
@@ -40,9 +42,10 @@ ratatui = { version = "0.29", features = ["all-widgets", "serde"]}
 arboard = { version = "3.6", default-features = false, features = ["wayland-data-control"]}
 
 [features]
-default = ["json", "sqlite"]
+default = ["json", "sqlite", "vjournal"]
 json =[]
 sqlite = ["dep:sqlx"]
+vjournal = ["dep:vobject", "dep:uuid"]
 
 [[bin]]
 name = "tjournal"

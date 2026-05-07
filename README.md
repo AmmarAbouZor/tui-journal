@@ -89,6 +89,7 @@ Before opening a PR, please read the [Contribution and AI Policy](#contribution-
 #### Back-ends:
 - [x]  Plain text JSON back-end.
 - [x]  Database back-end using SQLite.
+- [x]  `VJOURNAL` back-end syncable as a CalDAV directory.
 - [ ]  RESTful back-end server with a client in the app.
 #### Application:
 - [x]  Edit journals content with external text editor from within the app.
@@ -188,6 +189,12 @@ To install TUI-Journal with only the SQLite back-end feature, use the following 
 cargo install tui-journal --locked --no-default-features --features sqlite
 ```
 
+To install TUI-Journal with only the `VJOURNAL` back-end feature, use the following command:
+
+```bash
+cargo install tui-journal --locked --no-default-features --features vjournal
+```
+
 ## Usage
 
 Once installed, you can run TUI-Journal by typing `tjournal` in your terminal:
@@ -213,7 +220,8 @@ Commands:
 Options:
   -j, --json-file-path <FILE PATH>    Sets the entries Json file path and starts using it
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
-  -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
+      --vjournal-file-path <DIR PATH> Sets the entries VJOURNAL directory path and starts using it
+  -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite, vjournal]
   -c, --config <DIR PATH>             Specifies the path for the configuration directory.
                                       The configuration directory is considered as the root for themes files too.
                                       It still accepts the path for configuration file for backward compatibility.
@@ -232,7 +240,7 @@ The configuration for TUI-Journal can be found in the `config.toml` file located
 Here is a sample of the settings in the `config.toml` file:
 
 ```toml
-backend_type = "Sqlite"   # Available options: Json, Sqlite. Default value: Sqlite.
+backend_type = "Sqlite"   # Available options: Json, Sqlite, Vjournal. Default value: Sqlite.
 
 default_journal_priority = 3  # Sets the suggested priority while creating a new journal
 
@@ -277,6 +285,9 @@ file_path = "<Documents-folder>/tui-journal/entries.json"
 
 [sqlite_backend]
 file_path = "<Documents-folder>/tui-journal/entries.db"
+
+[vjournal_backend]
+directory = "<Documents-folder>/tui-journal/journal"
 ```
 
 ## Themes
