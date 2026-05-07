@@ -3,6 +3,10 @@ fn main() {
     println!("cargo:rerun-if-changed=backend/src/sqlite/migrations");
 
     // Make sure one feature at least is enabled
-    #[cfg(all(not(feature = "json"), not(feature = "sqlite")))]
+    #[cfg(all(
+        not(feature = "json"),
+        not(feature = "sqlite"),
+        not(feature = "vjournal")
+    ))]
     compile_error!("One feature at least must be enabled");
 }
