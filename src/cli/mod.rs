@@ -127,7 +127,7 @@ fn log_help() -> String {
 fn config_help() -> String {
     format!(
         "Specifies the path for the configuration directory.\n\
-            Configuration files is considered as root for themes file too.\n\
+            The configuration directory is considered as the root for themes files too.\n\
             It still accepts the path for configuration file for backward compatibility.\n\
             (default path: {})",
         settings_default_dir_path()

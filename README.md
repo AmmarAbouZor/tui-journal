@@ -215,7 +215,7 @@ Options:
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite]
   -c, --config <DIR PATH>             Specifies the path for the configuration directory.
-                                      Configuration files is considered as root for themes file too.
+                                      The configuration directory is considered as the root for themes files too.
                                       It still accepts the path for configuration file for backward compatibility.
                                       (default path: <config-dir>/tui-journal/)
   -v, --verbose...                    Increases logging verbosity each use for up to 3 times
