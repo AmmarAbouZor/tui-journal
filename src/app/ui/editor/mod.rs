@@ -25,6 +25,12 @@ pub enum EditorMode {
     Visual,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum VerticalDir {
+    Up,
+    Down,
+}
+
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
     mode: EditorMode,
@@ -226,10 +232,10 @@ impl<'a> Editor<'a> {
             (KeyCode::Char('h'), false) => {
                 self.text_area.move_cursor(CursorMove::Back);
             }
-            (KeyCode::Char('j'), false) => {
+            (KeyCode::Char('j'), false) if !self.try_snap_vertical(VerticalDir::Down) => {
                 self.text_area.move_cursor(CursorMove::Down);
             }
-            (KeyCode::Char('k'), false) => {
+            (KeyCode::Char('k'), false) if !self.try_snap_vertical(VerticalDir::Up) => {
                 self.text_area.move_cursor(CursorMove::Up);
             }
             (KeyCode::Char('l'), false) => {
@@ -315,17 +321,28 @@ impl<'a> Editor<'a> {
         Ok(())
     }
 
-    /// Up on first line / Down on last line snaps to line start/end instead of no-op.
+    /// Snaps to line start/end when vertical navigation would otherwise be a no-op.
     fn try_snap_vertical_navigation(&mut self, input: &Input) -> bool {
-        if !input.modifiers.is_empty() || self.is_visual_mode() {
+        if !input.modifiers.is_empty() {
             return false;
         }
         match input.key_code {
-            KeyCode::Up if self.is_on_first_line() => {
+            KeyCode::Up => self.try_snap_vertical(VerticalDir::Up),
+            KeyCode::Down => self.try_snap_vertical(VerticalDir::Down),
+            _ => false,
+        }
+    }
+
+    fn try_snap_vertical(&mut self, dir: VerticalDir) -> bool {
+        if self.is_visual_mode() {
+            return false;
+        }
+        match dir {
+            VerticalDir::Up if self.is_on_first_line() => {
                 self.text_area.move_cursor(CursorMove::Head);
                 true
             }
-            KeyCode::Down if self.is_on_last_line() => {
+            VerticalDir::Down if self.is_on_last_line() => {
                 self.text_area.move_cursor(CursorMove::End);
                 true
             }
