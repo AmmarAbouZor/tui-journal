@@ -248,6 +248,10 @@ pub fn get_entries_list_keymaps() -> Vec<Keymap> {
             Input::new(KeyCode::PageDown, KeyModifiers::NONE),
             UICommand::PageDownEntries,
         ),
+        Keymap::new(
+            Input::new(KeyCode::Char('p'), KeyModifiers::NONE),
+            UICommand::TogglePreviewMode,
+        ),
     ]
 }
 
@@ -361,6 +365,10 @@ pub fn get_multi_select_keymaps() -> Vec<Keymap> {
         Keymap::new(
             Input::new(KeyCode::Char('>'), KeyModifiers::NONE),
             UICommand::MulSelExportEntries,
+        ),
+        Keymap::new(
+            Input::new(KeyCode::Char('p'), KeyModifiers::NONE),
+            UICommand::TogglePreviewMode,
         ),
         // Char '?' isn't recognized on windows
         #[cfg(not(target_os = "windows"))]

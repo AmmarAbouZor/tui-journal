@@ -13,6 +13,7 @@ use ratatui::{
 use crate::app::{App, keymap::Input, runner::HandleInputReturnType};
 
 use backend::DataProvider;
+use markdown_tui::widget::MarkdownWidget;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
 use super::Styles;
@@ -31,6 +32,8 @@ pub struct Editor<'a> {
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,
+    preview_scroll: u16,
+    show_preview: bool,
 }
 
 impl From<&Input> for KeyEvent {
@@ -54,6 +57,8 @@ impl<'a> Editor<'a> {
             is_active: false,
             is_dirty: false,
             has_unsaved: false,
+            show_preview: false,
+            preview_scroll: 0,
         }
     }
 
@@ -144,6 +149,26 @@ impl<'a> Editor<'a> {
         input: &Input,
         app: &App<D>,
     ) -> anyhow::Result<HandleInputReturnType> {
+        if self.show_preview {
+            match input.key_code {
+                KeyCode::Char('j') | KeyCode::Down => {
+                    self.preview_scroll = self.preview_scroll.saturating_add(1);
+                    return Ok(HandleInputReturnType::Handled);
+                }
+                KeyCode::Char('k') | KeyCode::Up => {
+                    self.preview_scroll = self.preview_scroll.saturating_sub(1);
+                    return Ok(HandleInputReturnType::Handled);
+                }
+                KeyCode::Char('p') | KeyCode::Esc => {
+                    self.toggle_preview();
+                    return Ok(HandleInputReturnType::Handled);
+                }
+                _ => {
+                    self.show_preview = false;
+                    self.preview_scroll = 0;
+                }
+            }
+        }
         debug_assert!(!self.is_insert_mode());
 
         if app.get_current_entry().is_none() {
@@ -324,10 +349,19 @@ impl<'a> Editor<'a> {
             _ => {}
         }
 
+        if matches!(mode, EditorMode::Insert | EditorMode::Visual) {
+            self.show_preview = false;
+            self.preview_scroll = 0;
+        }
+
         self.mode = mode;
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
+        if self.show_preview {
+            self.render_preview(frame, area, styles);
+            return;
+        }
         let mut title = "Content".to_owned();
         if self.is_active {
             let mode_caption = match self.mode {
@@ -380,6 +414,47 @@ impl<'a> Editor<'a> {
 
         self.render_vertical_scrollbar(frame, area);
         self.render_horizontal_scrollbar(frame, area);
+    }
+
+    fn render_preview(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .style(styles.editor.block_normal_active)
+            .title("Preview");
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+
+        let content = self.get_content();
+        frame.render_widget(
+            MarkdownWidget::new(&content).scroll(self.preview_scroll),
+            inner,
+        );
+
+        self.render_preview_scrollbar(frame, area, inner);
+    }
+
+    fn render_preview_scrollbar(&mut self, frame: &mut Frame, area: Rect, inner: Rect) {
+        let total_lines = self.text_area.lines().len();
+        if total_lines as u16 <= inner.height {
+            return;
+        }
+
+        let mut state = ScrollbarState::default()
+            .content_length(total_lines)
+            .position(self.preview_scroll as usize);
+
+        let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("▲"))
+            .end_symbol(Some("▼"))
+            .track_symbol(Some(symbols::line::VERTICAL))
+            .thumb_symbol(symbols::block::FULL);
+
+        let scroll_area = area.inner(Margin {
+            horizontal: 0,
+            vertical: 1,
+        });
+
+        frame.render_stateful_widget(scrollbar, scroll_area, &mut state);
     }
 
     pub fn render_vertical_scrollbar(&mut self, frame: &mut Frame, area: Rect) {
@@ -524,6 +599,15 @@ impl<'a> Editor<'a> {
         }
 
         Ok(HandleInputReturnType::Handled)
+    }
+
+    pub fn toggle_preview(&mut self) {
+        self.show_preview = !self.show_preview;
+        self.preview_scroll = 0;
+    }
+
+    pub fn is_preview_mode(&self) -> bool {
+        self.show_preview
     }
 }
 
