@@ -8,6 +8,8 @@ use crate::settings::{BackendType, Settings};
 use futures_util::StreamExt;
 
 use backend::DataProvider;
+#[cfg(feature = "file")]
+use backend::FileDataProvide;
 #[cfg(feature = "json")]
 use backend::JsonDataProvide;
 #[cfg(feature = "sqlite")]
@@ -32,6 +34,16 @@ pub async fn run<B: Backend>(
     pending_cmd: Option<PendingCliCommand>,
 ) -> Result<()> {
     match settings.backend_type.unwrap_or_default() {
+        #[cfg(feature = "file")]
+        BackendType::File => {
+            let path = if let Some(path) = &settings.file_backend.storage_root {
+                path.clone()
+            } else {
+                crate::settings::file_backend::get_default_storage_root()?
+            };
+            let data_provider = FileDataProvide::new(path);
+            run_intern(terminal, data_provider, settings, styles, pending_cmd).await
+        }
         #[cfg(feature = "json")]
         BackendType::Json => {
             let path = if let Some(path) = &settings.json_backend.file_path {
