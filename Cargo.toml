@@ -31,7 +31,7 @@ futures-util = { version = "0.3", default-features = false }
 aho-corasick = "1"
 
 scopeguard = "1"
-git2 = { version = "0.20", default-features = false }
+git2 = { version = "0.21", default-features = false }
 rayon = "1"
 fuzzy-matcher = "0.3"
 path-absolutize = "3"
