@@ -4,6 +4,7 @@ cargo_check:
 	cargo check
 	cargo check --no-default-features -F json
 	cargo check --no-default-features -F sqlite
+	cargo check --no-default-features -F vjournal
 
 run_test:
 	cargo test
@@ -47,3 +48,5 @@ install_sqlite:
 install_json:
 	cargo install --path "." --no-default-features -F json 
 
+install_vjournal:
+	cargo install --path "." --no-default-features -F vjournal
