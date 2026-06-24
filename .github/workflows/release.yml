@@ -21,6 +21,9 @@ jobs:
           - os: ubuntu-latest
             container: rust
             dependencies: "libssl-dev"
+          - os: ubuntu-24.04-arm
+            container: rust
+            dependencies: "libssl-dev"
           - os: macos-latest
             arch: arm64
           - os: windows-latest
@@ -45,6 +48,9 @@ jobs:
       - name: Build Release Mac ARM64
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: make release-mac-arm64
+      - name: Build Release Linux ARM64
+        if: matrix.os == 'ubuntu-24.04-arm'
+        run: make release-linux-arm64
       - name: Build Release Linux
         if: matrix.os == 'ubuntu-latest'
         run: make release-linux

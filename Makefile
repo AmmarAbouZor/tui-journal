@@ -32,6 +32,12 @@ release-linux:
 	mkdir -p release
 	tar -C ./target/x86_64-unknown-linux-gnu/release/ -czvf ./release/tjournal-linux-gnu.tar.gz ./tjournal
 
+release-linux-arm64:
+	cargo build --release --target=aarch64-unknown-linux-gnu
+	strip target/aarch64-unknown-linux-gnu/release/tjournal
+	mkdir -p release
+	tar -C ./target/aarch64-unknown-linux-gnu/release/ -czvf ./release/tjournal-linux-arm64.tar.gz ./tjournal
+
 install:
 	cargo install --path "." 
 
