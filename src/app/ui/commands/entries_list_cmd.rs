@@ -299,7 +299,19 @@ pub async fn edit_in_external_editor<D: DataProvider>(
             builder.suffix(temp_extension);
         };
 
-        let temp_file = builder.tempfile_in(env::temp_dir())?;
+        let tmpdir = if let Some(xdg_runtime_dir) = env::var_os("XDG_RUNTIME_DIR") {
+            let xdg_dir = PathBuf::from(xdg_runtime_dir);
+            let xdg_subdir = xdg_dir.join("tui-journal");
+            if xdg_subdir.exists() || fs::create_dir(&xdg_subdir).await.is_ok() {
+                xdg_subdir
+            } else {
+                xdg_dir
+            }
+        } else {
+            env::temp_dir()
+        };
+
+        let temp_file = builder.tempfile_in(tmpdir)?;
         let file_path = temp_file.path();
 
         fs::write(file_path, entry.content.as_str()).await?;
