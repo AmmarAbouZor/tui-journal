@@ -28,3 +28,4 @@ jobs:
           formula: tui-journal
           tag: ${{ steps.ltag.outputs.GIT_TAG }}
           force: true
+          trust: true
