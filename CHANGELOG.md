@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.17.0 - 2026-07-10
+
+### Added
+
+- Provide Linux ARM64 release binaries
+
+### Changed
+
+- Return focus to the entries list when pressing Escape in the editor's normal mode
+- Improve JSON backend performance when assigning entry IDs and priorities
+- Rename misspelled theme cursor keys while retaining compatibility with existing themes
+- Use unique temporary files when opening entries in an external editor
+- Add operation and path context to backend I/O errors
+- Increase the minimum supported Rust version to 1.92.0
+- Switch release automation to tag-based releases and remove Aeruginous changelog tooling
+- Stop publishing Intel macOS release binaries
+
+### Fixed
+
+- Preserve an entry's original ID when undoing its deletion
+
 ## 0.16.1 - 2025-07-28
 
 ### Changed
