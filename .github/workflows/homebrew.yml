@@ -20,6 +20,11 @@ jobs:
           echo ${{ steps.ltag.outputs.GIT_TAG }}
           echo "-------------------------------------------------------------"
 
+      - name: Trust Homebrew Tap
+        run: |
+          /home/linuxbrew/.linuxbrew/bin/brew tap AmmarAbouZor/homebrew-tui-journal
+          /home/linuxbrew/.linuxbrew/bin/brew trust ammarabouzor/tui-journal
+
       - name: Bump Homebrew Formula
         uses: dawidd6/action-homebrew-bump-formula@v7
         with:
@@ -28,4 +33,3 @@ jobs:
           formula: tui-journal
           tag: ${{ steps.ltag.outputs.GIT_TAG }}
           force: true
-          trust: true
