@@ -33,3 +33,4 @@ jobs:
           formula: tui-journal
           tag: ${{ steps.ltag.outputs.GIT_TAG }}
           force: true
+          no_fork: true
