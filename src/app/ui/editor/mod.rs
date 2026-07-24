@@ -25,18 +25,19 @@ pub enum EditorMode {
     Visual,
 }
 
-#[derive(Debug, Clone, Copy)]
-enum VerticalDir {
-    Up,
-    Down,
-}
-
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
     mode: EditorMode,
     is_active: bool,
     is_dirty: bool,
     has_unsaved: bool,
+}
+
+/// Direction of a single-line vertical cursor movement.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VerticalDir {
+    Up,
+    Down,
 }
 
 impl From<&Input> for KeyEvent {
@@ -132,7 +133,8 @@ impl<'a> Editor<'a> {
                 }
             }
 
-            if self.try_snap_vertical_navigation(input) {
+            if let Some(dir) = vertical_arrow_dir(input) {
+                self.move_cursor_vertical(dir, self.should_extend_selection(input));
                 return Ok(HandleInputReturnType::Handled);
             }
 
@@ -162,11 +164,11 @@ impl<'a> Editor<'a> {
 
         let sync_os_clipboard = app.settings.sync_os_clipboard;
 
-        if is_default_navigation(input) {
-            if !self.try_snap_vertical_navigation(input) {
-                let key_event = KeyEvent::from(input);
-                self.text_area.input(key_event);
-            }
+        if let Some(dir) = vertical_arrow_dir(input) {
+            self.move_cursor_vertical(dir, self.should_extend_selection(input));
+        } else if is_default_navigation(input) {
+            let key_event = KeyEvent::from(input);
+            self.text_area.input(key_event);
         } else if !self.is_visual_mode()
             || !self.handle_input_visual_only(input, sync_os_clipboard)?
         {
@@ -232,11 +234,11 @@ impl<'a> Editor<'a> {
             (KeyCode::Char('h'), false) => {
                 self.text_area.move_cursor(CursorMove::Back);
             }
-            (KeyCode::Char('j'), false) if !self.try_snap_vertical(VerticalDir::Down) => {
-                self.text_area.move_cursor(CursorMove::Down);
+            (KeyCode::Char('j'), false) => {
+                self.move_cursor_down(self.is_visual_mode());
             }
-            (KeyCode::Char('k'), false) if !self.try_snap_vertical(VerticalDir::Up) => {
-                self.text_area.move_cursor(CursorMove::Up);
+            (KeyCode::Char('k'), false) => {
+                self.move_cursor_up(self.is_visual_mode());
             }
             (KeyCode::Char('l'), false) => {
                 self.text_area.move_cursor(CursorMove::Forward);
@@ -321,33 +323,46 @@ impl<'a> Editor<'a> {
         Ok(())
     }
 
-    /// Snaps to line start/end when vertical navigation would otherwise be a no-op.
-    fn try_snap_vertical_navigation(&mut self, input: &Input) -> bool {
-        if !input.modifiers.is_empty() {
-            return false;
-        }
-        match input.key_code {
-            KeyCode::Up => self.try_snap_vertical(VerticalDir::Up),
-            KeyCode::Down => self.try_snap_vertical(VerticalDir::Down),
-            _ => false,
-        }
+    /// Moves the cursor up one line, snapping to the line start when already on the
+    /// first line so the key press is never a dead no-op. Extends the active
+    /// selection when `select` is set.
+    fn move_cursor_up(&mut self, select: bool) {
+        self.move_cursor_vertical(VerticalDir::Up, select);
     }
 
-    fn try_snap_vertical(&mut self, dir: VerticalDir) -> bool {
-        if self.is_visual_mode() {
-            return false;
-        }
-        match dir {
-            VerticalDir::Up if self.is_on_first_line() => {
-                self.text_area.move_cursor(CursorMove::Head);
-                true
+    /// Moves the cursor down one line, snapping to the line end when already on the
+    /// last line so the key press is never a dead no-op. Extends the active
+    /// selection when `select` is set.
+    fn move_cursor_down(&mut self, select: bool) {
+        self.move_cursor_vertical(VerticalDir::Down, select);
+    }
+
+    /// Single entry point for vertical cursor movement across all modes. Owns the
+    /// selection state, the snap-to-edge decision, and the move itself so callers
+    /// never fall back to the underlying text area's default navigation.
+    fn move_cursor_vertical(&mut self, dir: VerticalDir, select: bool) {
+        if select {
+            if !self.text_area.is_selecting() {
+                self.text_area.start_selection();
             }
-            VerticalDir::Down if self.is_on_last_line() => {
-                self.text_area.move_cursor(CursorMove::End);
-                true
-            }
-            _ => false,
+        } else {
+            self.text_area.cancel_selection();
         }
+
+        let cursor_move = match dir {
+            VerticalDir::Up if self.is_on_first_line() => CursorMove::Head,
+            VerticalDir::Up => CursorMove::Up,
+            VerticalDir::Down if self.is_on_last_line() => CursorMove::End,
+            VerticalDir::Down => CursorMove::Down,
+        };
+        self.text_area.move_cursor(cursor_move);
+    }
+
+    /// Whether a vertical move should extend a selection: always in visual mode,
+    /// and in insert mode when Shift is held.
+    fn should_extend_selection(&self, input: &Input) -> bool {
+        self.is_visual_mode()
+            || (self.is_insert_mode() && input.modifiers.contains(KeyModifiers::SHIFT))
     }
 
     fn is_on_first_line(&self) -> bool {
@@ -577,14 +592,26 @@ impl<'a> Editor<'a> {
     }
 }
 
+/// Maps a plain or Shift-modified Up/Down arrow to a vertical direction so that
+/// vertical movement is fully owned by [`Editor::move_cursor_vertical`]. Arrows
+/// carrying Ctrl/Alt keep their default-navigation handling.
+fn vertical_arrow_dir(input: &Input) -> Option<VerticalDir> {
+    if !(input.modifiers - KeyModifiers::SHIFT).is_empty() {
+        return None;
+    }
+    match input.key_code {
+        KeyCode::Up => Some(VerticalDir::Up),
+        KeyCode::Down => Some(VerticalDir::Down),
+        _ => None,
+    }
+}
+
 fn is_default_navigation(input: &Input) -> bool {
     let has_control = input.modifiers.contains(KeyModifiers::CONTROL);
     let has_alt = input.modifiers.contains(KeyModifiers::ALT);
     match input.key_code {
         KeyCode::Left
         | KeyCode::Right
-        | KeyCode::Up
-        | KeyCode::Down
         | KeyCode::Home
         | KeyCode::End
         | KeyCode::PageUp
@@ -602,4 +629,115 @@ fn is_default_navigation(input: &Input) -> bool {
 
 fn map_clipboard_error(err: arboard::Error) -> anyhow::Error {
     anyhow!("Error while communicating with the operation system clipboard.\nError Details: {err}",)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::keymap::Input;
+    use crossterm::event::{KeyCode, KeyModifiers};
+    use tui_textarea::{CursorMove, TextArea};
+
+    fn editor_with(lines: &[&str], row: u16, col: u16) -> Editor<'static> {
+        let mut editor = Editor::new();
+        editor.text_area = TextArea::new(lines.iter().map(|l| (*l).to_owned()).collect());
+        editor.text_area.move_cursor(CursorMove::Jump(row, col));
+        editor
+    }
+
+    #[test]
+    fn vertical_arrow_dir_maps_plain_and_shift_arrows() {
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Up, KeyModifiers::NONE)),
+            Some(VerticalDir::Up)
+        );
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Down, KeyModifiers::NONE)),
+            Some(VerticalDir::Down)
+        );
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)),
+            Some(VerticalDir::Up)
+        );
+    }
+
+    #[test]
+    fn vertical_arrow_dir_ignores_ctrl_alt_and_other_keys() {
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Up, KeyModifiers::CONTROL)),
+            None
+        );
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Down, KeyModifiers::ALT)),
+            None
+        );
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Left, KeyModifiers::NONE)),
+            None
+        );
+        assert_eq!(
+            vertical_arrow_dir(&Input::new(KeyCode::Char('k'), KeyModifiers::NONE)),
+            None
+        );
+    }
+
+    #[test]
+    fn up_on_first_line_snaps_to_head() {
+        let mut editor = editor_with(&["hello", "world"], 0, 3);
+        editor.move_cursor_up(false);
+        assert_eq!(editor.text_area.cursor(), (0, 0));
+        assert!(!editor.text_area.is_selecting());
+    }
+
+    #[test]
+    fn up_mid_buffer_moves_one_line_without_snapping() {
+        let mut editor = editor_with(&["a", "bb", "ccc"], 2, 1);
+        editor.move_cursor_up(false);
+        assert_eq!(editor.text_area.cursor().0, 1);
+    }
+
+    #[test]
+    fn down_on_last_line_snaps_to_end() {
+        let mut editor = editor_with(&["hello", "world"], 1, 0);
+        editor.move_cursor_down(false);
+        assert_eq!(editor.text_area.cursor(), (1, 5));
+    }
+
+    #[test]
+    fn down_mid_buffer_moves_one_line_without_snapping() {
+        let mut editor = editor_with(&["a", "bb", "ccc"], 0, 0);
+        editor.move_cursor_down(false);
+        assert_eq!(editor.text_area.cursor().0, 1);
+    }
+
+    #[test]
+    fn snap_with_select_extends_selection() {
+        let mut editor = editor_with(&["hello", "world"], 0, 3);
+        editor.move_cursor_up(true);
+        assert_eq!(editor.text_area.cursor(), (0, 0));
+        assert!(editor.text_area.is_selecting());
+    }
+
+    #[test]
+    fn move_without_select_cancels_existing_selection() {
+        let mut editor = editor_with(&["a", "bb", "ccc"], 2, 1);
+        editor.text_area.start_selection();
+        editor.move_cursor_up(false);
+        assert!(!editor.text_area.is_selecting());
+    }
+
+    #[test]
+    fn should_extend_selection_depends_on_mode_and_shift() {
+        let mut editor = editor_with(&["abc"], 0, 0);
+
+        editor.mode = EditorMode::Normal;
+        assert!(!editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)));
+
+        editor.mode = EditorMode::Insert;
+        assert!(editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)));
+        assert!(!editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::NONE)));
+
+        editor.mode = EditorMode::Visual;
+        assert!(editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::NONE)));
+    }
 }
