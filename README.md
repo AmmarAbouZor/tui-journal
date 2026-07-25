@@ -22,7 +22,7 @@
 [![][lst]][repository]
 [![][lcns]][repository]
 
-TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports two different local back-ends: a plain text back-end in JSON format and a database back-end using SQLite.
+TUI-Journal is a terminal-based application written in Rust that allows you to write and manage your journal/notes from within the comfort of your terminal. It provides a simple and efficient interface for creating and organizing your thoughts, ideas, and reflections. TUI-Journal supports three local back-ends: plain-text JSON, SQLite, and an iCalendar `VJOURNAL` directory.
 
 Before opening a PR, please read the [Contribution and AI Policy](#contribution-and-ai-policy).
 
@@ -63,7 +63,7 @@ Before opening a PR, please read the [Contribution and AI Policy](#contribution-
 ## Features
 
 - Write and manage journal/notes entries from the terminal.
-- Store your entries in either a plain text file using the JSON format or a SQLite database.
+- Store your entries as JSON, in a SQLite database, or as iCalendar `VJOURNAL` files.
 - Intuitive, responsive and user-friendly text-based user interface (TUI).
 - Create, edit, and delete entries easily.
 - Edit journal content with the built-in editor or use your favourite terminal text editor from within the app.
@@ -89,8 +89,7 @@ Before opening a PR, please read the [Contribution and AI Policy](#contribution-
 #### Back-ends:
 - [x]  Plain text JSON back-end.
 - [x]  Database back-end using SQLite.
-- [x]  `VJOURNAL` back-end syncable as a CalDAV directory.
-- [ ]  RESTful back-end server with a client in the app.
+- [x]  `VJOURNAL` directory back-end for use with external CalDAV sync clients.
 #### Application:
 - [x]  Edit journals content with external text editor from within the app.
 - [x]  Filter & Search functionalities.
@@ -162,7 +161,7 @@ Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed on you
 
 #### Install with default features:
 
-To install TUI-Journal with default features (SQLite and JSON), you can use `cargo` to install directly from [crates.io](https://crates.io/crates/tui-journal):
+To install TUI-Journal with the default JSON, SQLite, and `VJOURNAL` back-ends, you can use `cargo` to install directly from [crates.io](https://crates.io/crates/tui-journal):
 
 ```bash
 cargo install tui-journal --locked
@@ -220,7 +219,7 @@ Commands:
 Options:
   -j, --json-file-path <FILE PATH>    Sets the entries Json file path and starts using it
   -s, --sqlite-file-path <FILE PATH>  Sets the entries sqlite file path and starts using it
-      --vjournal-file-path <DIR PATH> Sets the entries VJOURNAL directory path and starts using it
+      --vjournal-dir-path <DIR PATH>  Sets the entries VJOURNAL directory path and starts using it
   -b, --backend-type <BACKEND_TYPE>   Sets the backend type and starts using it [possible values: json, sqlite, vjournal]
   -c, --config <DIR PATH>             Specifies the path for the configuration directory.
                                       The configuration directory is considered as the root for themes files too.
@@ -289,6 +288,10 @@ file_path = "<Documents-folder>/tui-journal/entries.db"
 [vjournal_backend]
 directory = "<Documents-folder>/tui-journal/journal"
 ```
+
+### VJOURNAL back-end
+
+The `VJOURNAL` back-end stores journal entries as iCalendar `.ics` files in the configured directory. To use it with CalDAV, point the directory to one managed by an external synchronization client. TUI-Journal does not connect to a CalDAV server or monitor external file changes while running, so restart it after the directory is changed externally.
 
 ## Themes
 
