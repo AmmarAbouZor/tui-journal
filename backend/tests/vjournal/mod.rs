@@ -543,6 +543,32 @@ async fn nonexistent_directory_loads_no_entries() {
 }
 
 #[tokio::test]
+async fn roundtrip_preserves_escaped_tag_delimiters() {
+    let dir = Builder::new().prefix("vj-tag-escaping").tempdir().unwrap();
+    let expected_tags = vec![
+        String::from("work,personal"),
+        String::from("trailing\\"),
+        String::from("plain"),
+    ];
+    let mut provider = create_provider(&dir);
+    provider
+        .add_entry(EntryDraft::new(
+            Utc::now(),
+            String::from("Escaped tags"),
+            expected_tags.clone(),
+            None,
+        ))
+        .await
+        .unwrap();
+
+    let mut reloaded_provider = create_provider(&dir);
+    let entries = reloaded_provider.load_all_entries().await.unwrap();
+
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].tags, expected_tags);
+}
+
+#[tokio::test]
 async fn roundtrip_preserves_content_through_reload() {
     let dir = Builder::new().prefix("vj-roundtrip").tempdir().unwrap();
     let _provider = create_provider_with_two_entries(&dir).await;
