@@ -288,6 +288,46 @@ async fn update_entry() {
 }
 
 #[tokio::test]
+async fn escaped_uid_survives_repeated_updates() {
+    let dir = Builder::new()
+        .prefix("vj-escaped-uid-update")
+        .tempdir()
+        .unwrap();
+    let path = write_calendar(
+        &dir,
+        "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+BEGIN:VJOURNAL\r
+UID:team\\,journal\\\\archive\r
+DTSTAMP:20250101T000000Z\r
+SUMMARY:Original\r
+END:VJOURNAL\r
+END:VCALENDAR\r
+",
+    )
+    .await;
+    let mut provider = create_provider(&dir);
+    let mut entry = provider.load_all_entries().await.unwrap().remove(0);
+
+    entry.title = String::from("First update");
+    let mut entry = provider.update_entry(entry).await.unwrap();
+    entry.content = String::from("Second update");
+    provider.update_entry(entry).await.unwrap();
+
+    let content = tokio::fs::read_to_string(path).await.unwrap();
+    let calendar = parse_component(&content).unwrap();
+    let journal = &calendar.subcomponents[0];
+    let uid = journal.get_only("UID").unwrap();
+    assert_eq!(uid.raw_value, r"team\,journal\\archive");
+    assert_eq!(uid.value_as_string(), r"team,journal\archive");
+    assert_eq!(
+        journal.get_only("DESCRIPTION").unwrap().value_as_string(),
+        "Second update"
+    );
+}
+
+#[tokio::test]
 async fn export_import() {
     let dir_source = Builder::new().prefix("vj-export-src").tempdir().unwrap();
     let mut provider_source = create_provider_with_two_entries(&dir_source).await;
@@ -485,6 +525,59 @@ async fn deleting_master_removes_only_its_vjournal_series() {
     assert!(calendar.subcomponents.iter().any(|component| {
         component.name == "VEVENT" && component_uid(component) == Some("recurring-journal")
     }));
+}
+
+#[tokio::test]
+async fn escaped_uid_series_can_be_deleted_after_update() {
+    let dir = Builder::new()
+        .prefix("vj-escaped-uid-remove")
+        .tempdir()
+        .unwrap();
+    let path = write_calendar(
+        &dir,
+        "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+BEGIN:VJOURNAL\r
+UID:series\\,journal\r
+DTSTAMP:20250101T000000Z\r
+RECURRENCE-ID;VALUE=DATE:20250102\r
+SUMMARY:Detached instance\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:series\\,journal\r
+DTSTAMP:20250101T000000Z\r
+SUMMARY:Series master\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:standalone-journal\r
+DTSTAMP:20250101T000000Z\r
+SUMMARY:Standalone\r
+END:VJOURNAL\r
+END:VCALENDAR\r
+",
+    )
+    .await;
+    let mut provider = create_provider(&dir);
+    let mut master = provider
+        .load_all_entries()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|entry| entry.title == "Series master")
+        .unwrap();
+
+    master.title = String::from("Updated master");
+    let master = provider.update_entry(master).await.unwrap();
+    provider.remove_entry(master.id).await.unwrap();
+
+    let content = tokio::fs::read_to_string(path).await.unwrap();
+    let calendar = parse_component(&content).unwrap();
+    assert_eq!(calendar.subcomponents.len(), 1);
+    assert_eq!(
+        component_uid(&calendar.subcomponents[0]),
+        Some("standalone-journal")
+    );
 }
 
 #[tokio::test]
