@@ -333,6 +333,8 @@ impl VjournalState {
                 fresh_id
             })
         });
+        self.next_id = self.next_id.max(id + 1);
+
         let location = EntryLocation {
             file_path: file_path.to_path_buf(),
             uid: uid.to_string(),
