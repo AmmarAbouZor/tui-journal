@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, anyhow, ensure};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
-use futures_util::stream::{self, StreamExt};
 use uuid::Uuid;
 use vobject::component::write_component;
 use vobject::{Component, Property, parse_component};
@@ -317,19 +316,21 @@ const ICAL_DATE_FMT: &str = "%Y%m%d";
 
 /// Collect all `.ics` files in `dir`, sorted for deterministic ordering.
 async fn scan_ics_files(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
-    let read_dir = tokio::fs::read_dir(dir)
+    let mut read_dir = tokio::fs::read_dir(dir)
         .await
         .with_context(|| format!("reading directory {}", dir.display()))?;
 
-    let mut files: Vec<PathBuf> = stream::unfold(read_dir, |mut rd| async {
-        rd.next_entry().await.transpose().map(|res| (res, rd))
-    })
-    .filter_map(|res| async {
-        let path = res.ok()?.path();
-        (path.extension().and_then(|e| e.to_str()) == Some("ics") && path.is_file()).then_some(path)
-    })
-    .collect()
-    .await;
+    let mut files = Vec::new();
+    while let Some(entry) = read_dir
+        .next_entry()
+        .await
+        .with_context(|| format!("iterating directory {}", dir.display()))?
+    {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) == Some("ics") && path.is_file() {
+            files.push(path);
+        }
+    }
 
     files.sort();
     Ok(files)
