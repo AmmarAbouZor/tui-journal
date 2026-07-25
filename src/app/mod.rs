@@ -25,9 +25,10 @@ mod keymap;
 mod runner;
 mod sorter;
 pub mod state;
+pub mod ui;
+
 #[cfg(test)]
 mod test;
-pub mod ui;
 
 pub use runner::HandleInputReturnType;
 pub use runner::run;
@@ -237,18 +238,22 @@ where
 
         assert!(self.current_entry_id.is_some());
 
+        let mut candidate = self
+            .entries
+            .iter()
+            .find(|entry| entry.id == entry_id)
+            .cloned()
+            .expect("Current entry must have value when updating entry attributes");
+        candidate.title = title;
+        candidate.date = date;
+        candidate.tags = tags;
+        candidate.priority = priority;
+
+        let persisted_entry = self.data_provide.update_entry(candidate).await?;
         let entry = self
             .get_entry_mut(entry_id, EntryEditPart::Attributes, history_target)
-            .expect("Current entry must have value when updating entry attributes");
-
-        entry.title = title;
-        entry.date = date;
-        entry.tags = tags;
-        entry.priority = priority;
-
-        let clone = entry.clone();
-
-        self.data_provide.update_entry(clone).await?;
+            .expect("Updated entry must remain in the entries list");
+        *entry = persisted_entry;
 
         self.sort_entries();
 

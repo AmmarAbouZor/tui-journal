@@ -87,6 +87,42 @@ async fn add_entry() {
 }
 
 #[tokio::test]
+async fn write_priorities_are_validated() {
+    let dir = Builder::new()
+        .prefix("vj-priority-write")
+        .tempdir()
+        .unwrap();
+    let mut provider = create_provider(&dir);
+
+    let invalid = provider
+        .add_entry(EntryDraft::new(
+            Utc::now(),
+            String::from("Invalid"),
+            Vec::new(),
+            Some(42),
+        ))
+        .await;
+    let undefined = provider
+        .add_entry(EntryDraft::new(
+            Utc::now(),
+            String::from("Undefined"),
+            Vec::new(),
+            Some(0),
+        ))
+        .await
+        .unwrap();
+
+    assert!(invalid.is_err());
+    assert_eq!(undefined.priority, None);
+
+    let mut reloaded_provider = create_provider(&dir);
+    let reloaded = reloaded_provider.load_all_entries().await.unwrap();
+    assert_eq!(reloaded.len(), 1);
+    assert_eq!(reloaded[0].title, "Undefined");
+    assert_eq!(reloaded[0].priority, None);
+}
+
+#[tokio::test]
 async fn remove_entry() {
     let dir = Builder::new().prefix("vj-remove").tempdir().unwrap();
     let mut provider = create_provider_with_two_entries(&dir).await;
@@ -103,10 +139,10 @@ async fn remove_entry() {
 }
 
 #[tokio::test]
-async fn restore_entry_preserves_id() {
+async fn restore_entry_validates_priority_and_preserves_id() {
     let dir = Builder::new().prefix("vj-restore").tempdir().unwrap();
     let mut provider = create_provider_with_two_entries(&dir).await;
-    let restored_entry = provider
+    let mut restored_entry = provider
         .load_all_entries()
         .await
         .unwrap()
@@ -115,6 +151,15 @@ async fn restore_entry_preserves_id() {
         .unwrap();
 
     provider.remove_entry(restored_entry.id).await.unwrap();
+    restored_entry.priority = Some(42);
+    assert!(
+        provider
+            .restore_entry(restored_entry.clone())
+            .await
+            .is_err()
+    );
+
+    restored_entry.priority = Some(9);
     let restored = provider
         .restore_entry(restored_entry.clone())
         .await
@@ -146,17 +191,32 @@ async fn update_entry() {
 
     entry1.content = String::from("Updated Content");
     entry1.tags.pop().unwrap();
-    entry1.priority = Some(2);
+    entry1.priority = Some(8);
     entry1.date = Utc.with_ymd_and_hms(2024, 4, 5, 6, 7, 8).unwrap();
     entry2.title = String::from("Updated Title");
     entry2.tags.push(String::from("Tag_4"));
     entry2.priority = None;
 
     provider.update_entry(entry2).await.unwrap();
+
+    let mut invalid_entry = entry1.clone();
+    invalid_entry.priority = Some(12);
+    assert!(provider.update_entry(invalid_entry).await.is_err());
+    let unchanged = provider
+        .load_all_entries()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|entry| entry.title == "Title 1")
+        .unwrap();
+    assert_eq!(unchanged.content, "Content entry 1");
+    assert_eq!(unchanged.priority, None);
+
     let updated_entry = provider.update_entry(entry1).await.unwrap();
 
     let expected_date = Utc.with_ymd_and_hms(2024, 4, 5, 0, 0, 0).unwrap();
     assert_eq!(updated_entry.date, expected_date);
+    assert_eq!(updated_entry.priority, Some(8));
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -166,7 +226,7 @@ async fn update_entry() {
         .find(|e| e.content == "Updated Content")
         .expect("updated entry should be present");
     assert_eq!(first.tags.len(), 1);
-    assert_eq!(first.priority, Some(2));
+    assert_eq!(first.priority, Some(8));
     assert_eq!(first.date, expected_date);
 
     let second = entries
@@ -218,8 +278,18 @@ async fn assign_priority() {
     let dir = Builder::new().prefix("vj-priority").tempdir().unwrap();
     let mut provider = create_provider_with_two_entries(&dir).await;
 
-    provider.assign_priority_to_entries(3).await.unwrap();
+    assert!(provider.assign_priority_to_entries(12).await.is_err());
+    let entries = provider.load_all_entries().await.unwrap();
+    assert_eq!(
+        entries
+            .iter()
+            .find(|entry| entry.title == "Title 1")
+            .unwrap()
+            .priority,
+        None
+    );
 
+    provider.assign_priority_to_entries(9).await.unwrap();
     let entries = provider.load_all_entries().await.unwrap();
 
     let entry_no_prio = entries
@@ -231,8 +301,7 @@ async fn assign_priority() {
         .find(|e| e.title == "Title 2")
         .expect("entry 2 should be present");
 
-    // Title 1 had no priority, should now be 3.
-    assert_eq!(entry_no_prio.priority, Some(3));
+    assert_eq!(entry_no_prio.priority, Some(9));
     // Title 2 already had priority 1, should remain 1.
     assert_eq!(entry_with_prio.priority, Some(1));
 }

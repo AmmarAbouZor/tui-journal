@@ -166,6 +166,7 @@ impl DataProvider for VjournalDataProvide {
                 "Entry title can't be empty".into(),
             ));
         }
+        entry.priority = normalize_entry_priority(entry.priority)?;
 
         let loc = self.state.id_to_location.get(&entry.id).ok_or_else(|| {
             ModifyEntryError::ValidationError(format!("No entry with id {}", entry.id))
@@ -213,6 +214,10 @@ impl DataProvider for VjournalDataProvide {
     }
 
     async fn assign_priority_to_entries(&mut self, priority: u32) -> anyhow::Result<()> {
+        let Some(priority) = normalize_entry_priority(Some(priority))? else {
+            return Ok(());
+        };
+
         let entries = self.load_all_entries().await?;
 
         for mut entry in entries {
@@ -233,6 +238,7 @@ impl VjournalDataProvide {
         id: Option<u32>,
     ) -> Result<Entry, ModifyEntryError> {
         entry.date = date_at_utc_midnight(entry.date.date_naive());
+        entry.priority = normalize_entry_priority(entry.priority)?;
         let uid = generate_uid();
         let vjournal = apply_entry_to_component(&entry, &uid, None);
         let vcal = build_vcalendar(vjournal);
@@ -410,10 +416,11 @@ fn component_to_entry(component: &Component, id: u32) -> anyhow::Result<Entry> {
         .filter(|s| !s.is_empty())
         .collect();
 
-    let ical_priority = component
+    let priority = component
         .get_only("PRIORITY")
-        .and_then(|p| p.raw_value.parse::<u32>().ok());
-    let priority = ical_priority_to_entry(ical_priority);
+        .map(parse_ical_priority)
+        .transpose()?
+        .flatten();
 
     Ok(Entry {
         id,
@@ -472,10 +479,11 @@ fn apply_entry_to_component(
         });
     }
 
-    // PRIORITY <-> priority tier
+    // PRIORITY is used pragmatically even though RFC 5545 does not define it for VJOURNAL.
     comp.remove("PRIORITY");
-    if let Some(ical_prio) = entry_priority_to_ical(entry.priority) {
-        comp.set(Property::new("PRIORITY", ical_prio.to_string()));
+    if let Some(priority) = entry.priority {
+        debug_assert!((1..=9).contains(&priority));
+        comp.set(Property::new("PRIORITY", priority.to_string()));
     }
 
     comp
@@ -524,33 +532,34 @@ fn format_ical_datetime(dt: &DateTime<Utc>) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// Priority mapping
+// Priority handling
 // ---------------------------------------------------------------------------
 
-/// Map iCalendar PRIORITY (0-9) to tui-journal priority tier.
-///
-/// iCal 0 or absent -> None, 1-4 -> Some(1) [HIGH], 5 -> Some(2) [MEDIUM],
-/// 6-9 -> Some(3) [LOW].
-fn ical_priority_to_entry(ical_priority: Option<u32>) -> Option<u32> {
-    match ical_priority {
-        None | Some(0) => None,
-        Some(1..=4) => Some(1),
-        Some(5) => Some(2),
-        Some(6..=9) => Some(3),
-        Some(_) => None,
+/// Parse a native iCalendar priority without changing its ordinal value.
+fn parse_ical_priority(property: &Property) -> anyhow::Result<Option<u32>> {
+    let value = property
+        .raw_value
+        .parse::<u32>()
+        .with_context(|| format!("Invalid iCalendar priority: {}", property.raw_value))?;
+
+    match value {
+        0 => Ok(None),
+        1..=9 => Ok(Some(value)),
+        _ => Err(anyhow!("iCalendar priority must be between 0 and 9")),
     }
 }
 
-/// Map tui-journal priority tier to iCalendar PRIORITY (0-9).
-///
-/// None -> None (omit property), Some(1) -> 1, Some(2) -> 5, Some(3) -> 9.
-fn entry_priority_to_ical(entry_priority: Option<u32>) -> Option<u32> {
-    match entry_priority {
-        None => None,
-        Some(1) => Some(1),
-        Some(2) => Some(5),
-        Some(3) => Some(9),
-        Some(_) => None,
+/// Normalize undefined priority and reject values outside the iCalendar range.
+fn normalize_entry_priority(priority: Option<u32>) -> Result<Option<u32>, ModifyEntryError> {
+    match priority {
+        None | Some(0) => Ok(None),
+        Some(value @ 1..=9) => Ok(Some(value)),
+        Some(value) => {
+            let message = format!(
+                "Priority {value} cannot be represented in iCalendar; expected 1 through 9, or 0 for no priority"
+            );
+            Err(ModifyEntryError::ValidationError(message))
+        }
     }
 }
 
@@ -558,73 +567,39 @@ fn entry_priority_to_ical(entry_priority: Option<u32>) -> Option<u32> {
 mod tests {
     use super::*;
 
-    // -- Priority mapping ---------------------------------------------------
+    // -- Priority handling --------------------------------------------------
 
     #[test]
-    fn ical_priority_absent_maps_to_none() {
-        assert_eq!(ical_priority_to_entry(None), None);
-    }
-
-    #[test]
-    fn ical_priority_zero_maps_to_none() {
-        assert_eq!(ical_priority_to_entry(Some(0)), None);
-    }
-
-    #[test]
-    fn ical_priority_high_range() {
-        for v in 1..=4 {
-            assert_eq!(ical_priority_to_entry(Some(v)), Some(1), "iCal {v}");
+    fn native_priorities_keep_their_values() {
+        for value in 1..=9 {
+            let property = Property::new("PRIORITY", value.to_string());
+            assert_eq!(parse_ical_priority(&property).unwrap(), Some(value));
         }
     }
 
     #[test]
-    fn ical_priority_medium() {
-        assert_eq!(ical_priority_to_entry(Some(5)), Some(2));
+    fn native_zero_is_undefined() {
+        let property = Property::new("PRIORITY", "0");
+        assert_eq!(parse_ical_priority(&property).unwrap(), None);
     }
 
     #[test]
-    fn ical_priority_low_range() {
-        for v in 6..=9 {
-            assert_eq!(ical_priority_to_entry(Some(v)), Some(3), "iCal {v}");
+    fn invalid_native_priorities_are_rejected() {
+        for value in ["invalid", "10", "4294967296"] {
+            let property = Property::new("PRIORITY", value);
+            assert!(parse_ical_priority(&property).is_err(), "priority {value}");
         }
     }
 
     #[test]
-    fn ical_priority_out_of_range() {
-        assert_eq!(ical_priority_to_entry(Some(10)), None);
-    }
-
-    #[test]
-    fn entry_priority_none_maps_to_none() {
-        assert_eq!(entry_priority_to_ical(None), None);
-    }
-
-    #[test]
-    fn entry_priority_high() {
-        assert_eq!(entry_priority_to_ical(Some(1)), Some(1));
-    }
-
-    #[test]
-    fn entry_priority_medium() {
-        assert_eq!(entry_priority_to_ical(Some(2)), Some(5));
-    }
-
-    #[test]
-    fn entry_priority_low() {
-        assert_eq!(entry_priority_to_ical(Some(3)), Some(9));
-    }
-
-    #[test]
-    fn entry_priority_unknown_tier() {
-        assert_eq!(entry_priority_to_ical(Some(42)), None);
-    }
-
-    #[test]
-    fn priority_roundtrip() {
-        for tier in [None, Some(1), Some(2), Some(3)] {
-            let ical = entry_priority_to_ical(tier);
-            assert_eq!(ical_priority_to_entry(ical), tier, "tier {tier:?}");
-        }
+    fn application_priorities_are_validated() {
+        assert_eq!(normalize_entry_priority(None).unwrap(), None);
+        assert_eq!(normalize_entry_priority(Some(0)).unwrap(), None);
+        assert_eq!(normalize_entry_priority(Some(1)).unwrap(), Some(1));
+        assert_eq!(normalize_entry_priority(Some(8)).unwrap(), Some(8));
+        assert_eq!(normalize_entry_priority(Some(9)).unwrap(), Some(9));
+        assert!(normalize_entry_priority(Some(10)).is_err());
+        assert!(normalize_entry_priority(Some(u32::MAX)).is_err());
     }
 
     // -- Datetime helpers ---------------------------------------------------
@@ -676,7 +651,7 @@ DTSTART;TZID=Europe/Berlin:20250315T100000\r
 SUMMARY:My Title\r
 DESCRIPTION:Some content\r
 CATEGORIES:tag1,tag2\r
-PRIORITY:1\r
+PRIORITY:9\r
 END:VJOURNAL\r
 END:VCALENDAR\r
 ";
@@ -688,7 +663,7 @@ END:VCALENDAR\r
         assert_eq!(entry.title, "My Title");
         assert_eq!(entry.content, "Some content");
         assert_eq!(entry.tags, vec!["tag1", "tag2"]);
-        assert_eq!(entry.priority, Some(1)); // HIGH tier
+        assert_eq!(entry.priority, Some(9));
         assert_eq!(
             entry.date,
             date_at_utc_midnight(NaiveDate::from_ymd_opt(2025, 3, 15).unwrap())
@@ -719,6 +694,23 @@ END:VCALENDAR\r
             entry.date,
             date_at_utc_midnight(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap())
         );
+    }
+
+    #[test]
+    fn component_rejects_out_of_range_priority() {
+        let ical = "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+BEGIN:VJOURNAL\r
+UID:invalid-priority\r
+DTSTAMP:20250101T120000Z\r
+PRIORITY:10\r
+END:VJOURNAL\r
+END:VCALENDAR\r
+";
+        let vcal = parse_vcalendar(ical).unwrap();
+
+        assert!(component_to_entry(&vcal.subcomponents[0], 0).is_err());
     }
 
     #[test]
@@ -757,10 +749,7 @@ END:VCALENDAR\r
                 .raw_value
                 .contains("rust")
         );
-        assert_eq!(
-            comp.get_only("PRIORITY").unwrap().raw_value,
-            "5" // tier 2 -> iCal 5
-        );
+        assert_eq!(comp.get_only("PRIORITY").unwrap().raw_value, "2");
     }
 
     #[test]
