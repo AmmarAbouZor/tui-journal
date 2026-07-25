@@ -92,7 +92,7 @@ impl DataProvider for VjournalDataProvide {
                         continue;
                     }
                 };
-                if !seen_uids.insert(uid.to_string()) {
+                if !seen_uids.insert(uid.clone()) {
                     log::warn!(
                         "Skipping duplicate VJOURNAL master {uid} in {}",
                         file_path.display()
@@ -100,7 +100,7 @@ impl DataProvider for VjournalDataProvide {
                     continue;
                 }
 
-                let id = self.state.assign_id(uid, file_path, None);
+                let id = self.state.assign_id(&uid, file_path, None);
                 match component_to_entry(sub, id) {
                     Ok(entry) => entries.push(entry),
                     Err(e) => {
@@ -153,8 +153,10 @@ impl DataProvider for VjournalDataProvide {
 
         let mut vcal = read_vcalendar_file(&file_path).await?;
 
-        vcal.subcomponents
-            .retain(|c| c.name != "VJOURNAL" || get_uid(c) != Some(uid.as_str()));
+        vcal.subcomponents.retain(|component| {
+            component.name != "VJOURNAL"
+                || get_uid(component).is_none_or(|component_uid| component_uid != uid.as_str())
+        });
 
         if vcal.subcomponents.is_empty() {
             tokio::fs::remove_file(&file_path).await?;
@@ -192,7 +194,7 @@ impl DataProvider for VjournalDataProvide {
             .iter_mut()
             .find(|c| {
                 c.name == "VJOURNAL"
-                    && get_uid(c).is_some_and(|comp_id| comp_id == uid.as_str())
+                    && get_uid(c).is_some_and(|component_uid| component_uid == uid.as_str())
                     && c.get_all("RECURRENCE-ID").is_empty()
             })
             .ok_or_else(|| {
@@ -387,9 +389,9 @@ fn build_vcalendar(vjournal: Component) -> Component {
     vcal
 }
 
-/// Extract the UID string from a VJOURNAL component.
-fn get_uid(component: &Component) -> Option<&str> {
-    component.get_only("UID").map(|p| p.raw_value.as_str())
+/// Extract the unescaped UID from a VJOURNAL component.
+fn get_uid(component: &Component) -> Option<String> {
+    component.get_only("UID").map(Property::value_as_string)
 }
 
 /// Build an [`Entry`] from a VJOURNAL [`Component`].
@@ -458,17 +460,18 @@ fn split_text_list(value: &str) -> impl Iterator<Item = &str> {
 }
 
 /// Apply [`Entry`] fields onto a VJOURNAL [`Component`], preserving any
-/// properties we do not manage.  When `existing` is `None` a brand-new
-/// component is created with the given `uid`.
+/// properties we do not manage. When `existing` is `None`, a brand-new
+/// component is created with the given unescaped `uid`.
 fn apply_entry_to_component(
     entry: &EntryDraft,
     uid: &str,
     existing: Option<Component>,
 ) -> Component {
-    let mut comp = existing.unwrap_or_else(|| Component::new("VJOURNAL"));
-
-    // UID — set once, never changed.
-    comp.set(Property::new("UID", uid));
+    let mut comp = existing.unwrap_or_else(|| {
+        let mut component = Component::new("VJOURNAL");
+        component.set(Property::new("UID", uid));
+        component
+    });
 
     // DTSTAMP — required by RFC 5545; updated on every write.
     comp.set(Property::new("DTSTAMP", format_ical_datetime(&Utc::now())));
