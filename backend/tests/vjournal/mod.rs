@@ -63,7 +63,10 @@ async fn add_entry() {
     );
     entry_draft.content.push_str("Content entry added");
 
-    provider.add_entry(entry_draft).await.unwrap();
+    let added_entry = provider.add_entry(entry_draft).await.unwrap();
+
+    let expected_date = Utc.with_ymd_and_hms(2023, 3, 23, 0, 0, 0).unwrap();
+    assert_eq!(added_entry.date, expected_date);
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -76,6 +79,7 @@ async fn add_entry() {
     assert_eq!(added.title, String::from("Title added"));
     assert_eq!(added.content, String::from("Content entry added"));
     assert_eq!(added.priority, Some(1));
+    assert_eq!(added.date, expected_date);
     assert_eq!(
         added.tags,
         vec![String::from("Tag_1"), String::from("Tag_3")]
@@ -143,12 +147,16 @@ async fn update_entry() {
     entry1.content = String::from("Updated Content");
     entry1.tags.pop().unwrap();
     entry1.priority = Some(2);
+    entry1.date = Utc.with_ymd_and_hms(2024, 4, 5, 6, 7, 8).unwrap();
     entry2.title = String::from("Updated Title");
     entry2.tags.push(String::from("Tag_4"));
     entry2.priority = None;
 
     provider.update_entry(entry2).await.unwrap();
-    provider.update_entry(entry1).await.unwrap();
+    let updated_entry = provider.update_entry(entry1).await.unwrap();
+
+    let expected_date = Utc.with_ymd_and_hms(2024, 4, 5, 0, 0, 0).unwrap();
+    assert_eq!(updated_entry.date, expected_date);
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -159,6 +167,7 @@ async fn update_entry() {
         .expect("updated entry should be present");
     assert_eq!(first.tags.len(), 1);
     assert_eq!(first.priority, Some(2));
+    assert_eq!(first.date, expected_date);
 
     let second = entries
         .iter()

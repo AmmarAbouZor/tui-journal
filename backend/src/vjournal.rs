@@ -160,7 +160,7 @@ impl DataProvider for VjournalDataProvide {
         Ok(())
     }
 
-    async fn update_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn update_entry(&mut self, mut entry: Entry) -> Result<Entry, ModifyEntryError> {
         if entry.title.is_empty() {
             return Err(ModifyEntryError::ValidationError(
                 "Entry title can't be empty".into(),
@@ -189,6 +189,7 @@ impl DataProvider for VjournalDataProvide {
                 ))
             })?;
 
+        entry.date = date_at_utc_midnight(entry.date.date_naive());
         let draft = EntryDraft::from_entry(entry.clone());
         *sub = apply_entry_to_component(&draft, &uid, Some(sub.clone()));
 
@@ -228,9 +229,10 @@ impl DataProvider for VjournalDataProvide {
 impl VjournalDataProvide {
     async fn write_entry(
         &mut self,
-        entry: EntryDraft,
+        mut entry: EntryDraft,
         id: Option<u32>,
     ) -> Result<Entry, ModifyEntryError> {
+        entry.date = date_at_utc_midnight(entry.date.date_naive());
         let uid = generate_uid();
         let vjournal = apply_entry_to_component(&entry, &uid, None);
         let vcal = build_vcalendar(vjournal);
@@ -387,14 +389,15 @@ fn component_to_entry(component: &Component, id: u32) -> anyhow::Result<Entry> {
 
     let date = component
         .get_only("DTSTART")
-        .map(|p| parse_ical_datetime(&p.raw_value))
+        .map(parse_ical_date)
         .transpose()?
         .or_else(|| {
             component
                 .get_only("DTSTAMP")
-                .and_then(|p| parse_ical_datetime(&p.raw_value).ok())
+                .and_then(|property| parse_ical_datetime(&property.raw_value).ok())
+                .map(|timestamp| date_at_utc_midnight(timestamp.date_naive()))
         })
-        .unwrap_or_else(Utc::now);
+        .unwrap_or_else(|| date_at_utc_midnight(Utc::now().date_naive()));
 
     // CATEGORIES values are comma-separated in the raw property value.
     // NOTE: tags that contain literal commas will not roundtrip correctly;
@@ -448,7 +451,9 @@ fn apply_entry_to_component(
     }
 
     // DTSTART <-> date
-    comp.set(Property::new("DTSTART", format_ical_datetime(&entry.date)));
+    let mut dtstart = Property::new("DTSTART", entry.date.format(ICAL_DATE_FMT).to_string());
+    dtstart.params.insert("VALUE".into(), "DATE".into());
+    comp.set(dtstart);
 
     // CATEGORIES <-> tags
     comp.remove("CATEGORIES");
@@ -480,16 +485,37 @@ fn apply_entry_to_component(
 // iCalendar datetime helpers
 // ---------------------------------------------------------------------------
 
+/// Parses an iCalendar date or date-time and normalizes its calendar date to UTC midnight.
+///
+/// Time-of-day and timezone information are intentionally ignored because journal entries store
+/// dates only.
+fn parse_ical_date(property: &Property) -> anyhow::Result<DateTime<Utc>> {
+    let value = &property.raw_value;
+    const LOCAL_DATE_TIME_FMT: &str = "%Y%m%dT%H%M%S";
+    let date = NaiveDate::parse_from_str(value, ICAL_DATE_FMT)
+        .or_else(|_| {
+            NaiveDateTime::parse_from_str(value, ICAL_DATE_TIME_FMT).map(|datetime| datetime.date())
+        })
+        .or_else(|_| {
+            NaiveDateTime::parse_from_str(value, LOCAL_DATE_TIME_FMT)
+                .map(|datetime| datetime.date())
+        })
+        .with_context(|| format!("Failed to parse iCalendar date: {value}"))?;
+
+    let normalized_date = date_at_utc_midnight(date);
+    Ok(normalized_date)
+}
+
+/// Converts a calendar date to its UTC midnight representation.
+fn date_at_utc_midnight(date: NaiveDate) -> DateTime<Utc> {
+    date.and_hms_opt(0, 0, 0)
+        .expect("midnight is always valid")
+        .and_utc()
+}
+
 fn parse_ical_datetime(s: &str) -> anyhow::Result<DateTime<Utc>> {
     NaiveDateTime::parse_from_str(s, ICAL_DATE_TIME_FMT)
-        .map(|dt| dt.and_utc())
-        .or_else(|_err| {
-            NaiveDate::parse_from_str(s, ICAL_DATE_FMT).map(|d| {
-                d.and_hms_opt(0, 0, 0)
-                    .expect("midnight is always valid")
-                    .and_utc()
-            })
-        })
+        .map(|datetime| datetime.and_utc())
         .with_context(|| format!("Failed to parse iCalendar datetime: {s}"))
 }
 
@@ -610,9 +636,24 @@ mod tests {
     }
 
     #[test]
-    fn parse_date_only() {
-        let dt = parse_ical_datetime("20060910").unwrap();
-        assert_eq!(dt.to_rfc3339(), "2006-09-10T00:00:00+00:00");
+    fn dtstart_forms_normalize_to_date() {
+        let cases = [
+            ("20060910", Some(("VALUE", "DATE"))),
+            ("20060910T220000Z", None),
+            ("20060910T220000", None),
+            ("20060910T220000", Some(("TZID", "Europe/Berlin"))),
+        ];
+
+        for (value, parameter) in cases {
+            let mut property = Property::new("DTSTART", value);
+            if let Some((name, value)) = parameter {
+                property.params.insert(name.into(), value.into());
+            }
+
+            let date = parse_ical_date(&property).unwrap();
+
+            assert_eq!(date.to_rfc3339(), "2006-09-10T00:00:00+00:00");
+        }
     }
 
     #[test]
@@ -631,7 +672,7 @@ VERSION:2.0\r
 BEGIN:VJOURNAL\r
 UID:test-uid-1\r
 DTSTAMP:20250101T000000Z\r
-DTSTART:20250315T100000Z\r
+DTSTART;TZID=Europe/Berlin:20250315T100000\r
 SUMMARY:My Title\r
 DESCRIPTION:Some content\r
 CATEGORIES:tag1,tag2\r
@@ -648,7 +689,10 @@ END:VCALENDAR\r
         assert_eq!(entry.content, "Some content");
         assert_eq!(entry.tags, vec!["tag1", "tag2"]);
         assert_eq!(entry.priority, Some(1)); // HIGH tier
-        assert_eq!(entry.date, parse_ical_datetime("20250315T100000Z").unwrap());
+        assert_eq!(
+            entry.date,
+            date_at_utc_midnight(NaiveDate::from_ymd_opt(2025, 3, 15).unwrap())
+        );
     }
 
     #[test]
@@ -670,8 +714,11 @@ END:VCALENDAR\r
         assert_eq!(entry.content, "");
         assert!(entry.tags.is_empty());
         assert_eq!(entry.priority, None);
-        // Falls back to DTSTAMP when DTSTART is absent
-        assert_eq!(entry.date, parse_ical_datetime("20250101T120000Z").unwrap());
+        // Falls back to the DTSTAMP date when DTSTART is absent.
+        assert_eq!(
+            entry.date,
+            date_at_utc_midnight(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap())
+        );
     }
 
     #[test]
@@ -696,9 +743,11 @@ END:VCALENDAR\r
                 .value_as_string(),
             "Body text"
         );
+        let dtstart = comp.get_only("DTSTART").unwrap();
+        assert_eq!(dtstart.raw_value, "20250318");
         assert_eq!(
-            comp.get_only("DTSTART").unwrap().raw_value,
-            "20250318T090000Z"
+            dtstart.params.get("VALUE").map(String::as_str),
+            Some("DATE")
         );
         // CATEGORIES: comma-separated raw value
         assert!(
