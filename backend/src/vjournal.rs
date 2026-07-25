@@ -417,13 +417,10 @@ fn component_to_entry(component: &Component, id: u32) -> anyhow::Result<Entry> {
         })
         .unwrap_or_else(|| date_at_utc_midnight(Utc::now().date_naive()));
 
-    // CATEGORIES values are comma-separated in the raw property value.
-    // NOTE: tags that contain literal commas will not roundtrip correctly;
-    // this is acceptable for now.
     let tags: Vec<String> = component
         .get_all("CATEGORIES")
         .iter()
-        .flat_map(|p| p.raw_value.split(','))
+        .flat_map(|p| split_text_list(&p.raw_value))
         .map(|s| vobject::unescape_chars(s.trim()))
         .filter(|s| !s.is_empty())
         .collect();
@@ -441,6 +438,22 @@ fn component_to_entry(component: &Component, id: u32) -> anyhow::Result<Entry> {
         content,
         tags,
         priority,
+    })
+}
+
+/// Splits an iCalendar TEXT list without treating escaped commas as delimiters.
+fn split_text_list(value: &str) -> impl Iterator<Item = &str> {
+    let mut escaped = false;
+    value.split(move |character| {
+        if escaped {
+            escaped = false;
+            return false;
+        }
+        if character == '\\' {
+            escaped = true;
+            return false;
+        }
+        character == ','
     })
 }
 
@@ -662,7 +675,8 @@ DTSTAMP:20250101T000000Z\r
 DTSTART;TZID=Europe/Berlin:20250315T100000\r
 SUMMARY:My Title\r
 DESCRIPTION:Some content\r
-CATEGORIES:tag1,tag2\r
+CATEGORIES:tag1,work\\,personal\r
+CATEGORIES:path\\\\,tag2\r
 PRIORITY:9\r
 END:VJOURNAL\r
 END:VCALENDAR\r
@@ -674,7 +688,7 @@ END:VCALENDAR\r
         assert_eq!(entry.id, 42);
         assert_eq!(entry.title, "My Title");
         assert_eq!(entry.content, "Some content");
-        assert_eq!(entry.tags, vec!["tag1", "tag2"]);
+        assert_eq!(entry.tags, vec!["tag1", "work,personal", "path\\", "tag2"]);
         assert_eq!(entry.priority, Some(9));
         assert_eq!(
             entry.date,
