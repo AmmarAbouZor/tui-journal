@@ -74,6 +74,27 @@ async fn test_data_provider_errors() {
 }
 
 #[tokio::test]
+async fn failed_attribute_update_keeps_entry_unchanged() {
+    let mut app = create_default_app();
+    app.load_entries().await.unwrap();
+    app.current_entry_id = Some(0);
+    let original = app.get_current_entry().unwrap().clone();
+    app.data_provide.set_return_err(true);
+
+    let result = app
+        .update_current_entry_attributes(
+            String::from("Rejected"),
+            original.date,
+            original.tags.clone(),
+            Some(10),
+        )
+        .await;
+
+    assert!(result.is_err());
+    assert_eq!(app.get_current_entry(), Some(&original));
+}
+
+#[tokio::test]
 async fn test_get_tags() {
     let mut app = create_default_app();
     app.load_entries().await.unwrap();
