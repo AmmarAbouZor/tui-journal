@@ -1,10 +1,60 @@
+use std::path::PathBuf;
+
 use backend::*;
 use chrono::{TimeZone, Utc};
 use tempfile::{Builder, TempDir};
+use vobject::{Component, parse_component};
 
 fn create_provider(dir: &TempDir) -> VjournalDataProvide {
     VjournalDataProvide::new(dir.path().to_path_buf())
 }
+
+async fn write_calendar(dir: &TempDir, content: &str) -> PathBuf {
+    let path = dir.path().join("calendar.ics");
+    tokio::fs::write(&path, content).await.unwrap();
+    path
+}
+
+fn component_uid(component: &Component) -> Option<&str> {
+    component
+        .get_only("UID")
+        .map(|property| property.raw_value.as_str())
+}
+
+const RECURRING_CALENDAR: &str = "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:-//test//EN\r
+BEGIN:VJOURNAL\r
+UID:recurring-journal\r
+DTSTAMP:20250101T000000Z\r
+DTSTART;VALUE=DATE:20250102\r
+RECURRENCE-ID;VALUE=DATE:20250102\r
+SUMMARY:Detached instance\r
+DESCRIPTION:Detached content\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:recurring-journal\r
+DTSTAMP:20250101T000000Z\r
+DTSTART;VALUE=DATE:20250101\r
+RRULE:FREQ=DAILY;COUNT=3\r
+SUMMARY:Series master\r
+DESCRIPTION:Master content\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:standalone-journal\r
+DTSTAMP:20250101T000000Z\r
+DTSTART;VALUE=DATE:20250104\r
+SUMMARY:Standalone\r
+END:VJOURNAL\r
+BEGIN:VEVENT\r
+UID:recurring-journal\r
+DTSTAMP:20250101T000000Z\r
+DTSTART:20250101T120000Z\r
+SUMMARY:Event with matching UID\r
+END:VEVENT\r
+END:VCALENDAR\r
+";
 
 async fn create_provider_with_two_entries(dir: &TempDir) -> VjournalDataProvide {
     let mut provider = create_provider(dir);
@@ -304,6 +354,170 @@ async fn assign_priority() {
     assert_eq!(entry_no_prio.priority, Some(9));
     // Title 2 already had priority 1, should remain 1.
     assert_eq!(entry_with_prio.priority, Some(1));
+}
+
+#[tokio::test]
+async fn recurrence_instances_are_hidden_and_master_updates_are_targeted() {
+    let dir = Builder::new()
+        .prefix("vj-recurrence-update")
+        .tempdir()
+        .unwrap();
+    let path = write_calendar(&dir, RECURRING_CALENDAR).await;
+    let mut provider = create_provider(&dir);
+
+    let entries = provider.load_all_entries().await.unwrap();
+
+    assert_eq!(entries.len(), 2);
+    assert_ne!(entries[0].id, entries[1].id);
+    assert!(
+        entries
+            .iter()
+            .all(|entry| entry.title != "Detached instance")
+    );
+
+    let mut master = entries
+        .into_iter()
+        .find(|entry| entry.title == "Series master")
+        .unwrap();
+    master.title = String::from("Updated master");
+    provider.update_entry(master).await.unwrap();
+
+    let content = tokio::fs::read_to_string(path).await.unwrap();
+    let calendar = parse_component(&content).unwrap();
+    let recurring: Vec<_> = calendar
+        .subcomponents
+        .iter()
+        .filter(|component| {
+            component.name == "VJOURNAL" && component_uid(component) == Some("recurring-journal")
+        })
+        .collect();
+
+    assert_eq!(recurring.len(), 2);
+    let master = recurring
+        .iter()
+        .find(|component| component.get_only("RECURRENCE-ID").is_none())
+        .unwrap();
+    assert_eq!(
+        master.get_only("SUMMARY").unwrap().value_as_string(),
+        "Updated master"
+    );
+    assert_eq!(
+        master.get_only("RRULE").unwrap().raw_value,
+        "FREQ=DAILY;COUNT=3"
+    );
+
+    let detached = recurring
+        .iter()
+        .find(|component| component.get_only("RECURRENCE-ID").is_some())
+        .unwrap();
+    assert_eq!(
+        detached.get_only("SUMMARY").unwrap().value_as_string(),
+        "Detached instance"
+    );
+    assert_eq!(
+        detached.get_only("DESCRIPTION").unwrap().value_as_string(),
+        "Detached content"
+    );
+}
+
+#[tokio::test]
+async fn repeated_recurrence_ids_are_not_treated_as_a_master() {
+    let dir = Builder::new()
+        .prefix("vj-repeated-recurrence-id")
+        .tempdir()
+        .unwrap();
+    write_calendar(
+        &dir,
+        "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+BEGIN:VJOURNAL\r
+UID:recurring-journal\r
+DTSTAMP:20250101T000000Z\r
+RECURRENCE-ID;VALUE=DATE:20250102\r
+RECURRENCE-ID;VALUE=DATE:20250103\r
+SUMMARY:Malformed instance\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:recurring-journal\r
+DTSTAMP:20250101T000000Z\r
+SUMMARY:Series master\r
+END:VJOURNAL\r
+END:VCALENDAR\r
+",
+    )
+    .await;
+    let mut provider = create_provider(&dir);
+
+    let entries = provider.load_all_entries().await.unwrap();
+
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].title, "Series master");
+}
+
+#[tokio::test]
+async fn deleting_master_removes_only_its_vjournal_series() {
+    let dir = Builder::new()
+        .prefix("vj-recurrence-remove")
+        .tempdir()
+        .unwrap();
+    let path = write_calendar(&dir, RECURRING_CALENDAR).await;
+    let mut provider = create_provider(&dir);
+    let master_id = provider
+        .load_all_entries()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|entry| entry.title == "Series master")
+        .unwrap()
+        .id;
+
+    provider.remove_entry(master_id).await.unwrap();
+
+    let content = tokio::fs::read_to_string(path).await.unwrap();
+    let calendar = parse_component(&content).unwrap();
+    assert!(!calendar.subcomponents.iter().any(|component| {
+        component.name == "VJOURNAL" && component_uid(component) == Some("recurring-journal")
+    }));
+    assert!(calendar.subcomponents.iter().any(|component| {
+        component.name == "VJOURNAL" && component_uid(component) == Some("standalone-journal")
+    }));
+    assert!(calendar.subcomponents.iter().any(|component| {
+        component.name == "VEVENT" && component_uid(component) == Some("recurring-journal")
+    }));
+}
+
+#[tokio::test]
+async fn duplicate_masters_after_first_are_skipped() {
+    let dir = Builder::new()
+        .prefix("vj-duplicate-master")
+        .tempdir()
+        .unwrap();
+    write_calendar(
+        &dir,
+        "\
+BEGIN:VCALENDAR\r
+VERSION:2.0\r
+BEGIN:VJOURNAL\r
+UID:duplicate-master\r
+DTSTAMP:20250101T000000Z\r
+SUMMARY:First master\r
+END:VJOURNAL\r
+BEGIN:VJOURNAL\r
+UID:duplicate-master\r
+DTSTAMP:20250102T000000Z\r
+SUMMARY:Second master\r
+END:VJOURNAL\r
+END:VCALENDAR\r
+",
+    )
+    .await;
+    let mut provider = create_provider(&dir);
+
+    let entries = provider.load_all_entries().await.unwrap();
+
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].title, "First master");
 }
 
 #[tokio::test]

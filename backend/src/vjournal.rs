@@ -1,5 +1,4 @@
-use std::collections::BTreeMap;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, anyhow, ensure};
@@ -71,6 +70,7 @@ impl DataProvider for VjournalDataProvide {
 
         let files = scan_ics_files(&self.directory).await?;
         let mut entries = Vec::new();
+        let mut seen_uids = HashSet::new();
 
         for file_path in &files {
             let vcal = match read_vcalendar_file(file_path).await {
@@ -82,7 +82,7 @@ impl DataProvider for VjournalDataProvide {
             };
 
             for sub in &vcal.subcomponents {
-                if sub.name != "VJOURNAL" {
+                if sub.name != "VJOURNAL" || !sub.get_all("RECURRENCE-ID").is_empty() {
                     continue;
                 }
                 let uid = match get_uid(sub) {
@@ -92,6 +92,13 @@ impl DataProvider for VjournalDataProvide {
                         continue;
                     }
                 };
+                if !seen_uids.insert(uid.to_string()) {
+                    log::warn!(
+                        "Skipping duplicate VJOURNAL master {uid} in {}",
+                        file_path.display()
+                    );
+                    continue;
+                }
 
                 let id = self.state.assign_id(uid, file_path, None);
                 match component_to_entry(sub, id) {
@@ -147,7 +154,7 @@ impl DataProvider for VjournalDataProvide {
         let mut vcal = read_vcalendar_file(&file_path).await?;
 
         vcal.subcomponents
-            .retain(|c| get_uid(c) != Some(uid.as_str()));
+            .retain(|c| c.name != "VJOURNAL" || get_uid(c) != Some(uid.as_str()));
 
         if vcal.subcomponents.is_empty() {
             tokio::fs::remove_file(&file_path).await?;
@@ -179,10 +186,15 @@ impl DataProvider for VjournalDataProvide {
             .await
             .map_err(|e| anyhow!(e))?;
 
+        // Detached instances are hidden, so updates must target the recurrence master.
         let sub = vcal
             .subcomponents
             .iter_mut()
-            .find(|c| get_uid(c) == Some(uid.as_str()))
+            .find(|c| {
+                c.name == "VJOURNAL"
+                    && get_uid(c).is_some_and(|comp_id| comp_id == uid.as_str())
+                    && c.get_all("RECURRENCE-ID").is_empty()
+            })
             .ok_or_else(|| {
                 ModifyEntryError::DataError(anyhow!(
                     "VJOURNAL {uid} not found in {}",
