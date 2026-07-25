@@ -221,6 +221,35 @@ async fn restore_entry_validates_priority_and_preserves_id() {
 }
 
 #[tokio::test]
+async fn add_after_restore_uses_a_new_id() {
+    let dir = Builder::new()
+        .prefix("vj-add-after-restore")
+        .tempdir()
+        .unwrap();
+    let mut provider = create_provider(&dir);
+    let restored = Entry::from_draft(
+        7,
+        EntryDraft::new(Utc::now(), String::from("Restored"), Vec::new(), None),
+    );
+
+    provider.restore_entry(restored).await.unwrap();
+    let added = provider
+        .add_entry(EntryDraft::new(
+            Utc::now(),
+            String::from("Added"),
+            Vec::new(),
+            None,
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(added.id, 8);
+    let entries = provider.load_all_entries().await.unwrap();
+    assert_eq!(entries.len(), 2);
+    assert_ne!(entries[0].id, entries[1].id);
+}
+
+#[tokio::test]
 async fn update_entry() {
     let dir = Builder::new().prefix("vj-update").tempdir().unwrap();
     let mut provider = create_provider_with_two_entries(&dir).await;
