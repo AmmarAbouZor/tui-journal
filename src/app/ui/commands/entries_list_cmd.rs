@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, fs, path::PathBuf};
 
 use crate::app::{App, UIComponents, external_editor, ui::*};
 
@@ -286,8 +286,6 @@ pub async fn edit_in_external_editor<D: DataProvider>(
     ui_components: &mut UIComponents<'_>,
     app: &mut App<D>,
 ) -> anyhow::Result<()> {
-    use tokio::fs;
-
     if let Some(entry) = app.get_current_entry() {
         const TEMP_FILENAME: &str = "tui_journal";
         let temp_extension = &app.settings.external_editor.temp_file_extension;
@@ -299,29 +297,38 @@ pub async fn edit_in_external_editor<D: DataProvider>(
             builder.suffix(temp_extension);
         };
 
-        let tmpdir = if let Some(xdg_runtime_dir) = env::var_os("XDG_RUNTIME_DIR") {
-            let xdg_dir = PathBuf::from(xdg_runtime_dir);
-            let xdg_subdir = xdg_dir.join("tui-journal");
-            if xdg_subdir.exists() || fs::create_dir(&xdg_subdir).await.is_ok() {
-                xdg_subdir
-            } else {
-                xdg_dir
-            }
-        } else {
-            env::temp_dir()
-        };
+        // We need to check the content of the environment variable if it's
+        // actually a valid path before trying to create files and directories.
+        let xdg_temp_dir = env::var_os("XDG_RUNTIME_DIR")
+            .map(PathBuf::from)
+            .filter(|path| path.is_absolute())
+            .map(|runtime_dir| {
+                let app_dir = runtime_dir.join("tui-journal");
 
-        let temp_file = builder.tempfile_in(tmpdir)?;
+                if fs::create_dir(&app_dir).is_ok()
+                    || fs::metadata(&app_dir).is_ok_and(|metadata| metadata.is_dir())
+                {
+                    app_dir
+                } else {
+                    runtime_dir
+                }
+            });
+
+        let temp_file = xdg_temp_dir.map_or_else(
+            || builder.tempfile(),
+            |dir| builder.tempfile_in(dir).or_else(|_| builder.tempfile()),
+        )?;
+
         let file_path = temp_file.path();
 
-        fs::write(file_path, entry.content.as_str()).await?;
+        fs::write(file_path, entry.content.as_str())?;
 
         app.redraw_after_restore = true;
 
         external_editor::open_editor(file_path, &app.settings).await?;
 
         if file_path.exists() {
-            let new_content = fs::read_to_string(&file_path).await?;
+            let new_content = fs::read_to_string(file_path)?;
             ui_components.editor.set_entry_content(&new_content, app);
             ui_components.change_active_control(ControlType::EntriesList);
 
