@@ -26,7 +26,7 @@ jobs:
           /home/linuxbrew/.linuxbrew/bin/brew trust ammarabouzor/tui-journal
 
       - name: Bump Homebrew Formula
-        uses: dawidd6/action-homebrew-bump-formula@v7
+        uses: dawidd6/action-homebrew-bump-formula@v8
         with:
           token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
           tap: AmmarAbouZor/homebrew-tui-journal
