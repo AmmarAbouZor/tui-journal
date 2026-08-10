@@ -337,7 +337,7 @@ where
         Ok(())
     }
 
-    async fn export_entries(&self, path: PathBuf) -> anyhow::Result<()> {
+    async fn export_entries(&mut self, path: PathBuf) -> anyhow::Result<()> {
         if let Some(parent) = path.parent() {
             tokio::fs::create_dir_all(parent).await?;
         }
@@ -352,7 +352,7 @@ where
         Ok(())
     }
 
-    async fn import_entries(&self, file_path: PathBuf) -> anyhow::Result<()> {
+    async fn import_entries(&mut self, file_path: PathBuf) -> anyhow::Result<()> {
         if !file_path.exists() {
             bail!("Import file doesn't exist: path {}", file_path.display())
         }
@@ -519,7 +519,7 @@ where
     }
 
     /// Assigns priority to all entries that don't have a priority assigned to
-    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+    async fn assign_priority_to_entries(&mut self, priority: u32) -> anyhow::Result<()> {
         self.data_provide
             .assign_priority_to_entries(priority)
             .await?;

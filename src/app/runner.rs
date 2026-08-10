@@ -81,7 +81,7 @@ where
     let mut ui_components = UIComponents::new(styles);
     let mut app = App::new(data_provider, settings);
     if let Some(cmd) = pending_cmd
-        && let Err(err) = exec_pending_cmd(terminal, &app, cmd).await
+        && let Err(err) = exec_pending_cmd(terminal, &mut app, cmd).await
     {
         ui_components.show_err_msg(err.to_string());
     }
@@ -134,7 +134,7 @@ where
 
 async fn exec_pending_cmd<B: Backend, D: DataProvider>(
     terminal: &mut Terminal<B>,
-    app: &App<D>,
+    app: &mut App<D>,
     pending_cmd: PendingCliCommand,
 ) -> anyhow::Result<()> {
     match pending_cmd {

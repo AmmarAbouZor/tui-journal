@@ -1,20 +1,17 @@
-use std::sync::RwLock;
-
 use backend::ModifyEntryError;
 
 use super::*;
 
 #[derive(Default)]
 pub struct MockDataProvider {
-    entries: RwLock<Vec<Entry>>,
+    entries: Vec<Entry>,
     return_error: bool,
 }
 
 impl MockDataProvider {
     pub fn new_with_data() -> Self {
-        let entries = RwLock::from(get_default_entries());
         MockDataProvider {
-            entries,
+            entries: get_default_entries(),
             return_error: false,
         }
     }
@@ -32,74 +29,70 @@ impl MockDataProvider {
 }
 
 impl DataProvider for MockDataProvider {
-    async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
+    async fn load_all_entries(&mut self) -> anyhow::Result<Vec<Entry>> {
         self.early_return()?;
 
-        Ok(self.entries.read().unwrap().clone())
+        Ok(self.entries.clone())
     }
 
-    async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
+    async fn add_entry(&mut self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         self.early_return()?;
-        let mut entries = self.entries.write().unwrap();
-        let new_id = entries.iter().map(|entry| entry.id + 1).max().unwrap_or(0);
+        let new_id = self
+            .entries
+            .iter()
+            .map(|entry| entry.id + 1)
+            .max()
+            .unwrap_or(0);
 
         let entry = Entry::from_draft(new_id, entry);
 
-        entries.push(entry.clone());
+        self.entries.push(entry.clone());
 
         Ok(entry)
     }
 
-    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn restore_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         self.early_return()?;
 
-        let mut entries = self.entries.write().unwrap();
-        if entries.iter().any(|existing| existing.id == entry.id) {
+        if self.entries.iter().any(|existing| existing.id == entry.id) {
             return Err(ModifyEntryError::ValidationError(format!(
                 "Entry id {} already exists",
                 entry.id
             )));
         }
 
-        entries.push(entry.clone());
+        self.entries.push(entry.clone());
 
         Ok(entry)
     }
 
-    async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
+    async fn remove_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
         self.early_return()?;
 
-        let mut entries = self.entries.write().unwrap();
-
-        entries.retain(|entry| entry.id != entry_id);
+        self.entries.retain(|entry| entry.id != entry_id);
 
         Ok(())
     }
 
-    async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn update_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         self.early_return()?;
 
-        let mut entry_clone = entry.clone();
-
-        let mut entries = self.entries.write().unwrap();
-
-        let entry_to_change = entries
+        let entry_to_change = self
+            .entries
             .iter_mut()
-            .find(|e| e.id == entry.id)
+            .find(|existing| existing.id == entry.id)
             .ok_or(anyhow!("No item found"))?;
 
-        std::mem::swap(entry_to_change, &mut entry_clone);
+        *entry_to_change = entry.clone();
 
         Ok(entry)
     }
 
-    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
+    async fn get_export_object(&mut self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
         self.early_return()?;
 
-        let entries = self.entries.read().unwrap();
-
         Ok(EntriesDTO::new(
-            entries
+            self.entries
                 .iter()
                 .filter(|entry| entries_ids.contains(&entry.id))
                 .cloned()
@@ -108,7 +101,7 @@ impl DataProvider for MockDataProvider {
         ))
     }
 
-    async fn import_entries(&self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
+    async fn import_entries(&mut self, entries_dto: EntriesDTO) -> anyhow::Result<()> {
         self.early_return()?;
 
         for draft in entries_dto.entries {
@@ -118,7 +111,7 @@ impl DataProvider for MockDataProvider {
         Ok(())
     }
 
-    async fn assign_priority_to_entries(&self, _priority: u32) -> anyhow::Result<()> {
+    async fn assign_priority_to_entries(&mut self, _priority: u32) -> anyhow::Result<()> {
         unimplemented!("There are not tests for assigning priority on the app level");
     }
 }

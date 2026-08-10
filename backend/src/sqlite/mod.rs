@@ -89,7 +89,7 @@ impl SqliteDataProvide {
 }
 
 impl DataProvider for SqliteDataProvide {
-    async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
+    async fn load_all_entries(&mut self) -> anyhow::Result<Vec<Entry>> {
         let entries: Vec<EntryIntermediate> = sqlx::query_as(
             r"SELECT entries.id, entries.title, entries.date, entries.content, entries.priority, GROUP_CONCAT(tags.tag) AS tags
             FROM entries
@@ -106,7 +106,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(entries)
     }
 
-    async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
+    async fn add_entry(&mut self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         let row = sqlx::query(
             r"INSERT INTO entries (title, date, content, priority)
             VALUES($1, $2, $3, $4)
@@ -127,7 +127,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(Entry::from_draft(id, entry))
     }
 
-    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn restore_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         sqlx::query(
             r"INSERT INTO entries (id, title, date, content, priority)
             VALUES($1, $2, $3, $4, $5)",
@@ -146,7 +146,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(entry)
     }
 
-    async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
+    async fn remove_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
         sqlx::query(r"DELETE FROM entries WHERE id=$1")
             .bind(entry_id)
             .execute(&self.pool)
@@ -156,7 +156,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(())
     }
 
-    async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn update_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         sqlx::query(
             r"UPDATE entries
             Set title = $1,
@@ -216,7 +216,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(entry)
     }
 
-    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
+    async fn get_export_object(&mut self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
         let ids_text = entries_ids
             .iter()
             .map(|id| id.to_string())
@@ -246,7 +246,7 @@ impl DataProvider for SqliteDataProvide {
         Ok(EntriesDTO::new(entry_drafts))
     }
 
-    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+    async fn assign_priority_to_entries(&mut self, priority: u32) -> anyhow::Result<()> {
         let sql = format!(
             r"UPDATE entries
             SET priority = '{priority}'

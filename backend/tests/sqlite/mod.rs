@@ -2,7 +2,7 @@ use backend::*;
 use chrono::{TimeZone, Utc};
 
 async fn create_provider_with_two_entries() -> SqliteDataProvide {
-    let provider = create_provider().await;
+    let mut provider = create_provider().await;
 
     let mut entry_draft_1 = EntryDraft::new(
         Utc::now(),
@@ -32,7 +32,7 @@ async fn create_provider() -> SqliteDataProvide {
 
 #[tokio::test]
 async fn create_provider_with_default_entries() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -47,7 +47,7 @@ async fn create_provider_with_default_entries() {
 
 #[tokio::test]
 async fn add_entry() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
 
     let mut entry_draft = EntryDraft::new(
         Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
@@ -74,7 +74,7 @@ async fn add_entry() {
 
 #[tokio::test]
 async fn remove_entry() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
 
     provider.remove_entry(1).await.unwrap();
 
@@ -85,7 +85,7 @@ async fn remove_entry() {
 
 #[tokio::test]
 async fn restore_entry_preserves_id() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
     let restored_entry = provider
         .load_all_entries()
         .await
@@ -119,7 +119,7 @@ async fn restore_entry_preserves_id() {
 
 #[tokio::test]
 async fn update_entry() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
 
     let mut entries = provider.load_all_entries().await.unwrap();
 
@@ -146,7 +146,7 @@ async fn update_entry() {
 
 #[tokio::test]
 async fn export_import() {
-    let provider_source = create_provider_with_two_entries().await;
+    let mut provider_source = create_provider_with_two_entries().await;
 
     let created_ids = [1, 2];
 
@@ -157,7 +157,7 @@ async fn export_import() {
 
     assert_eq!(dto_source.entries.len(), created_ids.len());
 
-    let provider_dist = create_provider().await;
+    let mut provider_dist = create_provider().await;
 
     provider_dist
         .import_entries(dto_source.clone())
@@ -171,7 +171,7 @@ async fn export_import() {
 
 #[tokio::test]
 async fn assign_priority() {
-    let provider = create_provider_with_two_entries().await;
+    let mut provider = create_provider_with_two_entries().await;
 
     provider.assign_priority_to_entries(3).await.unwrap();
 

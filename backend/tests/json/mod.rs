@@ -3,7 +3,7 @@ use chrono::{TimeZone, Utc};
 use tempfile::{Builder, NamedTempFile};
 
 async fn create_provide_with_two_entries(temp_file: &NamedTempFile) -> JsonDataProvide {
-    let json_provide = JsonDataProvide::new(temp_file.path().to_path_buf());
+    let mut json_provide = JsonDataProvide::new(temp_file.path().to_path_buf());
     let mut entry_draft_1 = EntryDraft::new(
         Utc::now(),
         String::from("Title 1"),
@@ -31,7 +31,7 @@ async fn create_provider_with_default_entries() {
         .prefix("json_create_default")
         .tempfile()
         .unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     let entries = provider.load_all_entries().await.unwrap();
 
@@ -47,7 +47,7 @@ async fn create_provider_with_default_entries() {
 #[tokio::test]
 async fn add_entry() {
     let temp_file = Builder::new().prefix("json_add_entry").tempfile().unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     let mut entry_draft = EntryDraft::new(
         Utc.with_ymd_and_hms(2023, 3, 23, 1, 1, 1).unwrap(),
@@ -78,7 +78,7 @@ async fn remove_entry() {
         .prefix("json_remove_entry")
         .tempfile()
         .unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.remove_entry(1).await.unwrap();
 
@@ -93,7 +93,7 @@ async fn restore_entry_preserves_id() {
         .prefix("json_restore_entry")
         .tempfile()
         .unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     let restored_entry = provider
         .load_all_entries()
@@ -132,7 +132,7 @@ async fn update_entry() {
         .prefix("json_update_entry")
         .tempfile()
         .unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     let mut entries = provider.load_all_entries().await.unwrap();
 
@@ -163,7 +163,7 @@ async fn export_import() {
         .prefix("json_export_source")
         .tempfile()
         .unwrap();
-    let provider_source = create_provide_with_two_entries(&temp_file_source).await;
+    let mut provider_source = create_provide_with_two_entries(&temp_file_source).await;
 
     let created_ids = [0, 1];
 
@@ -178,7 +178,7 @@ async fn export_import() {
         .prefix("json_export_dist")
         .tempfile()
         .unwrap();
-    let provider_dist = JsonDataProvide::new(temp_file_dist.path().to_path_buf());
+    let mut provider_dist = JsonDataProvide::new(temp_file_dist.path().to_path_buf());
 
     provider_dist
         .import_entries(dto_source.clone())
@@ -196,7 +196,7 @@ async fn assign_priority() {
         .prefix("json_assign_priority")
         .tempfile()
         .unwrap();
-    let provider = create_provide_with_two_entries(&temp_file).await;
+    let mut provider = create_provide_with_two_entries(&temp_file).await;
 
     provider.assign_priority_to_entries(3).await.unwrap();
 

@@ -15,7 +15,7 @@ impl JsonDataProvide {
 }
 
 impl DataProvider for JsonDataProvide {
-    async fn load_all_entries(&self) -> anyhow::Result<Vec<Entry>> {
+    async fn load_all_entries(&mut self) -> anyhow::Result<Vec<Entry>> {
         if !self.file_path.exists() {
             return Ok(Vec::new());
         }
@@ -37,7 +37,7 @@ impl DataProvider for JsonDataProvide {
         Ok(entries)
     }
 
-    async fn add_entry(&self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
+    async fn add_entry(&mut self, entry: EntryDraft) -> Result<Entry, ModifyEntryError> {
         if entry.title.is_empty() {
             return Err(ModifyEntryError::ValidationError(
                 "Entry title can't be empty".into(),
@@ -57,7 +57,7 @@ impl DataProvider for JsonDataProvide {
         Ok(entries.into_iter().next_back().unwrap())
     }
 
-    async fn restore_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn restore_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         if entry.title.is_empty() {
             return Err(ModifyEntryError::ValidationError(
                 "Entry title can't be empty".into(),
@@ -78,7 +78,7 @@ impl DataProvider for JsonDataProvide {
         Ok(entry)
     }
 
-    async fn remove_entry(&self, entry_id: u32) -> anyhow::Result<()> {
+    async fn remove_entry(&mut self, entry_id: u32) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
 
         if let Some(pos) = entries.iter().position(|e| e.id == entry_id) {
@@ -90,7 +90,7 @@ impl DataProvider for JsonDataProvide {
         Ok(())
     }
 
-    async fn update_entry(&self, entry: Entry) -> Result<Entry, ModifyEntryError> {
+    async fn update_entry(&mut self, entry: Entry) -> Result<Entry, ModifyEntryError> {
         if entry.title.is_empty() {
             return Err(ModifyEntryError::ValidationError(
                 "Entry title can't be empty".into(),
@@ -112,7 +112,7 @@ impl DataProvider for JsonDataProvide {
         }
     }
 
-    async fn get_export_object(&self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
+    async fn get_export_object(&mut self, entries_ids: &[u32]) -> anyhow::Result<EntriesDTO> {
         let entries: Vec<EntryDraft> = self
             .load_all_entries()
             .await?
@@ -124,7 +124,7 @@ impl DataProvider for JsonDataProvide {
         Ok(EntriesDTO::new(entries))
     }
 
-    async fn assign_priority_to_entries(&self, priority: u32) -> anyhow::Result<()> {
+    async fn assign_priority_to_entries(&mut self, priority: u32) -> anyhow::Result<()> {
         let mut entries = self.load_all_entries().await?;
 
         let mut modified = false;
