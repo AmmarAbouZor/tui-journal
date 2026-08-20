@@ -341,6 +341,10 @@ impl<'a> Editor<'a> {
     /// selection state, the snap-to-edge decision, and the move itself so callers
     /// never fall back to the underlying text area's default navigation.
     fn move_cursor_vertical(&mut self, dir: VerticalDir, select: bool) {
+        let Some(cursor_move) = self.resolve_vertical_move(dir) else {
+            return;
+        };
+
         if select {
             if !self.text_area.is_selecting() {
                 self.text_area.start_selection();
@@ -349,20 +353,30 @@ impl<'a> Editor<'a> {
             self.text_area.cancel_selection();
         }
 
-        let cursor_move = match dir {
-            VerticalDir::Up if self.is_on_first_line() => CursorMove::Head,
-            VerticalDir::Up => CursorMove::Up,
-            VerticalDir::Down if self.is_on_last_line() => CursorMove::End,
-            VerticalDir::Down => CursorMove::Down,
-        };
         self.text_area.move_cursor(cursor_move);
     }
 
+    /// Resolves a direction to the concrete move to apply, snapping to the line
+    /// edge on the first and last lines. Yields `None` when the cursor already
+    /// sits on the edge it would snap to, so a dead key press leaves both the
+    /// cursor and the selection untouched.
+    fn resolve_vertical_move(&self, dir: VerticalDir) -> Option<CursorMove> {
+        let (row, col) = self.text_area.cursor();
+        match dir {
+            VerticalDir::Up if self.is_on_first_line() => (col > 0).then_some(CursorMove::Head),
+            VerticalDir::Up => Some(CursorMove::Up),
+            VerticalDir::Down if self.is_on_last_line() => {
+                let line_end = self.text_area.lines()[row].chars().count();
+                (col < line_end).then_some(CursorMove::End)
+            }
+            VerticalDir::Down => Some(CursorMove::Down),
+        }
+    }
+
     /// Whether a vertical move should extend a selection: always in visual mode,
-    /// and in insert mode when Shift is held.
+    /// and in any other mode while Shift is held, as a conventional editor does.
     fn should_extend_selection(&self, input: &Input) -> bool {
-        self.is_visual_mode()
-            || (self.is_insert_mode() && input.modifiers.contains(KeyModifiers::SHIFT))
+        self.is_visual_mode() || input.modifiers.contains(KeyModifiers::SHIFT)
     }
 
     fn is_on_first_line(&self) -> bool {
@@ -727,11 +741,49 @@ mod tests {
     }
 
     #[test]
+    fn shift_selects_in_normal_mode_without_leaving_it() {
+        let mut editor = editor_with(&["hello", "world"], 0, 3);
+        editor.mode = EditorMode::Normal;
+
+        editor.move_cursor_vertical(
+            VerticalDir::Up,
+            editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)),
+        );
+
+        assert_eq!(editor.text_area.cursor(), (0, 0));
+        assert_eq!(editor.text_area.selection_range(), Some(((0, 0), (0, 3))));
+        assert_eq!(editor.mode, EditorMode::Normal);
+    }
+
+    #[test]
+    fn dead_key_press_leaves_selection_untouched() {
+        let mut editor = editor_with(&["hello", "world"], 0, 0);
+        editor.move_cursor_up(true);
+        assert!(!editor.text_area.is_selecting());
+
+        let mut editor = editor_with(&["hello", "world"], 1, 5);
+        editor.move_cursor_down(true);
+        assert!(!editor.text_area.is_selecting());
+    }
+
+    #[test]
+    fn dead_key_press_preserves_an_existing_selection() {
+        let mut editor = editor_with(&["hello", "world"], 0, 3);
+        editor.move_cursor_up(true);
+        let selection = editor.text_area.selection_range();
+
+        editor.move_cursor_up(true);
+
+        assert_eq!(editor.text_area.selection_range(), selection);
+    }
+
+    #[test]
     fn should_extend_selection_depends_on_mode_and_shift() {
         let mut editor = editor_with(&["abc"], 0, 0);
 
         editor.mode = EditorMode::Normal;
-        assert!(!editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)));
+        assert!(editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)));
+        assert!(!editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::NONE)));
 
         editor.mode = EditorMode::Insert;
         assert!(editor.should_extend_selection(&Input::new(KeyCode::Up, KeyModifiers::SHIFT)));
