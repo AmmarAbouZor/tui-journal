@@ -610,7 +610,8 @@ impl<'a> Editor<'a> {
 /// vertical movement is fully owned by [`Editor::move_cursor_vertical`]. Arrows
 /// carrying Ctrl/Alt keep their default-navigation handling.
 fn vertical_arrow_dir(input: &Input) -> Option<VerticalDir> {
-    if !(input.modifiers - KeyModifiers::SHIFT).is_empty() {
+    let modifiers = input.modifiers;
+    if !modifiers.is_empty() && modifiers != KeyModifiers::SHIFT {
         return None;
     }
     match input.key_code {
@@ -626,6 +627,8 @@ fn is_default_navigation(input: &Input) -> bool {
     match input.key_code {
         KeyCode::Left
         | KeyCode::Right
+        | KeyCode::Up
+        | KeyCode::Down
         | KeyCode::Home
         | KeyCode::End
         | KeyCode::PageUp
@@ -693,6 +696,26 @@ mod tests {
             vertical_arrow_dir(&Input::new(KeyCode::Char('k'), KeyModifiers::NONE)),
             None
         );
+    }
+
+    #[test]
+    fn modified_vertical_arrows_stay_default_navigation() {
+        assert!(is_default_navigation(&Input::new(
+            KeyCode::Up,
+            KeyModifiers::CONTROL
+        )));
+        assert!(is_default_navigation(&Input::new(
+            KeyCode::Down,
+            KeyModifiers::CONTROL
+        )));
+        assert!(is_default_navigation(&Input::new(
+            KeyCode::Up,
+            KeyModifiers::ALT
+        )));
+        assert!(is_default_navigation(&Input::new(
+            KeyCode::Down,
+            KeyModifiers::ALT
+        )));
     }
 
     #[test]
