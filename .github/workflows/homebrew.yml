@@ -15,9 +15,11 @@ jobs:
           git fetch --tags
           echo "GIT_TAG=$(git describe --tags "$(git rev-list --tags --max-count=1)")" >> "$GITHUB_OUTPUT"
       - name: Debug tag
+        env:
+          GIT_TAG: ${{ steps.ltag.outputs.GIT_TAG }}
         run: |
           echo "-------------------------------------------------------------"
-          echo ${{ steps.ltag.outputs.GIT_TAG }}
+          echo "$GIT_TAG"
           echo "-------------------------------------------------------------"
 
       - name: Trust Homebrew Tap
@@ -26,11 +28,15 @@ jobs:
           /home/linuxbrew/.linuxbrew/bin/brew trust ammarabouzor/tui-journal
 
       - name: Bump Homebrew Formula
-        uses: dawidd6/action-homebrew-bump-formula@v8
-        with:
-          token: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
-          tap: AmmarAbouZor/homebrew-tui-journal
-          formula: tui-journal
-          tag: ${{ steps.ltag.outputs.GIT_TAG }}
-          force: true
-          no_fork: true
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+          GIT_TAG: ${{ steps.ltag.outputs.GIT_TAG }}
+        run: |
+          git config --global user.name "Ammar Abou Zor"
+          git config --global user.email "AmmarAbouZor@users.noreply.github.com"
+          /home/linuxbrew/.linuxbrew/bin/brew bump-formula-pr \
+            --no-audit \
+            --no-browse \
+            --no-fork \
+            --version="${GIT_TAG#v}" \
+            ammarabouzor/tui-journal/tui-journal
