@@ -2,7 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.18.0 - 2026-09-06
+
+### Added
+
+- Add an iCalendar VJOURNAL directory backend, included in default builds, for use with external CalDAV sync clients
+- Add `auto_title` configuration to prefill new-entry titles with literal text or today's date as DD-MM-YYYY
+- Support Shift+Up/Down selection in the editor's normal mode
+
+### Changed
+
+- Snap Up/Down and Vim-style k/j to the line start/end at the first/last editor line, including during selection
+- Prefer `XDG_RUNTIME_DIR` for external-editor temporary files, falling back to the system temporary directory
+
+### Fixed
+
+- Keep entry attributes and undo history unchanged when saving attribute updates fails
 
 ## 0.17.0 - 2026-07-10
 
