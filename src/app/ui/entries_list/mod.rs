@@ -1,5 +1,3 @@
-use chrono::Datelike;
-
 use ratatui::{
     Frame,
     layout::{Alignment, Rect},
@@ -82,35 +80,17 @@ impl EntriesList {
                 // *** Date & Priority ***
                 let date_priority_lines = match (app.settings.datum_visibility, entry.priority) {
                     (DatumVisibility::Show, Some(prio)) => {
-                        let one_liner = format!(
-                            "{},{},{} | Priority: {}",
-                            entry.date.day(),
-                            entry.date.month(),
-                            entry.date.year(),
-                            prio
-                        );
+                        let date_text = app.settings.date_format.display(&entry.date);
+                        let one_liner = format!("{date_text} | Priority: {prio}");
 
                         if one_liner.len() > area.width as usize - LIST_INNER_MARGIN {
-                            vec![
-                                format!(
-                                    "{},{},{}",
-                                    entry.date.day(),
-                                    entry.date.month(),
-                                    entry.date.year()
-                                ),
-                                format!("Priority: {prio}"),
-                            ]
+                            vec![date_text, format!("Priority: {prio}")]
                         } else {
                             vec![one_liner]
                         }
                     }
                     (DatumVisibility::Show, None) => {
-                        vec![format!(
-                            "{},{},{}",
-                            entry.date.day(),
-                            entry.date.month(),
-                            entry.date.year()
-                        )]
+                        vec![app.settings.date_format.display(&entry.date)]
                     }
                     (DatumVisibility::Hide, None) => Vec::new(),
                     (DatumVisibility::EmptyLine, None) => vec![String::new()],

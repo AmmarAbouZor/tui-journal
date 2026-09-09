@@ -165,7 +165,10 @@ fn edit_current_entry<D: DataProvider>(ui_components: &mut UIComponents, app: &m
     if let Some(entry) = app.get_current_entry() {
         ui_components
             .popup_stack
-            .push(Popup::Entry(Box::new(EntryPopup::from_entry(entry))));
+            .push(Popup::Entry(Box::new(EntryPopup::from_entry(
+                entry,
+                &app.settings,
+            ))));
     }
 }
 
