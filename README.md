@@ -264,6 +264,24 @@ colored_tags = true   # Sets if automatically coloring for tags is enabled.
 #  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
 datum_visibility = "show"
 
+# Sets the format used to render the datum of journals, and to read the date while
+# creating or editing a journal.
+# The value is written with date tokens, which are translated to their `strftime` equivalents:
+#  - `YYYY`: Year with century (2026).
+#  - `YY`:   Year without century (26).
+#  - `MM`:   Month, zero-padded (04).
+#  - `M`:    Month, without padding (4).
+#  - `DD`:   Day, zero-padded (07).
+#  - `D`:    Day, without padding (7).
+# Every other character is kept as it is, so any separator can be used: "YYYY/MM/DD".
+# Note that a `D`, `M` or `Y` is translated everywhere it appears, including inside a word.
+# If the value contains a `%` it's handed to `strftime` as it is without any translation,
+# which gives access to the full set of its specifiers: "%A %d %B %Y".
+# A value that can't render a date and read it back again -- an unknown specifier like "%Q",
+# or one too lossy to round-trip like "YYYY" -- falls back to the default.
+# Default value: "DD-MM-YYYY"
+date_format = "YYYY-MM-DD"
+
 # Sets the directory where the application persists its state between sessions.
 # Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows
 app_state_dir = "<STATE_DIRECTORY>/tui-journal/"

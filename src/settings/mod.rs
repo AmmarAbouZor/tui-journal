@@ -24,6 +24,8 @@ use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
 use self::vjournal_backend::{VjournalBackend, get_default_vjournal_path};
 use self::{auto_title::AutoTitle, export::ExportSettings, external_editor::ExternalEditor};
 
+pub use self::date_format::DateFormat;
+
 #[cfg(feature = "json")]
 pub mod json_backend;
 #[cfg(feature = "sqlite")]
@@ -32,6 +34,7 @@ pub mod sqlite_backend;
 pub mod vjournal_backend;
 
 mod auto_title;
+mod date_format;
 mod export;
 mod external_editor;
 
@@ -70,6 +73,10 @@ pub struct Settings {
     #[serde(default)]
     /// Sets the visibility options for the datum of journals when rendered in entries list.
     pub datum_visibility: DatumVisibility,
+    #[serde(default)]
+    /// Format used to display and parse dates across the entries list and popups.
+    /// Accepts DSL tokens (DD, D, MM, M, YYYY, YY) or raw strftime (`%d-%m-%Y`).
+    pub date_format: DateFormat,
     /// Overwrite the path for the directory used to persist the app state.
     pub app_state_dir: Option<PathBuf>,
 }
@@ -93,6 +100,7 @@ impl Default for Settings {
             history_limit: default_history_limit(),
             colored_tags: default_colored_tags(),
             datum_visibility: Default::default(),
+            date_format: Default::default(),
             app_state_dir: Default::default(),
         }
     }
@@ -197,6 +205,7 @@ impl Settings {
             history_limit: _,
             colored_tags: _,
             datum_visibility: _,
+            date_format: _,
             app_state_dir: _,
         } = self;
 
