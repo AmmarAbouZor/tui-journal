@@ -16,7 +16,7 @@
 - `cargo test` - run all tests.
 - `cargo clippy --all-targets --all-features` - lint code before pushing.
 - `cargo build --release` - produce optimized binary.
-- `make cargo_check`, `make run_test`, `make clippy`, `make build-release` - convenience wrappers used by maintainers.
+- `just` lists the maintainer recipes (`check`, `test`, `clippy`, `install`).
 
 ## Coding Style & Naming Conventions
 - Rust edition: 2024, minimum Rust: `1.92.0`.
