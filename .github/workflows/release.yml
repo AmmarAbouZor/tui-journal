@@ -5,11 +5,8 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-
 jobs:
-  release:
+  build:
     if: github.repository == 'AmmarAbouZor/tui-journal'
     name: build-release
     runs-on: ${{ matrix.os }}
@@ -17,16 +14,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Asset names are referenced by the Homebrew formula.
         include:
           - os: ubuntu-latest
             container: rust
-            dependencies: "libssl-dev"
+            target: x86_64-unknown-linux-gnu
+            asset: linux-gnu
           - os: ubuntu-24.04-arm
             container: rust
-            dependencies: "libssl-dev"
+            target: aarch64-unknown-linux-gnu
+            asset: linux-arm64
           - os: macos-latest
-            arch: arm64
+            target: aarch64-apple-darwin
+            asset: mac-arm64
           - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset: win
 
     steps:
       - uses: actions/checkout@v7
@@ -38,35 +41,51 @@ jobs:
 
       - name: Install Latest Rust
         run: |
-          rustup update --no-self-update ${{ env.RUST_CHANNEL }}
-          rustup default ${{ env.RUST_CHANNEL }}
+          rustup update --no-self-update stable
+          rustup default stable
 
-      - name: Install Linux dependencies
-        if: matrix.dependencies
-        run: apt update && apt install -y ${{ matrix.dependencies }}
+      # Explicit targets make a runner architecture change fail the build
+      # instead of publishing a binary under the wrong asset name.
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
-      - name: Build Release Mac ARM64
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: make release-mac-arm64
-      - name: Build Release Linux ARM64
-        if: matrix.os == 'ubuntu-24.04-arm'
-        run: make release-linux-arm64
-      - name: Build Release Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: make release-linux
-      - name: Build Release Win
-        if: matrix.os == 'windows-latest'
-        run: make release-win
+      - name: Package
+        if: runner.os != 'Windows'
+        run: |
+          strip target/${{ matrix.target }}/release/tjournal
+          mkdir -p release
+          tar -C target/${{ matrix.target }}/release -czvf release/tjournal-${{ matrix.asset }}.tar.gz tjournal
+
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p release
+          7z -y a release/tjournal-${{ matrix.asset }}.zip target/${{ matrix.target }}/release/tjournal.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.asset }}
+          path: release/*
+          if-no-files-found: error
+
+  # Publishes once after all builds succeed, so a release never misses assets.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: release
+          merge-multiple: true
 
       - name: release
-        if: success()
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           tag_name: ${{ github.ref_name }}
-          files: |
-            ./release/*.tar.gz
-            ./release/*.zip
-
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

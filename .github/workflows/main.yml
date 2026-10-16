@@ -45,14 +45,14 @@ jobs:
         uses: Swatinem/rust-cache@v2.9.2
 
       - name: Check General
-        run: cargo check --verbose
+        run: cargo check --locked --verbose
 
       - name: Check sqlite
-        run: cargo check --no-default-features -F sqlite --verbose
+        run: cargo check --locked --no-default-features -F sqlite --verbose
 
       - name: Clippy
         if: ${{ matrix.rust-version == 'stable' }}
-        run: cargo clippy --all-targets --all-features --verbose -- -D warnings
+        run: cargo clippy --locked --all-targets --all-features --verbose -- -D warnings
 
       - name: Format
         if: ${{ matrix.rust-version == 'stable' }}
@@ -60,11 +60,11 @@ jobs:
 
       - name: Build
         if: ${{ matrix.rust-version == 'stable' }}
-        run: cargo build --verbose
+        run: cargo build --locked --verbose
 
       - name: Run tests
         if: ${{ matrix.rust-version == 'stable' }}
-        run: cargo test --verbose
+        run: cargo test --locked --verbose
 
   cffconvert:
     runs-on: ubuntu-latest
