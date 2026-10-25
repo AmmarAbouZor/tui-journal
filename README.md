@@ -245,7 +245,7 @@ default_journal_priority = 3  # Sets the suggested priority while creating a new
 
 auto_title = { kind = "date" } # Pre-populates the title field when creating a new entry. Two forms are accepted:
 #   - Literal string: `auto_title = "Daily Note"` inserts the text as-is.
-#   - Computed value: `auto_title = { kind = "date" }` inserts today's date as DD-MM-YYYY.
+#   - Computed value: `auto_title = { kind = "date" }` inserts today's date formatted with `date_format`.
 # Omit the key entirely (default) to leave the title field empty.
 # Note: the string form is always literal. `auto_title = "date"` inserts the literal word "date",
 # not today's date — use the struct form `{ kind = "date" }` for computed values.
@@ -263,6 +263,18 @@ colored_tags = true   # Sets if automatically coloring for tags is enabled.
 #  - `hide`: Hide datum without providing an extra empty line for journal without `priority` value.
 #  - `empty_line`: Hide datum providing an extra empty line for journal without `priority` value.
 datum_visibility = "show"
+
+# Sets the format used to render the datum of journals, and to read the date while creating or editing a journal.
+# Uses chrono's strftime syntax: https://docs.rs/chrono/latest/chrono/format/strftime/index.html
+# The format must be a single line containing the day, month and four-digit year without any time
+# fields, so an entered date can be read back.
+# Examples:
+#  - "%d-%m-%Y"  -> 23-04-2026
+#  - "%Y-%m-%d"  -> 2026-04-23
+#  - "%m/%d/%Y"  -> 04/23/2026
+#  - "%-d %b %Y" -> 23 Apr 2026
+# Default value: "%d-%m-%Y"
+date_format = "%d-%m-%Y"
 
 # Sets the directory where the application persists its state between sessions.
 # Default are "~/<HOME>/.local/state/tui-journal/" on Linux and "C:\Users\Alice\AppData\Roaming\tui-journal\" on Windows
