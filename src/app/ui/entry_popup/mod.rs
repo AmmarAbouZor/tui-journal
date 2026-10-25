@@ -1,5 +1,5 @@
 use anyhow::Ok;
-use chrono::{Datelike, Local, NaiveDate, TimeZone, Utc};
+use chrono::{Datelike, Local, TimeZone, Utc};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     Frame,
@@ -11,7 +11,7 @@ use tui_textarea::{CursorMove, TextArea};
 
 use crate::{
     app::{App, keymap::Input},
-    settings::Settings,
+    settings::{DateFormat, Settings},
 };
 
 use backend::{DataProvider, Entry};
@@ -58,20 +58,13 @@ pub enum EntryPopupInputReturn {
 impl EntryPopup<'_> {
     pub fn new_entry(settings: &Settings) -> Self {
         let mut title_txt = if let Some(auto_title) = &settings.auto_title {
-            TextArea::new(vec![auto_title.resolve()])
+            TextArea::new(vec![auto_title.resolve(&settings.date_format)])
         } else {
             TextArea::default()
         };
         title_txt.move_cursor(CursorMove::End);
 
-        let date = Local::now();
-
-        let date_txt = TextArea::new(vec![format!(
-            "{:02}-{:02}-{}",
-            date.day(),
-            date.month(),
-            date.year()
-        )]);
+        let date_txt = TextArea::new(vec![settings.date_format.format(Local::now().date_naive())]);
 
         let tags_txt = TextArea::default();
 
@@ -96,16 +89,11 @@ impl EntryPopup<'_> {
         }
     }
 
-    pub fn from_entry(entry: &Entry) -> Self {
+    pub fn from_entry(entry: &Entry, date_format: &DateFormat) -> Self {
         let mut title_txt = TextArea::new(vec![entry.title.to_owned()]);
         title_txt.move_cursor(CursorMove::End);
 
-        let date_txt = TextArea::new(vec![format!(
-            "{:02}-{:02}-{}",
-            entry.date.day(),
-            entry.date.month(),
-            entry.date.year()
-        )]);
+        let date_txt = TextArea::new(vec![date_format.format(entry.date.date_naive())]);
 
         let tags = tags_to_text(&entry.tags);
 
@@ -131,7 +119,7 @@ impl EntryPopup<'_> {
             tags_popup: None,
         };
 
-        entry_popup.validate_all();
+        entry_popup.validate_all(date_format);
 
         entry_popup
     }
@@ -336,9 +324,9 @@ impl EntryPopup<'_> {
             && self.priority_err_msg.is_empty()
     }
 
-    pub fn validate_all(&mut self) {
+    pub fn validate_all(&mut self, date_format: &DateFormat) {
         self.validate_title();
-        self.validate_date();
+        self.validate_date(date_format);
         self.validate_tags();
         self.validate_priority();
     }
@@ -351,8 +339,8 @@ impl EntryPopup<'_> {
         }
     }
 
-    fn validate_date(&mut self) {
-        if let Err(err) = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y") {
+    fn validate_date(&mut self, date_format: &DateFormat) {
+        if let Err(err) = date_format.parse(self.date_txt.lines()[0].as_str()) {
             self.date_err_msg = err.to_string();
         } else {
             self.date_err_msg.clear();
@@ -440,7 +428,7 @@ impl EntryPopup<'_> {
                     }
                     ActiveText::Date => {
                         if self.date_txt.input(KeyEvent::from(input)) {
-                            self.validate_date();
+                            self.validate_date(&app.settings.date_format);
                         }
                     }
                     ActiveText::Tags => {
@@ -482,13 +470,16 @@ impl EntryPopup<'_> {
         app: &mut App<D>,
     ) -> anyhow::Result<EntryPopupInputReturn> {
         // Validation
-        self.validate_all();
+        self.validate_all(&app.settings.date_format);
         if !self.is_input_valid() {
             return Ok(EntryPopupInputReturn::KeepPopup);
         }
 
         let title = self.title_txt.lines()[0].to_owned();
-        let date = NaiveDate::parse_from_str(self.date_txt.lines()[0].as_str(), "%d-%m-%Y")
+        let date = app
+            .settings
+            .date_format
+            .parse(self.date_txt.lines()[0].as_str())
             .expect("Date must be valid here");
 
         let date = Utc

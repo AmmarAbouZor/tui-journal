@@ -24,6 +24,8 @@ use self::sqlite_backend::{SqliteBackend, get_default_sqlite_path};
 use self::vjournal_backend::{VjournalBackend, get_default_vjournal_path};
 use self::{auto_title::AutoTitle, export::ExportSettings, external_editor::ExternalEditor};
 
+pub use self::date_format::DateFormat;
+
 #[cfg(feature = "json")]
 pub mod json_backend;
 #[cfg(feature = "sqlite")]
@@ -32,6 +34,7 @@ pub mod sqlite_backend;
 pub mod vjournal_backend;
 
 mod auto_title;
+mod date_format;
 mod export;
 mod external_editor;
 
@@ -70,6 +73,9 @@ pub struct Settings {
     #[serde(default)]
     /// Sets the visibility options for the datum of journals when rendered in entries list.
     pub datum_visibility: DatumVisibility,
+    #[serde(default)]
+    /// Sets the format used to render journal dates and to read them while editing journals.
+    pub date_format: DateFormat,
     /// Overwrite the path for the directory used to persist the app state.
     pub app_state_dir: Option<PathBuf>,
 }
@@ -93,6 +99,7 @@ impl Default for Settings {
             history_limit: default_history_limit(),
             colored_tags: default_colored_tags(),
             datum_visibility: Default::default(),
+            date_format: Default::default(),
             app_state_dir: Default::default(),
         }
     }
@@ -197,6 +204,7 @@ impl Settings {
             history_limit: _,
             colored_tags: _,
             datum_visibility: _,
+            date_format: _,
             app_state_dir: _,
         } = self;
 
@@ -430,6 +438,32 @@ kind = "date"
         let settings: Settings = toml::from_str("").unwrap();
 
         assert_eq!(settings.auto_title, None);
+    }
+
+    #[test]
+    fn date_format_defaults_when_missing() {
+        let settings: Settings = toml::from_str("").unwrap();
+
+        assert_eq!(settings.date_format, DateFormat::default());
+    }
+
+    #[test]
+    fn date_format_survives_serialization() {
+        let settings: Settings = toml::from_str(r#"date_format = "%Y-%m-%d""#).unwrap();
+
+        let reloaded: Settings = toml::from_str(&toml::to_string(&settings).unwrap()).unwrap();
+
+        assert_eq!(
+            reloaded.date_format,
+            DateFormat::try_from(String::from("%Y-%m-%d")).unwrap()
+        );
+    }
+
+    #[test]
+    fn invalid_date_format_fails_to_load() {
+        let result = toml::from_str::<Settings>(r#"date_format = "%d-%m-%y""#);
+
+        assert!(result.is_err());
     }
 
     #[test]
