@@ -15,8 +15,11 @@ use crate::app::{App, keymap::Input, runner::HandleInputReturnType};
 use backend::DataProvider;
 use tui_textarea::{CursorMove, Scrolling, TextArea};
 
+mod preview;
+
 use super::Styles;
 use super::commands::ClipboardOperation;
+use preview::Preview;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditorMode {
@@ -27,6 +30,7 @@ pub enum EditorMode {
 
 pub struct Editor<'a> {
     text_area: TextArea<'a>,
+    pub preview: Option<Preview>,
     mode: EditorMode,
     is_active: bool,
     is_dirty: bool,
@@ -58,6 +62,7 @@ impl<'a> Editor<'a> {
         Editor {
             text_area,
             mode: EditorMode::Normal,
+            preview: None,
             is_active: false,
             is_dirty: false,
             has_unsaved: false,
@@ -96,8 +101,7 @@ impl<'a> Editor<'a> {
             None => TextArea::default(),
         };
 
-        self.text_area = text_area;
-
+        self.replace_buffer(text_area);
         self.refresh_has_unsaved(app);
     }
 
@@ -403,12 +407,17 @@ impl<'a> Editor<'a> {
             _ => {}
         }
 
+        if mode == EditorMode::Insert {
+            self.preview = None;
+        }
         self.mode = mode;
     }
 
     pub fn render_widget(&mut self, frame: &mut Frame, area: Rect, styles: &Styles) {
         let mut title = "Content".to_owned();
-        if self.is_active {
+        if self.preview.is_some() {
+            title.push_str(" - Markdown preview");
+        } else if self.is_active {
             let mode_caption = match self.mode {
                 EditorMode::Normal => " - NORMAL",
                 EditorMode::Insert => " - EDIT",
@@ -429,12 +438,18 @@ impl<'a> Editor<'a> {
             (EditorMode::Normal, false) => estyles.block_normal_inactive,
         };
 
-        self.text_area.set_block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(text_block_style)
-                .title(title),
-        );
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .style(text_block_style)
+            .title(title);
+        if let Some(preview) = &mut self.preview {
+            let viewport = block.inner(area);
+            frame.render_widget(block, area);
+            frame.buffer_mut().set_style(viewport, Style::reset());
+            preview.render(frame, viewport);
+            return;
+        }
+        self.text_area.set_block(block);
 
         let cursor_style = if self.is_active {
             let s = match self.mode {
@@ -530,9 +545,7 @@ impl<'a> Editor<'a> {
     }
 
     pub fn get_content(&self) -> String {
-        let lines = self.text_area.lines().to_vec();
-
-        lines.join("\n")
+        self.text_area.lines().join("\n")
     }
 
     pub fn has_unsaved(&self) -> bool {
@@ -559,9 +572,21 @@ impl<'a> Editor<'a> {
         text_area.move_cursor(tui_textarea::CursorMove::Bottom);
         text_area.move_cursor(tui_textarea::CursorMove::End);
 
-        self.text_area = text_area;
-
+        self.replace_buffer(text_area);
         self.refresh_has_unsaved(app);
+    }
+
+    fn replace_buffer(&mut self, text_area: TextArea<'a>) {
+        self.text_area = text_area;
+        if self.preview.is_some() {
+            self.preview = Some(Preview::new(self.get_content()));
+        }
+    }
+
+    pub fn toggle_preview(&mut self) {
+        if self.preview.take().is_none() {
+            self.preview = Some(Preview::new(self.get_content()));
+        }
     }
 
     pub fn exec_os_clipboard(

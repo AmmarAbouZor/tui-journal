@@ -37,8 +37,9 @@ git2 = { version = "0.21", default-features = false }
 rayon = "1.12"
 fuzzy-matcher = "0.3"
 path-absolutize = "4.0"
+pulldown-cmark = { version = "0.13", default-features = false }
 tui-textarea = "0.7"
-ratatui = { version = "0.29", features = ["all-widgets", "serde"]}
+ratatui = { version = "0.29", features = ["all-widgets", "serde", "unstable-rendered-line-info"]}
 arboard = { version = "3.6", default-features = false, features = ["wayland-data-control"]}
 
 [features]

@@ -234,8 +234,18 @@ impl UIComponents<'_> {
                     }
                 }
                 ControlType::EntryContentTxt => {
-                    if let Some(key) = self.editor_keymaps.iter().find(|c| &c.key == input) {
-                        key.command.clone().execute(self, app).await
+                    if let Some(command) = self
+                        .editor_keymaps
+                        .iter()
+                        .find(|c| &c.key == input)
+                        .map(|c| c.command)
+                        && (self.editor.preview.is_none()
+                            || command == UICommand::BackEditorNormalMode)
+                    {
+                        command.execute(self, app).await
+                    } else if let Some(preview) = &mut self.editor.preview {
+                        preview.handle_input(input);
+                        Ok(HandleInputReturnType::Handled)
                     } else {
                         self.editor.handle_input(input, app)
                     }

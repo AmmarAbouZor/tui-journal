@@ -165,6 +165,10 @@ pub(crate) fn get_global_keymaps() -> Vec<Keymap> {
 pub fn get_entries_list_keymaps() -> Vec<Keymap> {
     vec![
         Keymap::new(
+            Input::new(KeyCode::Char('p'), KeyModifiers::NONE),
+            UICommand::TogglePreview,
+        ),
+        Keymap::new(
             Input::new(KeyCode::Up, KeyModifiers::NONE),
             UICommand::SelectedPrevEntry,
         ),

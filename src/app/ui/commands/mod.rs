@@ -55,6 +55,7 @@ pub enum UICommand {
     ResetFilter,
     CycleTagFilter,
     ShowFuzzyFind,
+    TogglePreview,
     ToggleEditorVisualMode,
     ToggleFullScreenMode,
     CopyOsClipboard,
@@ -180,6 +181,10 @@ impl UICommand {
             UICommand::ShowFuzzyFind => {
                 CommandInfo::new("Fuzzy find", "Open fuzzy find popup for journals")
             }
+            UICommand::TogglePreview => CommandInfo::new(
+                "Markdown preview",
+                "Toggle the Markdown preview of the journal content",
+            ),
             UICommand::ToggleEditorVisualMode => CommandInfo::new(
                 "Toggle Editor Visual Mode",
                 "Toggle Editor Visual(Select) Mode when editor is in focus",
@@ -260,6 +265,10 @@ impl UICommand {
             UICommand::ResetFilter => exec_reset_filter(app),
             UICommand::CycleTagFilter => exec_cycle_tag_filter(ui_components, app),
             UICommand::ShowFuzzyFind => exec_show_fuzzy_find(ui_components, app),
+            UICommand::TogglePreview => {
+                ui_components.editor.toggle_preview();
+                Ok(HandleInputReturnType::Handled)
+            }
             UICommand::ToggleEditorVisualMode => exec_toggle_editor_visual_mode(ui_components),
             UICommand::ToggleFullScreenMode => exec_toggle_full_screen_mode(app),
             UICommand::CopyOsClipboard => exec_copy_os_clipboard(ui_components),
@@ -343,7 +352,7 @@ impl UICommand {
             UICommand::ShowFuzzyFind => {
                 continue_fuzzy_find(ui_components, app, msg_box_result).await
             }
-            UICommand::ToggleEditorVisualMode => not_implemented(),
+            UICommand::TogglePreview | UICommand::ToggleEditorVisualMode => not_implemented(),
             UICommand::ToggleFullScreenMode => not_implemented(),
             UICommand::CopyOsClipboard => not_implemented(),
             UICommand::CutOsClipboard => not_implemented(),

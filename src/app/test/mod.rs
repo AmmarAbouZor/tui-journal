@@ -7,6 +7,7 @@ use self::mock::MockDataProvider;
 use super::*;
 
 mod mock;
+mod preview;
 mod undo_redo;
 
 fn get_default_entries() -> Vec<Entry> {
